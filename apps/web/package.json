@@ -4,31 +4,44 @@
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start --hostname 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "auth:migrate": "npx auth@latest migrate"
+    "auth:migrate": "prisma migrate deploy",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "db:baseline": "prisma migrate resolve --applied 0_existing_schema",
+    "test": "node --conditions=react-server --import tsx --test tests/*.test.ts",
+    "test:db": "node --conditions=react-server --import tsx --test tests/database.integration.test.ts",
+    "test:browser": "playwright test"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "@supabase/supabase-js": "^2.76.0",
+    "better-auth": "^1.7.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "better-auth": "^1.7.0",
-    "pg": "^8.16.3",
-    "server-only": "^0.0.1",
-    "leaflet": "^1.9.4",
     "react-leaflet": "^5.0.0",
-    "lucide-react": "^0.468.0",
-    "@supabase/supabase-js": "^2.76.0"
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
+    "@playwright/test": "1.56.1",
+    "@types/geojson": "^7946.0.15",
+    "@types/leaflet": "^1.9.15",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/leaflet": "^1.9.15",
-    "@types/geojson": "^7946.0.15",
-    "@types/pg": "^8.15.5"
+    "dotenv": "17.2.3",
+    "prisma": "7.10.1",
+    "tsx": "4.21.0",
+    "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=22.12.0"

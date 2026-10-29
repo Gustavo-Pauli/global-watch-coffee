@@ -13,6 +13,6 @@ export async function GET(_request: Request,context:{params:Promise<{id:string;k
   try {
     // Only AFTER the owner check. Time-limited redirect avoids Vercel response-size limits.
     const signed=await signedRead(outputPath(owner,id,kind as OutputKind),60);
-    return Response.redirect(signed,302);
+    return new Response(null,{status:302,headers:{Location:signed,'Cache-Control':'private, no-store'}});
   } catch {return Response.json({detail:'Arquivo expirado ou indisponível.'},{status:404});}
 }

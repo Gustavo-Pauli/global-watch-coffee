@@ -12,7 +12,15 @@
     "test": "turbo run test",
     "test:geo": "pnpm --filter @global-watch/geo-worker test",
     "auth:migrate": "pnpm --filter @global-watch/web auth:migrate",
-    "check:files": "python scripts/check_repository.py"
+    "check:files": "python scripts/check_repository.py",
+    "db:generate": "pnpm --filter @global-watch/web db:generate",
+    "db:validate": "pnpm --filter @global-watch/web db:validate",
+    "db:deploy": "pnpm --filter @global-watch/web db:deploy",
+    "db:status": "pnpm --filter @global-watch/web db:status",
+    "db:baseline": "pnpm --filter @global-watch/web db:baseline",
+    "test:web": "pnpm --filter @global-watch/web test",
+    "test:db": "pnpm --filter @global-watch/web test:db",
+    "test:browser": "pnpm --filter @global-watch/web test:browser"
   },
   "devDependencies": {
     "turbo": "^2.5.6"

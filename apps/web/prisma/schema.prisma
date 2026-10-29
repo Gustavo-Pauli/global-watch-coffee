@@ -1,0 +1,100 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @db.Text
+  name          String    @db.Text
+  email         String    @unique(map: "user_email_key") @db.Text
+  emailVerified Boolean
+  image         String?   @db.Text
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @db.Text
+  expiresAt DateTime @db.Timestamptz(6)
+  token     String   @unique(map: "session_token_key") @db.Text
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  ipAddress String?  @db.Text
+  userAgent String?  @db.Text
+  userId    String   @db.Text
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userId_fkey")
+
+  @@index([userId], map: "session_userId_idx")
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @db.Text
+  accountId             String    @db.Text
+  providerId            String    @db.Text
+  userId                String    @db.Text
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime? @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(6)
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(6)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userId_fkey")
+
+  @@index([userId], map: "account_userId_idx")
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @db.Text
+  identifier String   @db.Text
+  value      String   @db.Text
+  expiresAt  DateTime @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([identifier], map: "verification_identifier_idx")
+  @@map("verification")
+}
+
+// The existing database deliberately has no owner FK; adding one would reject
+// existing/orphan records. Ownership is enforced in every application query.
+// PostgreSQL CHECK constraints remain in baseline SQL (not expressible in Prisma).
+model Analysis {
+  id              String    @id @db.Uuid
+  ownerId         String    @map("owner_id") @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  expiresAt       DateTime  @default(dbgenerated("(now() + '3 days'::interval)")) @map("expires_at") @db.Timestamptz(6)
+  status          String    @db.Text
+  scene           String?   @db.Text
+  acquisitionDate DateTime? @map("acquisition_date") @db.Date
+  imagePath       String?   @map("image_path") @db.Text
+  sclPath         String?   @map("scl_path") @db.Text
+  result          Json?     @db.JsonB
+  errorCode       String?   @map("error_code") @db.Text
+
+  @@index([ownerId, createdAt(sort: Desc)], map: "app_analyses_owner_created")
+  @@index([expiresAt], map: "app_analyses_expires")
+  @@map("app_analyses")
+}
+
+model RateLimit {
+  key       String   @id @db.Text
+  count     Int      @default(0)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@index([expiresAt], map: "app_rate_limits_expires_idx")
+  @@map("app_rate_limits")
+}
