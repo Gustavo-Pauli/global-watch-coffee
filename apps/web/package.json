@@ -18,7 +18,8 @@
     "server-only": "^0.0.1",
     "leaflet": "^1.9.4",
     "react-leaflet": "^5.0.0",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "@supabase/supabase-js": "^2.76.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

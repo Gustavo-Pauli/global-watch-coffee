@@ -1,13 +1,31 @@
-# Publicação do monorepo no GitHub
+# Atualização do repositório existente
 
-1. Crie um repositório **público e vazio**, por exemplo `global-watch-cafe`, na conta desejada. Não use outro repositório existente.
-2. Rode `python scripts/check_repository.py`. Confirme que `git status` não inclui segredos.
-3. Execute `powershell -ExecutionPolicy Bypass -File scripts/publish_github.ps1 -RepoUrl "https://github.com/SEU-USUARIO/global-watch-cafe.git"` no Windows, ou `bash scripts/publish_github.sh https://github.com/SEU-USUARIO/global-watch-cafe.git` no Linux/macOS. O script imprime os arquivos staged e só prossegue depois da confirmação `SIM`.
-4. Verifique que o remote `origin` realmente corresponde ao repositório vazio criado.
-5. No GitHub, confira se estão presentes `data/`, `apps/geo-worker/models/`, `apps/web/` e `docs/` e se **não** há `.env.local`.
+Repositório conectado identificado em 29/10/2026: **`Gustavo-Pauli/global-watch-coffee`** (`main`). Ao consultar a conta, sua visibilidade era **private**. O desafio exige **GitHub público**.
 
-Os binários de modelos e resultados fazem parte do primeiro commit, para que o exemplo seja reproduzível. Como há artefatos experimentais grandes, o repositório é maior que um projeto web comum; se futuramente crescer, mova datasets e modelos para releases ou Git LFS, mantendo checksums e scripts de obtenção.
+O projeto deve ser atualizado nesse mesmo repositório, não é necessário criar outro.
 
-O conector de GitHub disponível nesta conversa não permite a criação de repositórios; não há envio para uma URL pública nesta etapa.
+Depois de aplicar o patch na sua pasta local (consulte `MIGRACAO_LOCAL.md`):
 
-**Antes da publicação:** execute `pnpm install` e versiona `pnpm-lock.yaml`. Neste ambiente o registry npm não resolveu, então não foi possível gerar esse arquivo automaticamente.
+```bash
+# Terminal Git Bash na raiz do projeto
+pnpm install                  # gera/atualiza pnpm-lock.yaml
+python -m pytest apps/geo-worker/tests -q
+pnpm --filter @global-watch/web build
+
+git status                    # revise arquivos e mudanças locais
+git diff --check
+git add -A
+git diff --cached --stat
+# Confirme: nenhum .env, nenhuma chave, nenhum .venv, nenhum node_modules
+
+git commit -m "refactor: stateless geoprocessing and private Supabase Storage"
+git push origin main
+```
+
+Após o push, abra **GitHub → global-watch-coffee → Settings → General → Danger Zone → Change repository visibility → Public**. Verifique que é o repositório correto, que não existem secrets no histórico do Git e que a política do desafio permite tornar públicos os dados e arquivos; o kit Sentinel-2 já traz atribuição no repositório.
+
+Cheque que o repo contém `apps/web`, `apps/geo-worker`, `data`, `docs`, `render.yaml`, `apps/web/vercel.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml` e que a CI executa `python -m pytest` e o build Next.js.
+
+Não publique segredos (`SUPABASE_SERVICE_ROLE_KEY`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `GEMINI_API_KEY`, `WORKER_SECRET`, `CRON_SECRET`). O `.gitignore` exclui `.env`, `.env.local`, `.venv`, caches e SQLite. `*.joblib` só são carregados de arquivos próprios, sem fazer unpickle de uploads.
+
+A atualização ao GitHub **não é automática com o ZIP**: deve ser aplicada e enviada a partir do repositório local, preservando suas alterações. O conector disponível nesta conversa não oferece sincronização direta do ZIP do contêiner com o repositório existente.

@@ -57,7 +57,21 @@ export default function Dashboard(){
  const refreshHistory=useCallback(async()=>{try{setHistory(await request<HistoryItem[]>('/api/analyses'));}catch{setHistory([])}},[]);
  useEffect(()=>{if(authenticated)void refreshHistory();else setHistory([]);},[authenticated,refreshHistory]);
  const loadAnalysis=useCallback(async(id:string)=>{
-  const data=await request<AnalysisData>(`/api/analyses/${id}`);
+  let data: AnalysisData | null=null;
+  for(let attempt=0;attempt<45;attempt++){
+   const response=await fetch(`/api/analyses/${id}`,{credentials:'same-origin',cache:'no-store'});
+   if(response.status===202){
+    await new Promise(resolve=>setTimeout(resolve,4000));
+    continue;
+   }
+   if(!response.ok){
+    const body=await response.json().catch(()=>({detail:'Falha no processamento.'}));
+    throw new Error(body.detail || 'Falha no processamento.');
+   }
+   data=await response.json() as AnalysisData;
+   break;
+  }
+  if(!data)throw new Error('O processamento ainda está em andamento. Consulte o histórico e tente abrir novamente.');
   setAnalysis(data);setAnalysisId(id);
   const r=await fetch(`${API}/api/analyses/${id}/files/map`,{credentials:'same-origin'});
   if(!r.ok)throw new Error('Não foi possível carregar a imagem do mapa.');
@@ -70,14 +84,34 @@ export default function Dashboard(){
  },[refreshHistory]);
  const processDemo=async()=>{
   if(!authenticated)return;setLoading(true);setError('');
-  try{const data=await request<{id:string}>('/api/analysis/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scene:selectedScene})});await loadAnalysis(data.id)}
-  catch(e){setError(e instanceof Error?e.message:'Não foi possível processar a cena.')}finally{setLoading(false)}
+  try{
+   const data=await request<{id:string}>('/api/analysis/demo',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scene:selectedScene})});
+   await loadAnalysis(data.id);
+  }catch(e){setError(e instanceof Error?e.message:'Não foi possível processar a cena.')}finally{setLoading(false);void refreshHistory()}
+ };
+ type SignedUpload={signedUrl:string;path:string;token:string};
+ const directUpload=async(file:File,signature:SignedUpload)=>{
+  // Matches Supabase Storage's signed-upload endpoint. No service-role key in the browser.
+  const payload=new FormData();
+  payload.append('cacheControl','3600');
+  payload.append('',file,file.name);
+  const response=await fetch(signature.signedUrl,{method:'PUT',headers:{'x-upsert':'false'},body:payload});
+  if(!response.ok)throw new Error(`Storage recusou ${file.name} (${response.status}).`);
  };
  const processUpload=async()=>{
   if(!authenticated||!image)return;setLoading(true);setError('');
-  const form=new FormData();form.append('image',image);if(scl)form.append('scl',scl);if(date)form.append('date',date);
-  try{const data=await request<{id:string}>('/api/analysis/upload',{method:'POST',body:form});await loadAnalysis(data.id)}
-  catch(e){setError(e instanceof Error?e.message:'Falha no upload.')}finally{setLoading(false)}
+  try{
+   const prepared=await request<{id:string;uploads:{image:SignedUpload;scl?:SignedUpload}}>(
+    '/api/analysis/upload',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({image:{name:image.name,size:image.size},
+      scl:scl?{name:scl.name,size:scl.size}:null,date:date||null})});
+   await directUpload(image,prepared.uploads.image);
+   if(scl && prepared.uploads.scl)await directUpload(scl,prepared.uploads.scl);
+   await request(`/api/analysis/start`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:prepared.id})});
+   await loadAnalysis(prepared.id);
+  }catch(e){setError(e instanceof Error?e.message:'Falha no upload.')}finally{setLoading(false);void refreshHistory()}
  };
  const download=async(kind:'geojson'|'classified'|'tif')=>{
   if(!authenticated||!analysisId)return;setError('');
@@ -113,7 +147,7 @@ export default function Dashboard(){
    <div className="nav-caption">WORKSPACE</div>
    <div className="nav-item active"><Map size={18}/> Análise geoespacial <span className="nav-line"/></div>
    <div className="nav-item inactive"><Layers3 size={18}/> Sentinel-2 L2A</div>
-   {authenticated&&history.length>0&&<><div className="nav-caption">ANÁLISES RECENTES</div><div className="history-list">{history.slice(0,5).map(item=><button key={item.id} className={'history-item '+(analysisId===item.id?'selected':'')} disabled={loading||item.status!=='ready'} onClick={()=>{setError('');void loadAnalysis(item.id).catch(e=>setError(e instanceof Error?e.message:'Falha ao abrir análise.'))}}>{item.date||'Sem data'}<small>{item.scene||'Imagem enviada'}</small></button>)}</div></>}
+   {authenticated&&history.length>0&&<><div className="nav-caption">ANÁLISES RECENTES</div><div className="history-list">{history.slice(0,5).map(item=><button key={item.id} className={'history-item '+(analysisId===item.id?'selected':'')} disabled={loading||item.status==='error'||item.status==='uploading'} onClick={()=>{setError('');void loadAnalysis(item.id).catch(e=>setError(e instanceof Error?e.message:'Falha ao abrir análise.'))}}>{item.date||'Sem data'}<small>{item.scene||'Imagem enviada'}</small></button>)}</div></>}
    <div className="sidebar-bottom"><div className="status-dot"/> <span>Pipeline geoespacial ativo</span><p>Identificação exploratória de possíveis cafezais. Sem validação de campo.</p></div>
   </aside>
   <main className="main">
@@ -142,14 +176,14 @@ export default function Dashboard(){
        <div className="select-wrap"><select value={selectedScene} onChange={e=>setSelectedScene(e.target.value)} disabled={loading} aria-label="Cena de demonstração">{Object.entries(dateLabels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select><ChevronDown size={16}/></div>
        <button className="primary-action" disabled={loading} onClick={processDemo}>{loading?'Processando…':'Analisar demonstração'}<ArrowRight size={17}/></button>
       </section>
-      <section className="panel upload"><div className="panel-icon blue"><CloudUpload size={23}/></div><div className="panel-label">SEUS DADOS</div><h3>Envie seu GeoTIFF</h3><p>Quatro bandas B02/B03/B04/B08. Até 4 MB por imagem nesta implantação.</p>
+      <section className="panel upload"><div className="panel-icon blue"><CloudUpload size={23}/></div><div className="panel-label">SEUS DADOS</div><h3>Envie seu GeoTIFF</h3><p>Quatro bandas B02/B03/B04/B08. Até 12 MB por imagem; transferência direta ao armazenamento privado.</p>
        <input ref={selectedInput} type="file" accept=".tif,.tiff,image/tiff" hidden onChange={e=>setImage(e.target.files?.[0]??null)}/>
        <button className="file-pick" onClick={()=>selectedInput.current?.click()}><UploadCloud size={17}/>{image?image.name:'Escolher arquivo multiespectral'}</button>
        <div className="input-row"><label>Máscara SCL <small>opcional</small><input type="file" accept=".tif,.tiff" onChange={e=>setScl(e.target.files?.[0]??null)}/></label><label>Data da imagem<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label></div>
        <button className="secondary-action" disabled={loading||!image} onClick={processUpload}>Processar arquivo <ArrowRight size={17}/></button>
       </section>
      </div>
-     {loading&&<div className="info-state"><div className="spinner"/><span>Validando o arquivo, calculando índices, classificando pixels e gerando polígonos…</span></div>}
+     {loading&&<div className="info-state"><div className="spinner"/><span>Enviando/validando a imagem e aguardando o processamento real. No Render gratuito, a primeira execução pode levar mais tempo…</span></div>}
      {error&&<div className="error-state" role="alert"><TriangleAlert size={20}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Fechar"><X size={18}/></button></div>}
      <div className="section-heading result-heading"><div><span>02 / RESULTADOS</span><h2>Visão territorial</h2></div>{analysis&&<div className="result-chip"><CheckCircle2 size={15}/> Análise concluída</div>}</div>
      {analysis?<>

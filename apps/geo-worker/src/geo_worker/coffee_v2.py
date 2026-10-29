@@ -203,7 +203,7 @@ def train(scenes,reference,model_path, erode=1):
             "threshold":0.50, "forest_class_id":2}
     model_path.parent.mkdir(parents=True,exist_ok=True)
     joblib.dump({"estimator":final,"features":names,"report":report},model_path)
-    (model_path.parent/'treinamento_v2.json').write_text(json.dumps(report,indent=2,ensure_ascii=False))
+    (model_path.parent/'treinamento_v2.json').write_text(json.dumps(report,indent=2,ensure_ascii=False), encoding='utf-8')
     return report
 
 
@@ -247,7 +247,7 @@ def classify(image,output,model_path,scl=None,extra=None,acquisition_date=None,
             item['properties']['mean_model_score']=round(float(values.mean()),3) if values.size else None
             item['properties']['touches_scene_boundary']=bool(np.any((inside & mask)[0]) or np.any((inside & mask)[-1]) or np.any((inside & mask)[:,0]) or np.any((inside & mask)[:,-1]))
         coll={"type":"FeatureCollection","features":polys}
-        (output/'candidatos.geojson').write_text(json.dumps(coll,ensure_ascii=False))
+        (output/'candidatos.geojson').write_text(json.dumps(coll,ensure_ascii=False), encoding='utf-8')
         rgb=_visualize_rgb(rgb_bands)
         rgb.save(output/'imagem_rgb.png')
         geometry=[transform_geom('EPSG:4326',src.crs,p['geometry']) for p in polys]
@@ -265,7 +265,7 @@ def classify(image,output,model_path,scl=None,extra=None,acquisition_date=None,
            "model_score_threshold":threshold,"model_score_not_calibrated":True,
            "coffee_validated":False,"limitations":"MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
            "created_at":datetime.now(timezone.utc).isoformat()}
-    (output/'resultado.json').write_text(json.dumps(stats,ensure_ascii=False,indent=2))
+    (output/'resultado.json').write_text(json.dumps(stats,ensure_ascii=False,indent=2), encoding='utf-8')
     return stats
 
 if __name__=='__main__':

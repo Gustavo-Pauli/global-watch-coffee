@@ -1,3 +1,5 @@
+> **ARQUIVO HISTÓRICO (VERSÃO ANTERIOR).** Este arquivo registra decisões descartadas. **NÃO USAR PARA SETUP/DEPLOY.** As fontes atuais são `README.md`, `docs/architecture/ARQUITETURA.md` e `docs/delivery/DEPLOY.md`.
+
 > **Documento histórico anterior à migração para Turborepo.** Caminhos e comandos aqui podem estar obsoletos. Para executar, use o [README principal](../../README.md) e [DEPLOY atualizado](../delivery/DEPLOY.md).
 
 ---

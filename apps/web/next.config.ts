@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
-  // Uploads grandes são encaminhados por Route Handler com checagem de limite.
+  // TIFFs vão diretamente ao Storage via URL assinada; Next.js recebe apenas JSON pequeno.
   reactStrictMode: true,
 };
 export default nextConfig;

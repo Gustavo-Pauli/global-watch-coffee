@@ -9,7 +9,7 @@ if (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET.length < 3
   throw new Error('BETTER_AUTH_SECRET precisa ter pelo menos 32 caracteres.');
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 2, idleTimeoutMillis: 10_000 });
 export const auth = betterAuth({
   appName: 'Global Watch Café',
   baseURL: process.env.BETTER_AUTH_URL,

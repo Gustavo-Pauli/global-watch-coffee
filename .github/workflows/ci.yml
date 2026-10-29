@@ -30,3 +30,15 @@ jobs:
         run: pnpm install --no-frozen-lockfile
       - name: Typecheck
         run: pnpm --filter @global-watch/web typecheck
+      - name: Build Next.js (without real secrets)
+        env:
+          BETTER_AUTH_URL: http://localhost:3000
+          BETTER_AUTH_SECRET: ci-only-replace-before-deploy-012345678901234567
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/globalwatch
+          GOOGLE_CLIENT_ID: ci-placeholder.apps.googleusercontent.com
+          GOOGLE_CLIENT_SECRET: ci-placeholder
+          PYTHON_WORKER_URL: http://127.0.0.1:8000
+          WORKER_SECRET: ci-worker-secret-01234567890123456789012345
+          SUPABASE_URL: https://placeholder.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-do-not-use
+        run: pnpm --filter @global-watch/web build

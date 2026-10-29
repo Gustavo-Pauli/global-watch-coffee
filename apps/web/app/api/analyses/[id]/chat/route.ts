@@ -1,6 +1,7 @@
 import { originAllowed } from '@/lib/origin';
 import { sessionUserId } from '@/lib/session';
-import { workerFetch, failureResponse } from '@/lib/worker';
+import { ownAnalysis } from '@/lib/analyses';
+import { readJson, outputPath } from '@/lib/storage';
 import { rateLimit } from '@/lib/rate-limit';
 import { explain, numericsSupported, reportFacts } from '@/lib/chat';
 export const runtime = 'nodejs';
@@ -19,13 +20,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return Response.json({ detail: 'Limite de perguntas por minuto.' }, { status: 429 });
   let facts;
   try {
-    // O worker consulta dados apenas se a análise pertence ao usuário.
-    const r = await workerFetch(owner, `/internal/analyses/${id}`);
-    if (!r.ok) return Response.json({ detail: 'Análise não encontrada.' }, { status: r.status });
-    const data = await r.json();
-    if (!data.result) return Response.json({ detail: 'Processamento ainda não terminou.' }, { status: 409 });
-    facts = reportFacts(data);
-  } catch (error) { return failureResponse(error); }
+    const row=await ownAnalysis(owner,id);
+    if (!row) return Response.json({detail:'Análise não encontrada.'},{status:404});
+    if (row.status !== 'ready' || !row.result)
+      return Response.json({detail:'O processamento ainda não terminou.'},{status:409});
+    const geojson=await readJson(outputPath(owner,id,'geojson'));
+    facts=reportFacts({result:row.result,geojson});
+  } catch {
+    return Response.json({detail:'Resultados indisponíveis.'},{status:503});
+  }
   const fallback = { type: 'rules_fallback_not_ai', answer: explain(question, facts), warning: 'Resposta determinística, não gerada por LLM.' };
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return Response.json(fallback);
