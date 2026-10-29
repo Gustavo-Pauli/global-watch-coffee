@@ -1,5 +1,7 @@
 # Redesign da plataforma — 29/10/2026
 
+Este documento registra a reorganização inicial e sua validação. A evolução posterior com MapTiler e abas no painel direito está em [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md); esse documento descreve o comportamento vigente do mapa.
+
 ## Prioridade e direção
 
 O desafio original está em `data/sample/DESAFIO.txt`. O redesign preserva o fluxo real de autenticação, upload, Python, índices, polígonos, downloads e chat. A experiência anterior foi rejeitada pelo usuário por excesso de informações e ferramentas permanentes. Esta alteração não será commitada, conforme solicitado. Backup local dos componentes anteriores fora do repositório; nenhuma alteração em `.env`, `.env.local` ou `.venv`.

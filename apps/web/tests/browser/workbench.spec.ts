@@ -117,12 +117,12 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await expect(page.locator('.leaflet-interactive').first()).toBeVisible({ timeout: 120_000 });
     await expect(page.locator('.leaflet-image-layer')).toBeVisible();
     await expect.poll(() => page.locator('.leaflet-image-layer').evaluate((node: HTMLImageElement) => node.complete && node.naturalWidth > 0)).toBe(true);
-    await expect(page.getByRole('region', { name: 'Informações da análise', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     await screenshot(page, 'desktop-results.png');
 
     // One tool at a time; opening and closing preserves the result map.
-    await page.getByRole('button', { name: 'Camadas', exact: true }).click();
-    const raster = page.getByRole('switch', { name: 'Imagem de satélite', exact: true });
+    await page.getByRole('button', { name: 'Mapa e camadas', exact: true }).click();
+    const raster = page.getByRole('switch', { name: 'Imagem analisada', exact: true });
     await expect(raster).toBeChecked();
     await raster.click();
     await expect(page.locator('.leaflet-image-layer')).toHaveCount(0);
@@ -134,12 +134,11 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await polygons.click();
     await expect(page.locator('.leaflet-interactive').first()).toBeVisible();
     await screenshot(page, 'desktop-layers.png');
-    await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
+    await page.getByRole('button', { name: 'Fechar camadas', exact: true }).click();
 
-    await page.getByRole('button', { name: 'Informações', exact: true }).click();
-    await expect(page.getByRole('region', { name: 'Informações da análise', exact: true })).toBeVisible();
+    await page.getByRole('tab', { name: 'Informações', exact: true }).click();
+    await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     await screenshot(page, 'desktop-information.png');
-    await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
     await page.getByRole('button', { name: 'Arquivos', exact: true }).click();
     const downloaded = page.waitForEvent('download');
     await page.getByRole('menuitem', { name: /GeoJSON/ }).click();
@@ -157,7 +156,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
       expect(response.status()).toBe(200);
       expect((await response.body()).length).toBeGreaterThan(50);
     }
-    await page.getByRole('button', { name: 'Assistente', exact: true }).click();
+    await page.getByRole('tab', { name: 'Assistente', exact: true }).click();
     await page.getByRole('textbox', { name: 'Pergunta sobre a análise', exact: true }).fill('Qual é a área candidata e quais são as limitações?');
     await page.getByRole('button', { name: 'Enviar pergunta', exact: true }).click();
     await expect(page.locator('.chat-message.assistant')).toHaveCount(1);
@@ -172,8 +171,9 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await page.setViewportSize({ width: 390, height: 844 });
     await noHorizontalOverflow(page);
     await screenshot(page, 'mobile-results.png');
-    await page.getByRole('button', { name: 'Informações', exact: true }).click();
-    await expect(page.getByRole('region', { name: 'Informações da análise', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Painel da análise', exact: true }).click();
+    await page.getByRole('tab', { name: 'Informações', exact: true }).click();
+    await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     await noHorizontalOverflow(page);
     await screenshot(page, 'mobile-information.png');
     await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();

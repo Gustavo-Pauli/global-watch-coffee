@@ -83,7 +83,7 @@ async function main() {
     await expect(page.getByLabel('Legenda e área estimada', { exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(page.locator('.leaflet-image-layer')).toBeVisible({ timeout: 30_000 });
     await expect.poll(() => page.locator('.leaflet-image-layer').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
-    await page.getByRole('button', { name: 'Assistente', exact: true }).click();
+    await page.getByRole('tab', { name: 'Assistente', exact: true }).click();
     const answered = page.waitForResponse(response => response.url().endsWith(`/api/analyses/${id}/chat`) && response.request().method() === 'POST', { timeout: 65_000 });
     await page.getByRole('textbox', { name: 'Pergunta sobre a análise' }).fill('Qual é a área candidata desta imagem?');
     await page.getByRole('button', { name: 'Enviar pergunta' }).click();

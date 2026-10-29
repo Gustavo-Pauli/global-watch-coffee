@@ -8,6 +8,8 @@ Use o mesmo PostgreSQL para Prisma/Better Auth/análises. No Supabase, mantenha 
 
 Configure no Next: `DATABASE_URL`, `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`, `PYTHON_WORKER_URL`, `WORKER_SECRET`, `CRON_SECRET` e `GEMINI_API_KEY`. `GEMINI_MODEL` é opcional; o padrão é `gemini-3.5-flash-lite`. Disponibilidade e cota precisam ser confirmadas no projeto Google. O app não habilita cobrança nem provisiona serviços pagos.
 
+Para os fundos Satélite/Ruas, configure `NEXT_PUBLIC_MAPTILER_KEY` no ambiente de build web. É uma chave pública de navegador: restrinja as origens no painel MapTiler e inclua o domínio publicado. Mudanças exigem novo build. Sem ela, a imagem processada e os polígonos continuam disponíveis, com Sem mapa. Confira cotas/permissões da conta para os endpoints usados; não se presume raster gratuito indefinidamente. Fontes, atribuição e semântica de datas: [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md).
+
 Para o CLI Prisma, use `DIRECT_URL` com conexão direta ou pooler de sessão quando `DATABASE_URL` usar o transaction pooler. A configuração CLI carrega `.env.local` sem sobrepor variáveis do ambiente. Copie os endpoints corretos do painel; não reduza validação TLS para contornar certificados.
 
 O runtime usa Prisma com adapter PostgreSQL e pool de duas conexões por instância. Isso limita cada instância, não a soma de todas as instâncias Vercel: monitore o limite global do Supabase. [Guia Prisma/Supabase](https://supabase.com/docs/guides/database/prisma).

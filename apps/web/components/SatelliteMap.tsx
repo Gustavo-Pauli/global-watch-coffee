@@ -16,6 +16,11 @@ import type {
   GeoJSON as LeafletGeoJSON,
 } from "leaflet";
 import type { Bounds } from "./analysis-types";
+import {
+  basemapSource,
+  MAPTILER_ATTRIBUTION,
+  type BasemapId,
+} from "./map-sources";
 
 function MapTools({ bounds }: { bounds: Bounds }) {
   const map = useMap();
@@ -26,7 +31,9 @@ function MapTools({ bounds }: { bounds: Bounds }) {
       animate: false,
     });
   }, [map, bounds]);
-  useEffect(() => { fitImage(); }, [fitImage]);
+  useEffect(() => {
+    fitImage();
+  }, [fitImage]);
   useEffect(() => {
     const observer = new ResizeObserver(() => map.invalidateSize());
     observer.observe(map.getContainer());
@@ -103,15 +110,22 @@ export default function SatelliteMap({
   overlay,
   showRaster,
   showPolygons,
+  basemap,
 }: {
   geojson: FeatureCollection;
   bounds: Bounds;
   overlay: string | null;
   showRaster: boolean;
   showPolygons: boolean;
+  basemap: BasemapId;
 }) {
   const [tileError, setTileError] = useState(false);
   const [tileRevision, setTileRevision] = useState(0);
+  const source = basemapSource(basemap);
+  const tileUrl = source.url(process.env.NEXT_PUBLIC_MAPTILER_KEY ?? "");
+  useEffect(() => {
+    setTileError(false);
+  }, [basemap]);
   return (
     <MapContainer
       className="map"
@@ -122,15 +136,18 @@ export default function SatelliteMap({
       zoomControl={false}
       scrollWheelZoom
     >
-      <TileLayer
-        key={tileRevision}
-        attribution={
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        className="reference-map-tiles"
-        eventHandlers={{ tileerror: () => setTileError(true) }}
-      />
+      {tileUrl && (
+        <TileLayer
+          key={`${basemap}-${tileRevision}`}
+          attribution={MAPTILER_ATTRIBUTION}
+          url={tileUrl}
+          maxNativeZoom={source.maxNativeZoom}
+          maxZoom={22}
+          referrerPolicy="strict-origin"
+          className={`basemap-tiles basemap-${basemap}`}
+          eventHandlers={{ tileerror: () => setTileError(true) }}
+        />
+      )}
       {overlay && showRaster && (
         <ImageOverlay
           url={overlay}
@@ -139,7 +156,7 @@ export default function SatelliteMap({
         />
       )}
       {showPolygons && <CandidateLayer geojson={geojson} />}
-      {tileError && (
+      {tileError && tileUrl && (
         <div className="basemap-error" role="status">
           <span>
             O mapa de referência não carregou por completo. As camadas da
@@ -157,6 +174,22 @@ export default function SatelliteMap({
       )}
       <MapTools bounds={bounds} />
       <ScaleControl position="bottomleft" imperial={false} />
+      {tileUrl && (
+        <a
+          className="maptiler-logo"
+          href="https://www.maptiler.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="MapTiler"
+        >
+          <img
+            src="https://api.maptiler.com/resources/logo.svg"
+            alt="MapTiler"
+            width="88"
+            height="22"
+          />
+        </a>
+      )}
     </MapContainer>
   );
 }

@@ -32,6 +32,7 @@ Crie os arquivos locais a partir de `.env.example` **somente se não existirem**
 | `NEXT_CALLBACK_URL` | Worker; local `http://localhost:3000` |
 | `CRON_SECRET` | Next; segredo da limpeza |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` opcional | Somente Next |
+| `NEXT_PUBLIC_MAPTILER_KEY` | Web/build Next; chave pública do mapa, com origens restritas no MapTiler |
 
 No Supabase, crie um bucket **privado**, `geo-private`, com limite por objeto **12 MiB (12582912 bytes)**. O servidor recusa emitir URLs de upload se o bucket estiver público ou sem limite adequado. SCL tem limite adicional de 4 MiB na aplicação. O PostgreSQL pode continuar local; Supabase Storage não exige mover o banco.
 
@@ -106,6 +107,7 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 - [Migração Prisma sem perda de dados](docs/delivery/PRISMA_MIGRATION.md)
 - [Auditoria do geoprocessamento](docs/delivery/AUDITORIA_GEO.md)
 - [Design e estados da interface](docs/delivery/UI_DESIGN.md)
+- [Fontes do mapa, datas e painel com abas](docs/delivery/MAPAS_E_DATAS.md)
 - [Decisões e validação do novo redesign](docs/delivery/UI_REDESIGN.md)
 - [Preflight de configuração e permissões](docs/delivery/PREFLIGHT.md)
 - [Validação real de retenção e novas tentativas](docs/delivery/RETENCAO_VALIDACAO.md)

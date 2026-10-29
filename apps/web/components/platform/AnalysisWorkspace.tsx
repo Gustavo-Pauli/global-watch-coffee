@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import * as DropdownMenu from "radix-ui/dropdown-menu";
-import * as Switch from "radix-ui/switch";
+import * as Tabs from "radix-ui/tabs";
 import {
   ArrowLeft,
   ArrowUp,
@@ -14,7 +14,7 @@ import {
   FileImage,
   FileJson,
   Info,
-  Layers,
+  PanelRight,
   LoaderCircle,
   MessageSquare,
   RotateCcw,
@@ -38,6 +38,8 @@ import {
   sceneDate,
 } from "../analysis-types";
 import { NavigationToggle, usePlatform } from "./PlatformShell";
+import MapLayersPicker from "./MapLayersPicker";
+import type { BasemapId } from "../map-sources";
 
 const SatelliteMap = dynamic(() => import("../SatelliteMap"), {
   ssr: false,
@@ -54,7 +56,7 @@ const FILES: { kind: DownloadKind; label: string; extension: string }[] = [
   { kind: "tif", label: "Classificação", extension: "GeoTIFF" },
   { kind: "rgb", label: "Imagem RGB", extension: "PNG" },
 ];
-type Tool = "layers" | "information" | "chat" | null;
+type InspectorTab = "information" | "chat";
 
 export default function AnalysisWorkspace({ id }: { id: string }) {
   const { newAnalysis } = usePlatform();
@@ -68,7 +70,38 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
   const [revision, setRevision] = useState(0);
   const [showRaster, setShowRaster] = useState(true);
   const [showPolygons, setShowPolygons] = useState(true);
-  const [tool, setTool] = useState<Tool>(null);
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("information");
+  const hasMapKey = Boolean(process.env.NEXT_PUBLIC_MAPTILER_KEY?.trim());
+  const [basemap, setBasemap] = useState<BasemapId>(
+    hasMapKey ? "satellite" : "none",
+  );
+  const focusInspector = useRef(false);
+  const questionInput = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 900px)");
+    setInspectorOpen(media.matches);
+    const resize = () => {
+      if (!media.matches) setInspectorOpen(false);
+    };
+    media.addEventListener("change", resize);
+    try {
+      const saved = localStorage.getItem("global-watch:basemap:v1");
+      if (hasMapKey && ["satellite", "streets", "none"].includes(saved ?? ""))
+        setBasemap(saved as BasemapId);
+    } catch {
+      /* Browser storage is optional. */
+    }
+    return () => media.removeEventListener("change", resize);
+  }, [hasMapKey]);
+  function selectBasemap(value: BasemapId) {
+    setBasemap(value);
+    try {
+      localStorage.setItem("global-watch:basemap:v1", value);
+    } catch {
+      /* Optional preference. */
+    }
+  }
   const [downloading, setDownloading] = useState<DownloadKind | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [question, setQuestion] = useState("");
@@ -168,35 +201,22 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
     };
   }, [id, revision]);
 
-  const closeTool = useCallback(() => {
-    setTool(null);
+  const closeInspector = useCallback(() => {
+    setInspectorOpen(false);
     trigger.current?.focus();
   }, []);
-  function toggleTool(next: Tool, button: HTMLButtonElement) {
-    trigger.current = button;
-    setTool((current) => (current === next ? null : next));
-  }
   useEffect(() => {
-    if (!tool) return;
-    // Non-modal tools leave the map usable. Move focus into the panel and
-    // return it to the originating control on close, including Escape.
-    panel.current?.focus({ preventScroll: true });
-    const keydown = (event: KeyboardEvent) => {
-      if (
-        event.key === "Escape" &&
-        !event.defaultPrevented &&
-        !document.querySelector('[role="dialog"], [role="menu"]')
-      ) {
-        event.preventDefault();
-        closeTool();
-      }
-    };
-    document.addEventListener("keydown", keydown);
-    return () => document.removeEventListener("keydown", keydown);
-  }, [tool, closeTool]);
+    if (inspectorOpen && focusInspector.current) {
+      panel.current
+        ?.querySelector<HTMLElement>('[role="tab"][data-state="active"]')
+        ?.focus();
+      focusInspector.current = false;
+    }
+  }, [inspectorOpen]);
   useEffect(() => {
-    if (tool === "chat") chatEnd.current?.scrollIntoView({ block: "nearest" });
-  }, [messages, chatLoading, tool]);
+    if (inspectorOpen && inspectorTab === "chat")
+      chatEnd.current?.scrollIntoView({ block: "nearest" });
+  }, [messages, chatLoading, inspectorOpen, inspectorTab]);
 
   async function download(kind: DownloadKind) {
     if (downloadOperation.current) return;
@@ -276,12 +296,6 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
     ? (result?.acquisition_date ??
       sceneDate(data.analysis.scene, data.analysis.date))
     : null;
-  const title =
-    tool === "layers"
-      ? "Camadas"
-      : tool === "information"
-        ? "Informações da análise"
-        : "Assistente";
 
   return (
     <>
@@ -298,22 +312,32 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
         <span className="breadcrumb-divider">/</span>
         <h1>{analysisTitle(id)}</h1>
         {data && (
-          <span className="workspace-date">
+          <span
+            className="workspace-date"
+            title="Data de aquisição da imagem analisada"
+          >
             <CalendarDays size={14} />
-            {formatDate(date)}
+            Imagem · {formatDate(date)}
           </span>
         )}
         <div className="workspace-header-actions">
           {data && (
             <button
-              className={`button button-secondary assistant-button${tool === "chat" ? " is-active" : ""}`}
-              aria-label="Assistente"
-              aria-pressed={tool === "chat"}
-              aria-controls="analysis-tool-panel"
-              onClick={(event) => toggleTool("chat", event.currentTarget)}
+              ref={trigger}
+              className="button button-secondary inspector-toggle"
+              aria-label="Painel da análise"
+              aria-expanded={inspectorOpen}
+              aria-controls="analysis-inspector"
+              onClick={() => {
+                if (inspectorOpen) closeInspector();
+                else {
+                  focusInspector.current = true;
+                  setInspectorOpen(true);
+                }
+              }}
             >
-              <MessageSquare size={16} />
-              <span>Assistente</span>
+              <PanelRight size={17} />
+              <span>Detalhes</span>
             </button>
           )}
         </div>
@@ -367,360 +391,360 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
           </div>
         ) : (
           <>
-            <div className="map-canvas" aria-label="Mapa da análise">
-              <SatelliteMap
-                geojson={data.geojson}
-                bounds={data.result.leaflet_bounds}
-                overlay={overlay}
-                showRaster={showRaster}
-                showPolygons={showPolygons}
-              />
-            </div>
-            <div
-              className="map-toolbar"
-              role="group"
-              aria-label="Ferramentas da análise"
-            >
-              <button
-                className="tool-button"
-                aria-label="Camadas"
-                aria-pressed={tool === "layers"}
-                aria-controls="analysis-tool-panel"
-                onClick={(event) => toggleTool("layers", event.currentTarget)}
-              >
-                <Layers size={17} />
-                <span>Camadas</span>
-              </button>
-              <button
-                className="tool-button"
-                aria-label="Informações"
-                title="Informações"
-                aria-pressed={tool === "information"}
-                aria-controls="analysis-tool-panel"
-                onClick={(event) =>
-                  toggleTool("information", event.currentTarget)
-                }
-              >
-                <Info size={17} />
-                <span>Informações</span>
-              </button>
-              <span className="toolbar-separator" />
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <button
-                    className="tool-button"
-                    aria-label="Arquivos"
-                    aria-busy={Boolean(downloading)}
-                  >
-                    {downloading ? (
-                      <LoaderCircle size={17} className="spin" />
-                    ) : (
-                      <Download size={17} />
-                    )}
-                    <span>Arquivos</span>
-                    <ChevronDown size={12} />
-                  </button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content
-                    className="menu-content download-menu"
-                    align="start"
-                    sideOffset={8}
-                    collisionPadding={12}
-                  >
-                    {FILES.map((file) => (
-                      <DropdownMenu.Item
-                        className="menu-item"
-                        key={file.kind}
-                        disabled={Boolean(downloading)}
-                        onSelect={() => void download(file.kind)}
-                      >
-                        {file.kind === "geojson" ? (
-                          <FileJson size={16} />
-                        ) : (
-                          <FileImage size={16} />
-                        )}
-                        <span>{file.label}</span>
-                        <span className="menu-detail">{file.extension}</span>
-                      </DropdownMenu.Item>
-                    ))}
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-            </div>
-            <div className="map-legend" aria-label="Legenda e área estimada">
-              <span
-                className={`legend-swatch${showPolygons ? "" : " is-hidden"}`}
-              />
-              <span>Áreas candidatas</span>
-              <strong>
-                {formatNumber(data.result.candidate_area_ha)} <span>ha</span>
-              </strong>
-              {!showPolygons && <span className="legend-hidden">Ocultas</span>}
-            </div>
-            {notice && (
-              <div className="map-notice" role="alert">
-                <span>{notice}</span>
-                <button
-                  className="text-button"
-                  onClick={() => setRevision((value) => value + 1)}
-                >
-                  Recarregar
-                </button>
-                <button
-                  className="icon-button"
-                  aria-label="Fechar aviso"
-                  onClick={() => setNotice("")}
-                >
-                  <X size={15} />
-                </button>
+            <div className="map-stage">
+              <div className="map-canvas" aria-label="Mapa da análise">
+                <SatelliteMap
+                  geojson={data.geojson}
+                  bounds={data.result.leaflet_bounds}
+                  overlay={overlay}
+                  showRaster={showRaster}
+                  showPolygons={showPolygons}
+                  basemap={basemap}
+                />
               </div>
-            )}
-            {tool && (
-              <section
-                ref={panel}
-                tabIndex={-1}
-                className={`map-panel ${tool === "chat" ? "assistant-panel" : ""}`}
-                id="analysis-tool-panel"
-                aria-label={title}
+              <div
+                className="map-toolbar"
+                role="group"
+                aria-label="Ferramentas da análise"
               >
-                <div className="map-panel-header">
-                  <h2>{title}</h2>
+                <MapLayersPicker
+                  basemap={basemap}
+                  onBasemap={selectBasemap}
+                  hasKey={hasMapKey}
+                  date={date}
+                  hasImage={Boolean(overlay)}
+                  showRaster={showRaster}
+                  onRaster={setShowRaster}
+                  showPolygons={showPolygons}
+                  onPolygons={setShowPolygons}
+                />
+                <span className="toolbar-separator" />
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button
+                      className="tool-button"
+                      aria-label="Arquivos"
+                      aria-busy={Boolean(downloading)}
+                    >
+                      {downloading ? (
+                        <LoaderCircle size={17} className="spin" />
+                      ) : (
+                        <Download size={17} />
+                      )}
+                      <span>Arquivos</span>
+                      <ChevronDown size={12} />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="menu-content download-menu"
+                      align="start"
+                      sideOffset={8}
+                      collisionPadding={12}
+                    >
+                      {FILES.map((file) => (
+                        <DropdownMenu.Item
+                          className="menu-item"
+                          key={file.kind}
+                          disabled={Boolean(downloading)}
+                          onSelect={() => void download(file.kind)}
+                        >
+                          {file.kind === "geojson" ? (
+                            <FileJson size={16} />
+                          ) : (
+                            <FileImage size={16} />
+                          )}
+                          <span>{file.label}</span>
+                          <span className="menu-detail">{file.extension}</span>
+                        </DropdownMenu.Item>
+                      ))}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+              <div className="map-legend" aria-label="Legenda e área estimada">
+                <span
+                  className={`legend-swatch${showPolygons ? "" : " is-hidden"}`}
+                />
+                <span>Áreas candidatas</span>
+                <strong>
+                  {formatNumber(data.result.candidate_area_ha)} <span>ha</span>
+                </strong>
+                {!showPolygons && (
+                  <span className="legend-hidden">Ocultas</span>
+                )}
+              </div>
+              {notice && (
+                <div className="map-notice" role="alert">
+                  <span>{notice}</span>
+                  <button
+                    className="text-button"
+                    onClick={() => setRevision((value) => value + 1)}
+                  >
+                    Recarregar
+                  </button>
                   <button
                     className="icon-button"
-                    aria-label="Fechar painel"
-                    onClick={closeTool}
+                    aria-label="Fechar aviso"
+                    onClick={() => setNotice("")}
                   >
-                    <X size={18} />
+                    <X size={15} />
                   </button>
                 </div>
-                {tool === "layers" && (
-                  <div className="map-panel-body">
-                    <div className="layer-row">
-                      <span className="layer-symbol raster-symbol">
-                        <FileImage size={19} />
-                      </span>
-                      <label htmlFor="raster-switch">
-                        <strong>Imagem de satélite</strong>
-                        <span>Composição RGB</span>
-                      </label>
-                      <Switch.Root
-                        id="raster-switch"
-                        className="switch"
-                        checked={showRaster}
-                        onCheckedChange={setShowRaster}
-                        disabled={!overlay}
-                        aria-label="Imagem de satélite"
+              )}
+            </div>
+            {inspectorOpen && (
+              <aside
+                ref={panel}
+                className={`analysis-inspector ${inspectorTab === "information" ? "is-information" : "is-chat"}`}
+                id="analysis-inspector"
+                aria-label="Painel da análise"
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Escape" &&
+                    !event.defaultPrevented &&
+                    !document.querySelector('[role="dialog"], [role="menu"]')
+                  ) {
+                    event.preventDefault();
+                    closeInspector();
+                  }
+                }}
+              >
+                <Tabs.Root
+                  value={inspectorTab}
+                  onValueChange={(value) =>
+                    setInspectorTab(value as InspectorTab)
+                  }
+                  className="inspector-tabs"
+                >
+                  <div className="inspector-header">
+                    <Tabs.List
+                      className="inspector-tab-list"
+                      aria-label="Painel da análise"
+                    >
+                      <Tabs.Trigger
+                        value="information"
+                        className="inspector-tab"
                       >
-                        <Switch.Thumb className="switch-thumb" />
-                      </Switch.Root>
-                    </div>
-                    <div className="layer-row">
-                      <span className="layer-symbol candidate-symbol">
-                        <Layers size={19} />
-                      </span>
-                      <label htmlFor="polygon-switch">
-                        <strong>Áreas candidatas</strong>
-                        <span>Polígonos do processamento</span>
-                      </label>
-                      <Switch.Root
-                        id="polygon-switch"
-                        className="switch"
-                        checked={showPolygons}
-                        onCheckedChange={setShowPolygons}
-                        aria-label="Áreas candidatas"
-                      >
-                        <Switch.Thumb className="switch-thumb" />
-                      </Switch.Root>
-                    </div>
-                    <p className="panel-note">
-                      Mapa de referência: OpenStreetMap.
-                    </p>
+                        <Info size={15} />
+                        Informações
+                      </Tabs.Trigger>
+                      <Tabs.Trigger value="chat" className="inspector-tab">
+                        <MessageSquare size={15} />
+                        Assistente
+                      </Tabs.Trigger>
+                    </Tabs.List>
+                    <button
+                      className="icon-button"
+                      aria-label="Fechar painel"
+                      onClick={closeInspector}
+                    >
+                      <X size={17} />
+                    </button>
                   </div>
-                )}
-                {tool === "information" && (
-                  <div className="map-panel-body">
-                    <dl className="result-summary">
-                      <div className="primary-result">
-                        <dt>Área candidata</dt>
-                        <dd>
-                          {formatNumber(data.result.candidate_area_ha)}{" "}
-                          <span>ha</span>
-                        </dd>
+                  <Tabs.Content
+                    value="information"
+                    className="inspector-content info-content"
+                    aria-label="Informações"
+                  >
+                    <div className="map-panel-body">
+                      <div className="image-acquisition">
+                        <span>Aquisição da imagem</span>
+                        <time dateTime={date ?? undefined}>
+                          {formatDate(date)}
+                        </time>
                       </div>
-                      <div>
-                        <dt>Polígonos candidatos</dt>
-                        <dd>
-                          {formatNumber(data.result.candidate_polygon_count, 0)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>NDVI mediano</dt>
-                        <dd>
-                          {data.result.ndvi_median == null
-                            ? "—"
-                            : formatNumber(data.result.ndvi_median, 3)}
-                        </dd>
-                      </div>
-                    </dl>
-                    {data.result.candidate_polygon_count === 0 && (
-                      <p className="panel-note">
-                        Nenhuma área candidata foi identificada nesta imagem.
-                      </p>
-                    )}
-                    <p className="result-caveat">
-                      Áreas potenciais de café, sem validação em campo.
-                    </p>
-                    <details className="method-details">
-                      <summary>Método e limitações</summary>
-                      <p>
-                        {data.result.method === "rf_purified_multiclass_2.0"
-                          ? "Random Forest com supervisão fraca do MapBiomas. A classificação combina bandas espectrais e índices de vegetação."
-                          : data.result.method}
-                      </p>
-                      <p>{data.result.limitations}</p>
-                      <dl className="detail-values">
-                        <div>
-                          <dt>Pixels válidos</dt>
-                          <dd>{formatNumber(data.result.valid_pixels, 0)}</dd>
+                      <dl className="result-summary">
+                        <div className="primary-result">
+                          <dt>Área candidata</dt>
+                          <dd>
+                            {formatNumber(data.result.candidate_area_ha)}{" "}
+                            <span>ha</span>
+                          </dd>
                         </div>
                         <div>
-                          <dt>Aquisição</dt>
-                          <dd>{formatDate(date)}</dd>
+                          <dt>Polígonos candidatos</dt>
+                          <dd>
+                            {formatNumber(
+                              data.result.candidate_polygon_count,
+                              0,
+                            )}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>NDVI mediano</dt>
+                          <dd>
+                            {data.result.ndvi_median == null
+                              ? "—"
+                              : formatNumber(data.result.ndvi_median, 3)}
+                          </dd>
                         </div>
                       </dl>
-                    </details>
-                  </div>
-                )}
-                {tool === "chat" && (
-                  <>
-                    <div className="chat-scroll">
-                      <div className="analysis-attachment">
-                        {previewError ? (
-                          <button
-                            className="text-button"
-                            onClick={() => {
-                              setPreviewError(false);
-                              setPreviewRevision((value) => value + 1);
-                            }}
-                          >
-                            Recarregar imagem
-                          </button>
-                        ) : (
-                          <button
-                            className="classification-preview"
-                            onClick={closeTool}
-                            aria-label="Ver classificação no mapa"
-                          >
-                            <img
-                              key={previewRevision}
-                              src={`/api/analyses/${id}/files/classified`}
-                              alt="Imagem processada com os polígonos candidatos a café"
-                              onError={() => setPreviewError(true)}
-                            />
-                            <span>
-                              <FileImage size={14} />
-                              Classificação da imagem
-                            </span>
-                          </button>
+                      {data.result.candidate_polygon_count === 0 && (
+                        <p className="panel-note">
+                          Nenhuma área candidata foi identificada nesta imagem.
+                        </p>
+                      )}
+                      <p className="result-caveat">
+                        Áreas potenciais de café, sem validação em campo.
+                      </p>
+                      <details className="method-details">
+                        <summary>Método e limitações</summary>
+                        <p>
+                          {data.result.method === "rf_purified_multiclass_2.0"
+                            ? "Random Forest com supervisão fraca do MapBiomas. A classificação combina bandas espectrais e índices de vegetação."
+                            : data.result.method}
+                        </p>
+                        <p>{data.result.limitations}</p>
+                        <dl className="detail-values">
+                          <div>
+                            <dt>Pixels válidos</dt>
+                            <dd>{formatNumber(data.result.valid_pixels, 0)}</dd>
+                          </div>
+                        </dl>
+                      </details>
+                    </div>
+                  </Tabs.Content>
+                  <Tabs.Content
+                    value="chat"
+                    className="inspector-content chat-content"
+                    aria-label="Assistente"
+                  >
+                    <>
+                      <div className="chat-scroll">
+                        <div className="analysis-attachment">
+                          {previewError ? (
+                            <button
+                              className="text-button"
+                              onClick={() => {
+                                setPreviewError(false);
+                                setPreviewRevision((value) => value + 1);
+                              }}
+                            >
+                              Recarregar imagem
+                            </button>
+                          ) : (
+                            <button
+                              className="classification-preview"
+                              onClick={closeInspector}
+                              aria-label="Ver classificação no mapa"
+                            >
+                              <img
+                                key={previewRevision}
+                                src={`/api/analyses/${id}/files/classified`}
+                                alt="Imagem processada com os polígonos candidatos a café"
+                                onError={() => setPreviewError(true)}
+                              />
+                              <span>
+                                <FileImage size={14} />
+                                Classificação da imagem
+                              </span>
+                            </button>
+                          )}
+                        </div>
+                        {messages.length === 0 && (
+                          <div className="chat-introduction">
+                            <h3>Sobre esta análise</h3>
+                            <p>
+                              Pergunte sobre as áreas candidatas, o NDVI ou as
+                              limitações do resultado.
+                            </p>
+                            <button
+                              className="suggestion-button"
+                              onClick={() => {
+                                setQuestion(
+                                  "Como interpretar as áreas candidatas?",
+                                );
+                                questionInput.current?.focus();
+                              }}
+                            >
+                              Como interpretar o resultado?
+                            </button>
+                          </div>
                         )}
+                        <div
+                          className="chat-messages"
+                          role="log"
+                          aria-label="Conversa sobre a análise"
+                          aria-live="polite"
+                        >
+                          {messages.map((message, index) => (
+                            <div
+                              className={`chat-message ${message.role}`}
+                              key={index}
+                            >
+                              <span className="message-author">
+                                {message.role === "user"
+                                  ? "Você"
+                                  : "Assistente"}
+                                {message.mode === "rules_fallback_not_ai" && (
+                                  <span className="response-mode">
+                                    Resposta por regras · IA indisponível
+                                  </span>
+                                )}
+                              </span>
+                              <p>{message.text}</p>
+                            </div>
+                          ))}
+                          {chatLoading && (
+                            <div className="chat-thinking" role="status">
+                              <LoaderCircle size={14} className="spin" />
+                              Consultando análise…
+                            </div>
+                          )}
+                          <div ref={chatEnd} />
+                        </div>
                       </div>
-                      {messages.length === 0 && (
-                        <div className="chat-introduction">
-                          <h3>Sobre esta análise</h3>
-                          <p>
-                            Pergunte sobre as áreas candidatas, o NDVI ou as
-                            limitações do resultado.
-                          </p>
-                          <button
-                            className="suggestion-button"
-                            onClick={() =>
-                              setQuestion(
-                                "Como interpretar as áreas candidatas?",
-                              )
+                      <form
+                        className="chat-composer"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void sendQuestion();
+                        }}
+                      >
+                        <div className="chat-input-wrap">
+                          <textarea
+                            ref={questionInput}
+                            aria-label="Pergunta sobre a análise"
+                            value={question}
+                            placeholder="Pergunte sobre esta imagem…"
+                            rows={2}
+                            maxLength={1200}
+                            readOnly={chatLoading}
+                            aria-busy={chatLoading}
+                            onChange={(event) =>
+                              setQuestion(event.target.value)
                             }
+                            onKeyDown={(event) => {
+                              if (
+                                event.key === "Enter" &&
+                                !event.shiftKey &&
+                                !event.nativeEvent.isComposing
+                              ) {
+                                event.preventDefault();
+                                void sendQuestion();
+                              }
+                            }}
+                          />
+                          <button
+                            className="send-question"
+                            type="submit"
+                            aria-label="Enviar pergunta"
+                            disabled={chatLoading || question.trim().length < 2}
                           >
-                            Como interpretar o resultado?
+                            {chatLoading ? (
+                              <LoaderCircle size={17} className="spin" />
+                            ) : (
+                              <ArrowUp size={18} />
+                            )}
                           </button>
                         </div>
-                      )}
-                      <div
-                        className="chat-messages"
-                        role="log"
-                        aria-label="Conversa sobre a análise"
-                        aria-live="polite"
-                      >
-                        {messages.map((message, index) => (
-                          <div
-                            className={`chat-message ${message.role}`}
-                            key={index}
-                          >
-                            <span className="message-author">
-                              {message.role === "user" ? "Você" : "Assistente"}
-                              {message.mode === "rules_fallback_not_ai" && (
-                                <span className="response-mode">
-                                  Resposta por regras · IA indisponível
-                                </span>
-                              )}
-                            </span>
-                            <p>{message.text}</p>
-                          </div>
-                        ))}
-                        {chatLoading && (
-                          <div className="chat-thinking" role="status">
-                            <LoaderCircle size={14} className="spin" />
-                            Consultando análise…
-                          </div>
-                        )}
-                        <div ref={chatEnd} />
-                      </div>
-                    </div>
-                    <form
-                      className="chat-composer"
-                      onSubmit={(event) => {
-                        event.preventDefault();
-                        void sendQuestion();
-                      }}
-                    >
-                      <div className="chat-input-wrap">
-                        <textarea
-                          aria-label="Pergunta sobre a análise"
-                          value={question}
-                          placeholder="Pergunte sobre esta imagem…"
-                          rows={2}
-                          maxLength={1200}
-                          readOnly={chatLoading}
-                          aria-busy={chatLoading}
-                          onChange={(event) => setQuestion(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (
-                              event.key === "Enter" &&
-                              !event.shiftKey &&
-                              !event.nativeEvent.isComposing
-                            ) {
-                              event.preventDefault();
-                              void sendQuestion();
-                            }
-                          }}
-                        />
-                        <button
-                          className="send-question"
-                          type="submit"
-                          aria-label="Enviar pergunta"
-                          disabled={chatLoading || question.trim().length < 2}
-                        >
-                          {chatLoading ? (
-                            <LoaderCircle size={17} className="spin" />
-                          ) : (
-                            <ArrowUp size={18} />
-                          )}
-                        </button>
-                      </div>
-                      <p>Respostas fundamentadas nos dados desta imagem.</p>
-                    </form>
-                  </>
-                )}
-              </section>
+                        <p>Respostas fundamentadas nos dados desta imagem.</p>
+                      </form>
+                    </>
+                  </Tabs.Content>
+                </Tabs.Root>
+              </aside>
             )}
           </>
         )}

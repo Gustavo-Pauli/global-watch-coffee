@@ -133,7 +133,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     page.on('request', request => {
       const url = new URL(request.url());
       if (/\/api\/analysis\/(demo|start)$/.test(url.pathname)) processingRequests.push(request.url());
-      if (url.hostname === 'tile.openstreetmap.org' || url.hostname.endsWith('.tile.openstreetmap.org')) {
+      if (url.hostname === 'api.maptiler.com' && /^\/(tiles|maps)\//.test(url.pathname)) {
         // Passive inspection preserves normal browser caching. Routing or
         // fetching tiles separately would change the behavior under test.
         tileHeaderReads.push(request.allHeaders().then(headers => {
@@ -142,10 +142,10 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
       }
     });
     page.on('response', response => {
-      if (new URL(response.url()).hostname === 'tile.openstreetmap.org') tileResponses.push(response.status());
+      if (new URL(response.url()).hostname === 'api.maptiler.com' && /^\/(tiles|maps)\//.test(new URL(response.url()).pathname)) tileResponses.push(response.status());
     });
     const documentResponse = await page.goto('/analyses');
-    expect(documentResponse?.headers()['referrer-policy']).toBe('no-referrer');
+    expect(documentResponse?.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
     const record = page.getByRole('link', { name: `Abrir análise ${id}`, exact: true });
     await expect(record).toBeVisible();
     await expect(page.locator('.analysis-table-wrap')).toHaveAttribute('aria-busy', 'false');
@@ -184,16 +184,16 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
       policy: (image as HTMLImageElement).referrerPolicy,
     })));
     expect(nativeTiles.length).toBeGreaterThan(0);
-    expect(nativeTiles.every(tile => tile.host === 'tile.openstreetmap.org' && tile.policy === 'strict-origin')).toBe(true);
+    expect(nativeTiles.every(tile => tile.host === 'api.maptiler.com' && tile.policy === 'strict-origin')).toBe(true);
     await expect.poll(() => tileResponses.length).toBeGreaterThan(0);
     await Promise.all(tileHeaderReads);
     expect(tileRequests.length).toBeGreaterThan(0);
-    expect(tileRequests.every(tile => tile.host === 'tile.openstreetmap.org' && tile.referer === tileOrigin)).toBe(true);
-    expect(tileResponses.every(status => status === 200)).toBe(true);
+    expect(tileRequests.every(tile => tile.host === 'api.maptiler.com' && tile.referer === tileOrigin)).toBe(true);
+    expect(tileResponses.every(status => status === 200 || status === 304)).toBe(true);
     await expect(page.locator('.basemap-error')).toHaveCount(0);
     await noOverflow(page);
     await capture(page, 'desktop-results.png');
-    await expect(page.getByRole('region', { name: 'Informações da análise', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     const { point, id: polygonId } = representativePolygon(geojson);
     const rectangle = await page.locator('.leaflet-image-layer').boundingBox();
     assert.ok(rectangle);
@@ -209,38 +209,57 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await capture(page, 'desktop-popup.png');
     await page.locator('.leaflet-popup-close-button').click();
 
-    const layers = page.getByRole('button', { name: 'Camadas', exact: true });
+    const layers = page.getByRole('button', { name: 'Mapa e camadas', exact: true });
     await layers.click();
-    await expect(page.getByRole('region', { name: 'Camadas', exact: true })).toBeFocused();
+    await expect(page.getByRole('radio', { name: 'Satélite', exact: true })).toBeChecked();
+    await expect(page.getByText('Mosaico de diferentes datas. Não corresponde à aquisição da análise.', { exact: true })).toBeVisible();
     await capture(page, 'desktop-layers.png');
-    const raster = page.getByRole('switch', { name: 'Imagem de satélite', exact: true });
+    const raster = page.getByRole('switch', { name: 'Imagem analisada', exact: true });
     await raster.click();
     await expect(page.locator('.leaflet-image-layer')).toHaveCount(0);
     await raster.click();
     await readyMap(page);
+    await page.getByRole('radio', { name: 'Ruas', exact: true }).click();
+    await expect(page.locator('.basemap-streets img.leaflet-tile-loaded').first()).toBeVisible();
+    await readyMap(page);
+    await capture(page, 'desktop-streets.png');
+    await page.getByRole('radio', { name: 'Sem mapa', exact: true }).click();
+    await expect(page.locator('.basemap-tiles')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'MapTiler', exact: true })).toHaveCount(0);
+    await readyMap(page);
+    await page.getByRole('radio', { name: 'Satélite', exact: true }).click();
+    await expect(page.locator('.basemap-satellite img.leaflet-tile-loaded').first()).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(layers).toBeFocused();
-    const information = page.getByRole('button', { name: 'Informações', exact: true });
-    await information.click();
-    const info = page.getByRole('region', { name: 'Informações da análise', exact: true });
-    await expect(info).toBeFocused();
+    const information = page.getByRole('tab', { name: 'Informações', exact: true });
+    const inspector = page.getByRole('button', { name: 'Painel da análise', exact: true });
+    const info = page.getByRole('tabpanel', { name: 'Informações', exact: true });
     await expect(info).toContainText('24');
     await expect(info).toContainText('0,559');
     await capture(page, 'desktop-information.png');
-    await page.keyboard.press('Escape');
-    await expect(information).toBeFocused();
-
-    await page.getByRole('button', { name: 'Assistente', exact: true }).click();
-    const assistant = page.getByRole('region', { name: 'Assistente', exact: true });
+    await information.focus();
+    await page.keyboard.press('ArrowRight');
+    const assistant = page.getByRole('tabpanel', { name: 'Assistente', exact: true });
+    await expect(assistant).toBeVisible();
     const classifiedPreview = assistant.getByRole('img', { name: 'Imagem processada com os polígonos candidatos a café', exact: true });
     await expect(classifiedPreview).toBeVisible();
     await expect.poll(() => classifiedPreview.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
     await expect(assistant.getByRole('button', { name: 'Enviar pergunta', exact: true })).toBeDisabled();
     await assistant.getByRole('button', { name: 'Como interpretar o resultado?', exact: true }).click();
-    await expect(assistant.getByRole('textbox', { name: 'Pergunta sobre a análise', exact: true })).toHaveValue('Como interpretar as áreas candidatas?');
+    const composer = assistant.getByRole('textbox', { name: 'Pergunta sobre a análise', exact: true });
+    await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
+    await expect(composer).toBeFocused();
     await expect(assistant.getByRole('button', { name: 'Enviar pergunta', exact: true })).toBeEnabled();
+    await information.click();
+    await expect(info).toBeVisible();
+    await page.getByRole('tab', { name: 'Assistente', exact: true }).click();
+    await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
     await capture(page, 'desktop-chat-ready.png');
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
+    await expect(inspector).toBeFocused();
+    await inspector.click();
+    await expect(page.getByRole('tab', { name: 'Assistente', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
 
     // Verify the compact rail's account menu is clickable with no dev chrome.
     const account = page.getByRole('button', { name: 'Menu da conta', exact: true });
@@ -267,10 +286,11 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
       await readyMap(page);
       await noOverflow(page);
       await capture(page, filename);
+      await inspector.click();
       await information.click();
       await expect(info).toBeVisible();
       await noOverflow(page);
-      await page.keyboard.press('Escape');
+      await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
     await account.click();
@@ -296,8 +316,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await mobile.setViewportSize({ width: 390, height: 844 });
     await mobile.reload();
     await readyMap(mobile);
-    await mobile.getByRole('button', { name: 'Informações', exact: true }).click();
-    await expect(mobile.getByRole('region', { name: 'Informações da análise', exact: true })).toBeVisible();
+    await mobile.getByRole('button', { name: 'Painel da análise', exact: true }).click();
+    await mobile.getByRole('tab', { name: 'Informações', exact: true }).click();
+    await expect(mobile.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     await capture(mobile, 'mobile-information.png');
     await mobile.getByRole('button', { name: 'Fechar painel', exact: true }).click();
     await mobile.getByRole('button', { name: 'Abrir navegação', exact: true }).click();
@@ -338,15 +359,15 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     expect(errors).toEqual([]);
     expect(processingRequests).toEqual([]);
     await Promise.all(tileHeaderReads);
-    expect(tileRequests.every(tile => tile.host === 'tile.openstreetmap.org' && tile.referer === tileOrigin)).toBe(true);
-    expect(tileResponses.every(status => status === 200)).toBe(true);
+    expect(tileRequests.every(tile => tile.host === 'api.maptiler.com' && tile.referer === tileOrigin)).toBe(true);
+    expect(tileResponses.every(status => status === 200 || status === 304)).toBe(true);
     const quotaAfter = await prisma.rateLimit.findMany({ where: { key: { startsWith: 'global:analysis:' } }, orderBy: { key: 'asc' }, select: { key: true, count: true } });
     expect(quotaAfter).toEqual(quotaBefore);
     console.log(JSON.stringify({ readyUI: true, profilePersisted: true, desktopRailLogout: true, mobileNestedProfileAndLogout: true,
       processingJobsStarted: 0, geminiCalls: 0, globalQuotaCount: quotaAfter.reduce((sum, row) => sum + row.count, 0),
       artifacts: 'real precomputed public Sentinel-2 scene', oauthHandshakeTested: false,
-      basemap: { host: 'tile.openstreetmap.org', referrerPolicy: 'strict-origin', referer: tileOrigin,
-        observedResponses: tileResponses.length, statuses: [...new Set(tileResponses)], globalReferrerPolicy: 'no-referrer' } }));
+      basemap: { host: 'api.maptiler.com', referrerPolicy: 'strict-origin', referer: tileOrigin,
+        observedResponses: tileResponses.length, statuses: [...new Set(tileResponses)], globalReferrerPolicy: 'strict-origin-when-cross-origin' } }));
   } finally {
     await Promise.all(contexts.map(context => context.close()));
     const { error } = await storage.storage.from(bucket).remove(paths);
