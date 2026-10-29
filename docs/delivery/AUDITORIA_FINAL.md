@@ -53,7 +53,7 @@ Procedimento, preflight de role/grants e backout seguro: [PRISMA_MIGRATION.md](P
 |---|---|
 | Instalação JavaScript com lock congelado/postinstall | Passou; Prisma Client gerado. Allowlist de scripts Prisma/engines/esbuild conferida com rebuild e nova instalação. Não é prova de cold cache ou máquina limpa |
 | `pnpm db:validate`, `pnpm db:status` | Schema válido; duas migrations locais aplicadas |
-| `pnpm test:web` | **5 testes unitários passaram**; suíte DB fica explicitamente skipped sem TEST_DATABASE_URL. Inclui chat adversarial/rounding, JSON stream e Origin |
+| `pnpm test:web` | **17 testes unitários passaram** após continuação; suíte DB fica explicitamente skipped sem TEST_DATABASE_URL. Inclui chat adversarial/rounding, JSON stream, Origin, cleanup e preflight |
 | `pnpm test:db` com banco descartável explícito | **11 testes contados pelo runner** (10 subtestes e suíte principal) passaram; 32 chamadas concorrentes, ownership, expiração, cotas/CAS/rollback, callbacks, metadados, CHECKs, catálogo RLS/grants e adapter Better Auth |
 | Python pytest | **50 testes passaram**, 21,76 s na execução registrada pelo auditor do worker. Pixels reais, TIFF/GeoJSON, SSRF, tamanho, formatos, concorrência, retry e falhas parciais |
 | Python compileall e pip check | Passaram; dependências da `.venv` existente consistentes |
@@ -64,6 +64,8 @@ Procedimento, preflight de role/grants e backout seguro: [PRISMA_MIGRATION.md](P
 | `python scripts/check_repository.py`, `git diff --check` | Passaram |
 | `pnpm audit --prod --json` | Zero vulnerabilidades conhecidas reportadas na consulta |
 | PDF de pesquisa | Duas páginas com texto extraível, conferidas estruturalmente com pypdf. Não foi alterado/renderizado nesta auditoria |
+| Retenção HTTP com Storage real | Passou em Next production `localhost:3001` + banco isolado: 401 sem token, 8 objetos vencidos removidos, 8 ativos preservados, rate limits conferidos; fixtures removidos |
+| `pnpm release:check --mode=local` | Verificações automáticas de banco, migrations, RLS/grants, Storage, worker e ambos health passaram; exit 1 somente por chave Gemini ausente |
 
 Não há linter configurado; não foi alegado resultado de lint. A CI foi atualizada para executar instalação frozen, geração/validação Prisma, migrations em PostgreSQL 16 de teste, regressões e build, mas o workflow **não foi executado no GitHub** nesta tarefa.
 
@@ -116,7 +118,7 @@ Capturas em 1440x1000 e 390x844; o navegador não apresentou erros JavaScript no
 3. **Gemini real bloqueado por ausência de chave.** Mocks não provam disponibilidade, cota, faturamento ou qualidade factual real. Triagem numérica/linguística e instruções reduzem alucinações, mas não provam a verdade semântica de texto livre; uma resposta pode cair no fallback conservador. Testar perguntas adversariais e formato de números com o modelo real.
 4. **Modelos e dados são exploratórios.** MapBiomas é rótulo fraco de aproximadamente 30 m; outubro influenciou/participa do treino final. v2 é compatível com sklearn 1.8.0; v1 histórico 1.9.1 ainda avisa em testes de pesquisa. Não re-treinado nem usado para maquiar métricas.
 5. **Uploads nativos têm risco residual.** Limites de bytes/pixels, GDAL cache/thread e validações não equivalem a sandbox de GDAL. Bandas sem descrições dependem de preparação correta; apenas imagens compatíveis são suportadas.
-6. **Storage/retentividade.** URLs assinadas são bearer temporários; quem as obtiver pode usá-las até expirar. Bucket tem limite real, mas criação de capacidades tem janela de configuração em cache de 30 segundos. Acesso expira após três dias; limpeza física depende do cron/retry. O cleanup e falhas estão documentados, sem teste real de passagem de três dias.
+6. **Storage/retentividade.** URLs assinadas são bearer temporários; quem as obtiver pode usá-las até expirar. Bucket tem limite real, mas criação de capacidades tem janela de configuração em cache de 30 segundos. Acesso expira após três dias; limpeza física depende do cron/retry. A limpeza HTTP e de objetos reais passou com fixtures de data vencida; não houve passagem real de três dias nem teste do agendamento Vercel.
 7. **Produção e testes humanos.** Google real, Data API remota, cold start, reinício, cron público e Gemini ainda exigem validação com serviços/destino finais. O plano gratuito não tem SLA de produção contínua.
 
 ## Checklist objetivo para colocar online
@@ -131,3 +133,11 @@ Capturas em 1440x1000 e 390x844; o navegador não apresentou erros JavaScript no
 8. Revisar nota de duas páginas e fontes; gravar vídeo <=3 minutos. Somente com autorização específica, executar push/alterar visibilidade conforme a entrega.
 
 Configuração detalhada e fontes oficiais atuais: [DEPLOY.md](DEPLOY.md). Nenhuma ação externa de publicação foi realizada por este trabalho.
+
+## Continuação: retenção, preflight e proveniência
+
+A continuação encontrou e corrigiu um problema adicional no cron: exceções de rede/SDK interrompiam a execução, e uma chamada de Storage não tinha timeout próprio. O serviço agora contém falhas por registro, usa cutoff fixo e aplica um sinal de até 10 segundos, reduzido ao orçamento restante. Novos testes cobrem retry, falhas parciais, backlog, expiração durante a execução e timeout; a rota foi validada com banco/HTTP/Storage reais separados. [Detalhes e reprodução](RETENCAO_VALIDACAO.md).
+
+O preflight é uma ferramenta operacional somente leitura. Confere permissões e migrations sem imprimir valores de credenciais e sem executar migração/publicação; mantém gates humanos explícitos e não chama Gemini. [Procedimento](PREFLIGHT.md).
+
+As três publicações foram conferidas em fontes primárias, três cenas STAC responderam com os IDs/datas/assets esperados e oito checksums do kit coincidiram. A licença dos dados MapBiomas foi identificada como CC BY 4.0; proveniência, nota Markdown e gerador foram alinhados, preservando a data original. O PDF permanece com a ressalva anterior e não foi regenerado; o documento de proveniência acompanha a nota até revisão conjunta do PDF. A licença para código/pesos próprios permanece decisão do titular. [Evidências](PESQUISA_PROVENIENCIA.md).

@@ -18,9 +18,15 @@ function config() {
   return { url, key, bucket: process.env.SUPABASE_STORAGE_BUCKET || 'geo-private' };
 }
 
-export function storageAdmin() {
+export function storageAdmin(signal?: AbortSignal) {
   const { url, key } = config();
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const scopedFetch: typeof fetch = (input, init) => fetch(input, {
+    ...init, signal: init?.signal ? AbortSignal.any([init.signal, signal!]) : signal,
+  });
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    ...(signal ? { global: { fetch: scopedFetch } } : {}),
+  });
 }
 export function bucketName() { return config().bucket; }
 export function jobPrefix(userId: string, id: string) {

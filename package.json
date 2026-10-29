@@ -20,7 +20,9 @@
     "db:baseline": "pnpm --filter @global-watch/web db:baseline",
     "test:web": "pnpm --filter @global-watch/web test",
     "test:db": "pnpm --filter @global-watch/web test:db",
-    "test:browser": "pnpm --filter @global-watch/web test:browser"
+    "test:browser": "pnpm --filter @global-watch/web test:browser",
+    "test:retention:live": "pnpm --filter @global-watch/web test:retention:live",
+    "release:check": "pnpm --filter @global-watch/web release:check"
   },
   "devDependencies": {
     "turbo": "^2.5.6"

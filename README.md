@@ -77,6 +77,7 @@ pnpm.cmd test:web
 & apps/geo-worker/.venv/Scripts/python.exe -m pytest apps/geo-worker/tests -q --disable-warnings
 pnpm.cmd typecheck
 pnpm.cmd build
+pnpm.cmd release:check --mode=local
 & apps/geo-worker/.venv/Scripts/python.exe scripts/check_repository.py
 ```
 
@@ -84,12 +85,17 @@ pnpm.cmd build
 
 Para revisão visual: execute o app local, instale Chrome ou `pnpm --filter @global-watch/web exec playwright install chromium`, e execute `pnpm test:browser`. O fluxo real opt-in usa `RUN_LIVE_BROWSER=1`, cria usuários/sessões descartáveis e limpa seus próprios objetos; usa a configuração local e consome a cota de processamento. **Não testa o consentimento OAuth Google**. Capturas do aplicativo ficam em `docs/delivery/screenshots`; não há screenshots externos copiados.
 
+O preflight é somente leitura, não exibe segredos e retorna código 1 se faltar uma configuração obrigatória, inclusive a chave Gemini. Nunca declara produção pronta sozinho. A verificação de retenção real tem opt-in e banco/servidor isolados; consulte os procedimentos antes de executá-la.
+
 ## Documentos
 
 - [Auditoria final e matriz de conformidade](docs/delivery/AUDITORIA_FINAL.md)
 - [Migração Prisma sem perda de dados](docs/delivery/PRISMA_MIGRATION.md)
 - [Auditoria do geoprocessamento](docs/delivery/AUDITORIA_GEO.md)
 - [Design e estados da interface](docs/delivery/UI_DESIGN.md)
+- [Preflight de configuração e permissões](docs/delivery/PREFLIGHT.md)
+- [Validação real de retenção e novas tentativas](docs/delivery/RETENCAO_VALIDACAO.md)
+- [Fontes, licenças e proveniência verificadas](docs/delivery/PESQUISA_PROVENIENCIA.md)
 - [Deploy gratuito e validação pública](docs/delivery/DEPLOY.md)
 - [Nota de pesquisa editável](docs/research/NOTA_PESQUISA_FINAL.md) e [PDF](docs/research/NOTA_PESQUISA_FINAL.pdf)
 - [Roteiro do vídeo](docs/delivery/ROTEIRO_VIDEO.md)
