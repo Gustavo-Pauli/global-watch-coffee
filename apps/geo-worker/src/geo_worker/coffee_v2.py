@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import warnings
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -14,11 +15,12 @@ import joblib
 import numpy as np
 import rasterio
 from rasterio.warp import transform as transform_coords, reproject, Resampling, transform_geom
-from scipy.ndimage import binary_erosion, uniform_filter, median_filter
+from rasterio.features import rasterize
+from scipy.ndimage import binary_erosion, uniform_filter
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import precision_recall_fscore_support, confusion_matrix
 from sklearn.model_selection import GroupShuffleSplit
-from PIL import Image
+from sklearn.exceptions import InconsistentVersionWarning
 
 from geo_worker.processing import _load_scl, _polygons, _visualize_rgb, _draw_candidate_outlines, _save_leaflet_raster
 
@@ -52,20 +54,30 @@ def read_features(image: Path, scl: Path | None = None, extra: Path | None = Non
             raise ValueError("Envie GeoTIFF multiespectral de 4 bandas, com CRS projetado.")
         if src.width * src.height > MAX_PIXELS:
             raise ValueError("Imagem ultrapassa o limite de pixels permitido.")
-        if src.transform.a <= 0 or src.transform.e >= 0:
+        if (not np.isfinite(tuple(src.transform)).all() or src.transform.a <= 0
+                or src.transform.e >= 0 or src.transform.b != 0 or src.transform.d != 0):
             raise ValueError("Grade geográfica inesperada (resolução/transform).")
+        declared = [description.upper().strip().split('_', 1)[0].split(' ', 1)[0]
+                    if description else None for description in src.descriptions]
+        if any(declared) and declared != BANDS:
+            raise ValueError("Ordem das bandas declaradas deve ser B02, B03, B04, B08.")
         raw = src.read().astype(np.float32)
-        valid = (raw != 0).all(axis=0) & np.isfinite(raw).all(axis=0)
+        valid = (src.read_masks() != 0).all(axis=0) & np.isfinite(raw).all(axis=0)
         if src.nodata is not None:
             valid &= (raw != src.nodata).all(axis=0)
         scales = np.array(src.scales, dtype=np.float32)[:, None, None]
         offsets = np.array(src.offsets, dtype=np.float32)[:, None, None]
-        if np.any(scales <= 0):
+        if not np.isfinite(scales).all() or np.any(scales <= 0) or not np.isfinite(offsets).all():
             raise ValueError("Escalas radiométricas inválidas.")
         data = raw * scales + offsets  # usa metadados do upload; NÃO reaplica offset
+        valid &= np.isfinite(data).all(axis=0)
+        if valid.any() and np.max(np.abs(data[:, valid])) > 2:
+            raise ValueError("Reflectância incompatível: confira os metadados de escala/offset do GeoTIFF.")
         blue, green, red, nir = data
         if scl:
             valid &= np.isin(_load_scl(scl, src), (4, 5))
+        if not valid.any():
+            raise ValueError("Imagem sem pixels válidos após aplicar NoData e máscara SCL.")
         ext_arrays = []
         if extra:
             with rasterio.open(extra) as ex:
@@ -219,11 +231,20 @@ def classify(image,output,model_path,scl=None,extra=None,acquisition_date=None,
              threshold=.50,min_area_ha=.2,coherence=True):
     if not .1<=threshold<=.99 or min_area_ha<0:
         raise ValueError("Threshold e tamanho mínimo inválidos.")
-    saved=joblib.load(model_path) # somente arquivo fixo confiável, nunca upload!
+    # Only a trusted configured file can reach joblib. Cross-version pickle
+    # loading is unsupported by sklearn and must not silently serve predictions.
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', InconsistentVersionWarning)
+        saved=joblib.load(model_path)
+    if (saved.get('report', {}).get('model_version') != MODEL_VERSION
+            or set(saved['estimator'].classes_) != set(CLASS_NAMES)):
+        raise ValueError("Modelo incompatível com o pipeline multiclasse v2.")
     features,valid,rgb_bands,names=read_features(image,scl,extra)
     if names!=saved['features']:
         raise ValueError("Bandas do arquivo não correspondem ao esquema do modelo.")
-    m=saved['estimator']; scores=_predict_scores(m,features)
+    # Render Free has limited CPU/RAM: avoid one prediction thread per host CPU.
+    m=saved['estimator']; m.set_params(n_jobs=1)
+    scores=_predict_scores(m,features)
     coffee=np.asarray(scores[:,:,list(m.classes_).index(1)],dtype=np.float32)
     pred=np.argmax(scores,axis=2)
     # A probabilidade é escore NÃO calibrado; evitar chamar de confiança real.
@@ -237,27 +258,34 @@ def classify(image,output,model_path,scl=None,extra=None,acquisition_date=None,
     output=Path(output);output.mkdir(parents=True,exist_ok=True)
     with rasterio.open(image) as src:
         polys=_polygons(mask,src.transform,src.crs,min_area_ha)
-        for item in polys:
+        geometry=[transform_geom('EPSG:4326',src.crs,p['geometry']) for p in polys]
+        # Rasterize retained components once. A full-scene mask per polygon was
+        # quadratic in scene size/fragmentation and could monopolize a free CPU.
+        labels = (rasterize(((g, i + 1) for i, g in enumerate(geometry)), out_shape=src.shape,
+                            transform=src.transform, fill=0, dtype='int32')
+                  if geometry else np.zeros(src.shape, dtype='int32'))
+        retained = labels != 0
+        counts = np.bincount(labels[mask], minlength=len(polys) + 1)
+        sums = np.bincount(labels[mask], weights=coffee[mask], minlength=len(polys) + 1)
+        boundary_ids = set(np.concatenate((labels[0], labels[-1], labels[:, 0], labels[:, -1])).tolist())
+        for i, item in enumerate(polys, 1):
             item['properties'].update(class_name='coffee_candidate',model_version=MODEL_VERSION,
                 probability_kind='uncalibrated_rf_score',acquisition_date=acquisition_date)
-            geom_proj=transform_geom('EPSG:4326',src.crs,item['geometry'])
-            from rasterio.features import geometry_mask
-            inside=geometry_mask([geom_proj],out_shape=src.shape,transform=src.transform,invert=True)
-            values=coffee[inside & mask]
-            item['properties']['mean_model_score']=round(float(values.mean()),3) if values.size else None
-            item['properties']['touches_scene_boundary']=bool(np.any((inside & mask)[0]) or np.any((inside & mask)[-1]) or np.any((inside & mask)[:,0]) or np.any((inside & mask)[:,-1]))
+            item['properties']['mean_model_score']=round(float(sums[i]/counts[i]),3) if counts[i] else None
+            item['properties']['touches_scene_boundary']=i in boundary_ids
         coll={"type":"FeatureCollection","features":polys}
         (output/'candidatos.geojson').write_text(json.dumps(coll,ensure_ascii=False), encoding='utf-8')
         rgb=_visualize_rgb(rgb_bands)
         rgb.save(output/'imagem_rgb.png')
-        geometry=[transform_geom('EPSG:4326',src.crs,p['geometry']) for p in polys]
+        # The TIFF must show exactly the candidates retained in the GeoJSON/ha.
+        # Previously sub-0.2ha components disappeared only from vector outputs.
         _draw_candidate_outlines(rgb,geometry,src.transform).save(output/'imagem_classificada.png')
         bounds=_save_leaflet_raster(src,rgb,output/'imagem_mapa.png')
     # GeoTIFF classificado para uso técnico, além do PNG obrigatório.
     with rasterio.open(image) as src:
         profile=src.profile.copy(); profile.update(count=1,dtype='uint8',nodata=255,compress='deflate')
         with rasterio.open(output/'classificacao.tif','w',**profile) as dst:
-            dst.write(np.where(valid,mask.astype('uint8'),255).astype('uint8'),1)
+            dst.write(np.where(valid,retained.astype('uint8'),255).astype('uint8'),1)
     stats={"method":MODEL_VERSION,"acquisition_date":acquisition_date,"candidate_polygon_count":len(polys),
            "candidate_area_ha":round(sum(x['properties']['area_ha'] for x in polys),3),
            "valid_pixels":int(valid.sum()),"leaflet_bounds":bounds,"image":Path(image).name,

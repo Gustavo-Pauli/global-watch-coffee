@@ -40,8 +40,10 @@ def _load_scl(scl_path: Path, reference: rasterio.io.DatasetReader) -> np.ndarra
     """Alinha classes categóricas de 20 m a 10 m usando vizinho mais próximo."""
     scl = np.zeros((reference.height, reference.width), dtype=np.uint8)
     with rasterio.open(scl_path) as source:
-        if source.count != 1 or source.crs is None:
+        if source.driver != 'GTiff' or source.count != 1 or source.crs is None:
             raise ValueError("A máscara SCL precisa ter uma banda e CRS válido.")
+        if source.width * source.height > MAX_PIXELS:
+            raise ValueError("A máscara SCL excede o limite de pixels.")
         reproject(
             source.read(1),
             scl,
@@ -56,13 +58,17 @@ def _load_scl(scl_path: Path, reference: rasterio.io.DatasetReader) -> np.ndarra
     return scl
 
 
-def _polygons(binary: np.ndarray, transform, crs, min_area_ha: float):
+def _polygons(binary: np.ndarray, transform, crs, min_area_ha: float, *, max_regions: int = 10_000):
     features = []
-    for geometry, value in shapes(binary.astype("uint8"), mask=binary, transform=transform):
+    for region, (geometry, value) in enumerate(shapes(binary.astype("uint8"), mask=binary, transform=transform)):
+        if region >= max_regions:
+            raise ValueError("Imagem excessivamente fragmentada; envie um recorte menor.")
         if not value:
             continue
         wgs84 = transform_geom(crs, "EPSG:4326", geometry, precision=7)
         area_ha = abs(GEOD.geometry_area_perimeter(shape(wgs84))[0]) / 10_000
+        if not np.isfinite(area_ha):
+            raise ValueError("Geometria fora dos limites válidos do CRS informado.")
         if area_ha < min_area_ha:
             continue
         features.append(
@@ -112,6 +118,8 @@ def _save_leaflet_raster(src: rasterio.io.DatasetReader, source_rgba: Image.Imag
     dst_transform, width, height = calculate_default_transform(
         src.crs, "EPSG:4326", src.width, src.height, *src.bounds
     )
+    if width <= 0 or height <= 0 or width * height > 2_000_000:
+        raise ValueError("A reprojeção para o mapa excede o limite de dois milhões de pixels.")
     src_data = np.asarray(source_rgba)
     warped = np.zeros((height, width, 4), dtype=np.uint8)
     for band in range(4):

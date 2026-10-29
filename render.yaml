@@ -5,7 +5,8 @@ services:
     plan: free
     # Root dir MUST be repository root: demo scenes live under data/.
     buildCommand: pip install -e apps/geo-worker
-    startCommand: uvicorn geo_worker.server:app --host 0.0.0.0 --port $PORT
+    # Exactly one process: the bounded job semaphore lives in process memory.
+    startCommand: uvicorn geo_worker.server:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION

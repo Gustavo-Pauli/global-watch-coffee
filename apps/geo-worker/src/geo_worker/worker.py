@@ -8,18 +8,18 @@ from __future__ import annotations
 
 import asyncio
 import os
-import re
 import secrets
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 from uuid import UUID
 
 import httpx
 import rasterio
 from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from starlette.responses import JSONResponse
 
 from geo_worker.coffee_v2 import classify
 from geo_worker.paths import REPO_ROOT, MODELS_ROOT
@@ -39,13 +39,67 @@ OUTPUT_FILES = {
 }
 MAX_IMAGE = 12 * 1024 * 1024
 MAX_SCL = 4 * 1024 * 1024
+MAX_JOB_BYTES = 32 * 1024
+MAX_RASTER_PIXELS = 1_000_000
+
+
+class WorkerBoundaryMiddleware:
+    """Reject unauthorized/large envelopes before FastAPI buffers or parses JSON."""
+
+    def __init__(self, app, secret: str):
+        self.app, self.secret = app, secret
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] != 'http' or scope['path'] != '/internal/process':
+            return await self.app(scope, receive, send)
+        headers = dict(scope.get('headers', []))
+
+        async def reject(status, detail):
+            await JSONResponse({'detail': detail}, status_code=status)(scope, receive, send)
+
+        token = headers.get(b'x-worker-token', b'')
+        if not token or not secrets.compare_digest(token, self.secret.encode()):
+            return await reject(401, 'Acesso exclusivo ao servidor de aplicação.')
+        if scope['method'] != 'POST':
+            return await self.app(scope, receive, send)
+        if headers.get(b'content-type', b'').split(b';', 1)[0].strip().lower() != b'application/json':
+            return await reject(415, 'Use Content-Type application/json.')
+        try:
+            declared_size = int(headers.get(b'content-length', b'0'))
+            if declared_size < 0:
+                raise ValueError
+        except ValueError:
+            return await reject(400, 'Content-Length inválido.')
+        if declared_size > MAX_JOB_BYTES:
+            return await reject(413, 'Envelope da tarefa excede 32 KiB.')
+        body = bytearray()
+        while True:
+            message = await receive()
+            if message['type'] == 'http.disconnect':
+                return
+            body.extend(message.get('body', b''))
+            if len(body) > MAX_JOB_BYTES:
+                return await reject(413, 'Envelope da tarefa excede 32 KiB.')
+            if not message.get('more_body', False):
+                break
+        delivered = False
+
+        async def replay():
+            nonlocal delivered
+            if not delivered:
+                delivered = True
+                return {'type': 'http.request', 'body': bytes(body), 'more_body': False}
+            return await receive()
+
+        await self.app(scope, replay, send)
 
 
 class JobRequest(BaseModel):
+    model_config = ConfigDict(extra='forbid', strict=True)
     id: str
-    scene: str | None = None
-    image_url: str | None = None
-    scl_url: str | None = None
+    scene: str | None = Field(default=None, max_length=16)
+    image_url: str | None = Field(default=None, max_length=4096)
+    scl_url: str | None = Field(default=None, max_length=4096)
     date: str | None = None
     uploads: dict[str, str] = Field(default_factory=dict)
 
@@ -64,18 +118,21 @@ class JobRequest(BaseModel):
         return value
 
 
-def storage_url_allowed(url: str, storage_base: str) -> bool:
+def storage_url_allowed(url: str, storage_base: str, *, upload: bool = False) -> bool:
     """No SSRF: only HTTPS signed Storage URLs for our own configured project."""
     try:
         target = urlsplit(url)
         base = urlsplit(storage_base)
+        path = unquote(target.path)
+        route = '/storage/v1/object/upload/sign/' if upload else '/storage/v1/object/sign/'
         return (
             target.scheme == ('http' if base.hostname in ('127.0.0.1', 'localhost') else 'https')
             and target.hostname == base.hostname
             and target.port == base.port
             and target.username is None and target.password is None
-            and target.path.startswith('/storage/v1/object/')
-            and ('/sign/' in target.path)
+            and path.startswith(route)
+            and all(part not in ('.', '..') for part in path.split('/'))
+            and '\\' not in path and '%' not in path
             and bool(target.query)
             and not target.fragment
         )
@@ -86,8 +143,14 @@ def storage_url_allowed(url: str, storage_base: str) -> bool:
 async def download_tiff(client: httpx.AsyncClient, url: str, path: Path, limit: int) -> None:
     size = 0
     with path.open('wb') as target:
-        async with client.stream('GET', url) as response:
+        async with client.stream('GET', url, headers={'Accept-Encoding': 'identity'}) as response:
             response.raise_for_status()
+            # Bound bytes before decoding too: a compressed HTTP response can
+            # expand inside httpx before aiter_bytes applies its chunk size.
+            if response.headers.get('content-encoding', 'identity').lower() != 'identity':
+                raise ValueError('Compressão HTTP não permitida para GeoTIFF')
+            if int(response.headers.get('content-length', '0')) > limit:
+                raise ValueError('GeoTIFF excede o tamanho permitido')
             async for chunk in response.aiter_bytes(1024 * 1024):
                 size += len(chunk)
                 if size > limit:
@@ -100,14 +163,26 @@ async def download_tiff(client: httpx.AsyncClient, url: str, path: Path, limit: 
 
 def validate_rasters(image: Path, scl: Path | None) -> None:
     with rasterio.open(image) as src:
-        if src.count != 4 or src.crs is None or not src.crs.is_projected:
+        if src.driver != 'GTiff' or src.count != 4 or src.crs is None or not src.crs.is_projected:
             raise ValueError('Esperadas quatro bandas e CRS projetado')
-        if src.width * src.height > 1_000_000:
+        if src.width * src.height > MAX_RASTER_PIXELS:
             raise ValueError('Limite de um milhão de pixels')
     if scl:
         with rasterio.open(scl) as src:
-            if src.count != 1 or src.crs is None:
+            if src.driver != 'GTiff' or src.count != 1 or src.crs is None:
                 raise ValueError('Máscara SCL inválida')
+            if src.width * src.height > MAX_RASTER_PIXELS:
+                raise ValueError('Máscara SCL excede um milhão de pixels')
+            if src.dtypes[0] != 'uint8':
+                raise ValueError('Máscara SCL precisa conter classes uint8')
+
+
+def classify_job(image: Path, output: Path, model: Path, scl: Path | None, date: str | None):
+    # GDAL's default cache scales with host memory, not necessarily a free-tier
+    # container's quota. Bound its cache and threads for each processing thread.
+    with rasterio.Env(GDAL_CACHEMAX=16 * 1024 * 1024, GDAL_NUM_THREADS='1'):
+        validate_rasters(image, scl)
+        return classify(image, output, model, scl, acquisition_date=date)
 
 
 def create_worker(*, secret: str | None = None, model: Path | None = None,
@@ -127,8 +202,10 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
         raise RuntimeError('Callback de produção deve utilizar HTTPS.')
     callback = callback_url.rstrip('/') + '/api/internal/worker-complete'
     app = FastAPI(title='Geo-worker interno', docs_url=None, redoc_url=None, openapi_url=None)
+    app.add_middleware(WorkerBoundaryMiddleware, secret=secret)
     semaphore = asyncio.Semaphore(1)
     tasks: set[asyncio.Task] = set()
+    active_ids: set[str] = set()
 
     def authorize(x_worker_token: str | None) -> None:
         if not x_worker_token or not secrets.compare_digest(x_worker_token, secret):
@@ -152,8 +229,7 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
                         await download_tiff(client, job.image_url, image, MAX_IMAGE)
                         if job.scl_url and scl is not None:
                             await download_tiff(client, job.scl_url, scl, MAX_SCL)
-                    await asyncio.to_thread(validate_rasters, image, scl)
-                    await asyncio.to_thread(classify, image, workspace / 'out', model, scl, acquisition_date=date)
+                    await asyncio.to_thread(classify_job, image, workspace / 'out', model, scl, date)
                     for kind, (name, content_type) in OUTPUT_FILES.items():
                         file = workspace / 'out' / name
                         if not file.is_file():
@@ -178,6 +254,7 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
                     if attempt < 2:
                         await asyncio.sleep(2 * (attempt + 1))
             semaphore.release()
+            active_ids.discard(job.id)
 
     @app.get('/health')
     def health():
@@ -197,12 +274,15 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
         if job.scl_url and not storage_url_allowed(job.scl_url, storage_base):
             raise HTTPException(422, 'URL SCL inválida.')
         if set(job.uploads) != set(OUTPUT_FILES) or any(
-            not storage_url_allowed(value, storage_base) for value in job.uploads.values()
+            not storage_url_allowed(value, storage_base, upload=True) for value in job.uploads.values()
         ):
             raise HTTPException(422, 'URLs de saída inválidas.')
+        if job.id in active_ids:
+            return {'id': job.id, 'status': 'processing'}
         if semaphore.locked():
             raise HTTPException(503, 'Worker ocupado: tente novamente após o término da análise.')
         await semaphore.acquire()
+        active_ids.add(job.id)
         task = asyncio.create_task(execute(job))
         tasks.add(task)
         task.add_done_callback(tasks.discard)
