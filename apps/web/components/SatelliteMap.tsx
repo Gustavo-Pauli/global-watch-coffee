@@ -1,27 +1,45 @@
 'use client';
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, ImageOverlay, GeoJSON, useMap } from 'react-leaflet';
-import type { FeatureCollection } from 'geojson';
-import type { LatLngBoundsExpression } from 'leaflet';
 
-type Bounds = [[number,number],[number,number]];
-const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-function FitBounds({ bounds }: {bounds:Bounds}) {
+import { useEffect, useRef, useState } from 'react';
+import { LocateFixed, Minus, Plus } from 'lucide-react';
+import { GeoJSON, ImageOverlay, MapContainer, TileLayer, useMap, ScaleControl } from 'react-leaflet';
+import type { FeatureCollection } from 'geojson';
+import type { LatLngBoundsExpression, GeoJSON as LeafletGeoJSON } from 'leaflet';
+import type { Bounds } from './analysis-types';
+
+function MapTools({ bounds }: { bounds: Bounds }) {
   const map = useMap();
-  useEffect(() => { map.fitBounds(bounds as LatLngBoundsExpression, { padding: [24,24] }); }, [map,bounds]);
-  return null;
+  useEffect(() => { map.fitBounds(bounds as LatLngBoundsExpression, { padding: [36, 36], maxZoom: 16, animate: false }); }, [map, bounds]);
+  useEffect(() => { const observer = new ResizeObserver(() => map.invalidateSize()); observer.observe(map.getContainer()); return () => observer.disconnect(); }, [map]);
+  return <div className="map-navigation" aria-label="Navegação do mapa" onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
+    <button aria-label="Aproximar mapa" title="Aproximar" onClick={() => map.zoomIn()}><Plus size={18} /></button>
+    <button aria-label="Afastar mapa" title="Afastar" onClick={() => map.zoomOut()}><Minus size={18} /></button>
+    <button aria-label="Enquadrar imagem" title="Enquadrar imagem" onClick={() => map.fitBounds(bounds as LatLngBoundsExpression, { padding: [36, 36], maxZoom: 16, animate: false })}><LocateFixed size={18} /></button>
+  </div>;
 }
-export default function SatelliteMap({ geojson, bounds, overlay }: { geojson:FeatureCollection; bounds:Bounds;overlay:string|null }) {
-  return <MapContainer className="map" center={[-21.331,-46.68]} zoom={12} zoomControl={false} scrollWheelZoom>
-    <TileLayer attribution={attribution} url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
-    {overlay && <ImageOverlay url={overlay} bounds={bounds as LatLngBoundsExpression} opacity={0.84}/>}
-    <GeoJSON key={`${JSON.stringify(geojson).length}-${bounds[0][0]}`} data={geojson}
-      style={{color:'#d4f768',weight:2.5,fillColor:'#a6d950',fillOpacity:.16}}
-      onEachFeature={(feature,layer) => {
-        const id = Number(feature.properties?.id ?? 0);
-        const ha = Number(feature.properties?.area_ha ?? 0);
-        layer.bindPopup(`Candidato ${Number.isFinite(id) ? id : '?'} · ${Number.isFinite(ha) ? ha.toFixed(2) : '?'} ha · Sem validação de campo`);
-      }}/>
-    <FitBounds bounds={bounds}/>
+
+function CandidateLayer({ geojson }: { geojson: FeatureCollection }) {
+  const layer = useRef<LeafletGeoJSON | null>(null);
+  useEffect(() => { layer.current?.clearLayers(); layer.current?.addData(geojson); }, [geojson]);
+  return <GeoJSON ref={layer} data={geojson} style={{ color: '#c4d58c', weight: 1.7, fillColor: '#bbd277', fillOpacity: 0.18 }} onEachFeature={(feature, item) => {
+    const id = Number(feature.properties?.id ?? 0), area = Number(feature.properties?.area_ha ?? 0);
+    const content = document.createElement('div'), title = document.createElement('strong'), measure = document.createElement('span'), note = document.createElement('small');
+    title.textContent = `Candidato ${Number.isFinite(id) ? id : '—'}`;
+    measure.textContent = `${Number.isFinite(area) ? area.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : '—'} ha`;
+    note.textContent = 'Sem validação em campo'; content.append(title, measure, note); item.bindPopup(content);
+  }} />;
+}
+
+export default function SatelliteMap({ geojson, bounds, overlay, showRaster, showPolygons }: {
+  geojson: FeatureCollection; bounds: Bounds; overlay: string | null; showRaster: boolean; showPolygons: boolean;
+}) {
+  const [tileError, setTileError] = useState(false);
+  const [tileRevision, setTileRevision] = useState(0);
+  return <MapContainer className="map" center={[-21.331, -46.68]} zoom={12} zoomControl={false} scrollWheelZoom>
+    <TileLayer key={tileRevision} attribution={'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'} url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" className="reference-map-tiles" eventHandlers={{ tileerror: () => setTileError(true) }} />
+    {overlay && showRaster && <ImageOverlay url={overlay} bounds={bounds as LatLngBoundsExpression} opacity={1} />}
+    {showPolygons && <CandidateLayer geojson={geojson} />}
+    {tileError && <div className="basemap-error" role="status"><span>O mapa de referência não carregou por completo. As camadas da análise continuam independentes.</span><button onClick={() => { setTileError(false); setTileRevision(value => value + 1); }}>Recarregar mapa</button></div>}
+    <MapTools bounds={bounds} /><ScaleControl position="bottomleft" imperial={false} />
   </MapContainer>;
 }

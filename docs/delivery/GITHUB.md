@@ -1,31 +1,9 @@
-# Atualização do repositório existente
+﻿# Repositório e publicação manual
 
-Repositório conectado identificado em 29/10/2026: **`Gustavo-Pauli/global-watch-coffee`** (`main`). Ao consultar a conta, sua visibilidade era **private**. O desafio exige **GitHub público**.
+Repositório local: Global Watch Coffee. A auditoria prepara commits locais quando possível; **não executa push, deploy nem alteração de visibilidade**. A visibilidade atual no GitHub não foi consultada nesta execução.
 
-O projeto deve ser atualizado nesse mesmo repositório, não é necessário criar outro.
+Antes de qualquer publicação autorizada, revise `git diff`, `git diff --check`, arquivos staged e histórico. Exclua `.env`, `.env.local`, `.venv`, node_modules, logs, cookies e tokens. Referências visuais externas são apenas orientação: não comitar screenshots, marcas ou assets de terceiros. Capturas em `docs/delivery/screenshots` devem mostrar apenas o próprio aplicativo e dados de teste.
 
-Depois de aplicar o patch na sua pasta local (consulte `MIGRACAO_LOCAL.md`):
+Execute os gates do [README](../../README.md), verifique a [auditoria](AUDITORIA_FINAL.md) e revise licenças/atribuições do kit e MapBiomas. A exigência de repositório público do desafio continua uma ação humana pendente até confirmação explícita; não torna autorizada a exposição automática de dados ou chaves.
 
-```bash
-# Terminal Git Bash na raiz do projeto
-pnpm install                  # gera/atualiza pnpm-lock.yaml
-python -m pytest apps/geo-worker/tests -q
-pnpm --filter @global-watch/web build
-
-git status                    # revise arquivos e mudanças locais
-git diff --check
-git add -A
-git diff --cached --stat
-# Confirme: nenhum .env, nenhuma chave, nenhum .venv, nenhum node_modules
-
-git commit -m "refactor: stateless geoprocessing and private Supabase Storage"
-git push origin main
-```
-
-Após o push, abra **GitHub → global-watch-coffee → Settings → General → Danger Zone → Change repository visibility → Public**. Verifique que é o repositório correto, que não existem secrets no histórico do Git e que a política do desafio permite tornar públicos os dados e arquivos; o kit Sentinel-2 já traz atribuição no repositório.
-
-Cheque que o repo contém `apps/web`, `apps/geo-worker`, `data`, `docs`, `render.yaml`, `apps/web/vercel.json`, `pnpm-lock.yaml`, `.github/workflows/ci.yml` e que a CI executa `python -m pytest` e o build Next.js.
-
-Não publique segredos (`SUPABASE_SERVICE_ROLE_KEY`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `GEMINI_API_KEY`, `WORKER_SECRET`, `CRON_SECRET`). O `.gitignore` exclui `.env`, `.env.local`, `.venv`, caches e SQLite. `*.joblib` só são carregados de arquivos próprios, sem fazer unpickle de uploads.
-
-A atualização ao GitHub **não é automática com o ZIP**: deve ser aplicada e enviada a partir do repositório local, preservando suas alterações. O conector disponível nesta conversa não oferece sincronização direta do ZIP do contêiner com o repositório existente.
+A CI usa lockfile congelado, gera Prisma Client, valida schema, aplica migrations em PostgreSQL de teste e executa verificações. Passar CI não prova Google OAuth, Gemini, cold start ou funcionamento de uma URL pública.

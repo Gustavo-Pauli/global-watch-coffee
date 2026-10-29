@@ -25,12 +25,12 @@ Browser do usuário autenticado
 
 | Camada | Tecnologia | Estado armazenado |
 |---|---|---|
-| `apps/web` | Next.js 16 + Better Auth + pg | sessões, análises/status e rate limits no PostgreSQL |
+| `apps/web` | Next.js 16 + Better Auth + Prisma ORM | sessões, análises/status e rate limits no PostgreSQL |
 | Storage | Supabase Free, bucket **privado** | TIFFs de entrada e arquivos realmente produzidos |
 | `apps/geo-worker` | FastAPI + Rasterio + RF scikit-learn | **nenhum estado permanente**; diretório temporário por tarefa |
 | Chat | Gemini no servidor Next.js | usa apenas resultados da análise do proprietário |
 
-O worker recebe **apenas URLs assinadas, IDs de tarefa e segredo servidor-servidor**; não recebe OAuth, ID arbitrário de usuário, credenciais de banco ou chave service-role. Todos os endpoints do usuário verificam a sessão Better Auth e consultam a análise com `WHERE owner_id=$user`. O worker não pode consultar análises de outros usuários.
+O worker recebe **apenas URLs assinadas, IDs de tarefa e segredo servidor-servidor**; não recebe OAuth, ID arbitrário de usuário, credenciais de banco ou chave administrativa Supabase. Todos os endpoints do usuário verificam a sessão Better Auth e consultam a análise pelo proprietário e expiração via Prisma. O worker não pode consultar análises de outros usuários. O schema e o baseline seguro estão em [PRISMA_MIGRATION.md](../delivery/PRISMA_MIGRATION.md).
 
 ## Por que assíncrono?
 
@@ -42,7 +42,7 @@ Render Free pode levar cerca de um minuto para despertar. Uma função Vercel n�
 
 - Upload direto ao Storage: **12 MiB** TIFF de 4 bandas + **4 MiB** SCL, no máximo 1 milhão de pixels e 4 bandas.
 - 5 análises por usuário a cada hora; **10 análises no total por dia** entre todos os usuários. Rate limit persistente e atômico no PostgreSQL.
-- Dados retidos por **3 dias**. Cron diário autenticado remove objetos e linhas vencidos (deve ser configurado no deploy).
+- Acesso aos dados expira em **3 dias**. Cron diário autenticado remove objetos e linhas vencidos; remoção física pode ocorrer depois e depender de novas tentativas (deve ser configurado no deploy).
 - Supabase Free pode pausar projeto inativo; Render Free suspende web service em 15 min de inatividade e perde disco local. Os resultados não dependem do disco local do Render após conclusão.
 - Requisição de upload não passa pela Function Vercel, evitando seu limite de 4,5 MB. Downloads também usam redirecionamento temporário para Storage.
 

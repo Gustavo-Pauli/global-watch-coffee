@@ -1,3 +1,5 @@
+> Documento histórico da abordagem v1. Não usar os comandos, limiares, versões ou resultados abaixo como configuração de produção. O worker atual usa RF v2 com três datas no treino, score 0,50, mínimo 0,2 ha e scikit-learn 1.8.0. Consulte AUDITORIA_GEO.md e a nota final para o método efetivo.
+
 # Como funciona a parte geoespacial — guia para explicar na avaliação
 
 Este guia acompanha o código real do projeto. O objetivo é **localizar áreas com aparência de cafezal existente**, não avaliar se seria possível plantar café naquele solo.

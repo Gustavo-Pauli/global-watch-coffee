@@ -1,20 +1,17 @@
-# Checklist de entrega — Global Watch (prazo 30/10/2026)
+﻿# Checklist de entrega — 30/10/2026
 
-| Requisito do enunciado | Estado verificado | O que falta |
-|---|---|---|
-| React + Python | Next.js/React + FastAPI + classificação real no repositório | Build web/integração pública |
-| Login Google e logout, backend validando sessão | Better Auth e `sessionUserId()` implementados | OAuth Google real em produção |
-| Upload multiespectral e índice espectral | Worker testado com TIFF original; upload direto assinado implementado | Upload real ao Supabase pelo navegador |
-| Polígonos candidatos, hectares, justificativa | Python e testes do classificador | Conferir dados na UI pública |
-| Mapa, imagem, legenda, data e downloads | React/Leaflet e URLs privadas de download implementadas | Conferência desktop/celular e links reais |
-| Chatbot **com IA** fundamentada nos resultados | Gemini conectado no código com verificação de números | Chave/cota e teste de `ai_grounded`; fallback não conta como IA |
-| UI responsiva, loading, erros, vazio | Interface e polling assíncrono implementados | Revisão no navegador |
-| Backend seguro e limites | Owner no PostgreSQL, segredo interno e URL Storage assinada; tests do worker | Testes de duas contas OAuth e cota via URL pública |
-| Imagem adicional real | Julho e outubro presentes; análises Python reexecutam imagens | Demonstrar pelo site |
-| Nota pesquisa até 2 páginas | PDF pronto em `docs/research` | Anexar/linkar junto da entrega |
-| README e relato de IA | Reorganizados, com ressalvas de validação | Conferir links após GitHub público |
-| Frontend/backend gratuitos | Configuração Vercel/Render/Supabase documentada | **Serviços NÃO publicados** |
-| Repositório GitHub público | Monorepo preparado e .gitignore | **Criar e fazer push, revisar segredos** |
-| Vídeo até 3 minutos | Roteiro pronto | **Gravar a aplicação publicada** |
+A matriz com evidências está em [AUDITORIA_FINAL.md](AUDITORIA_FINAL.md). O enunciado original está em `data/sample/DESAFIO.txt`.
 
-**Validação até aqui:** testes Python reais e de servidor interno com HTTP assinado simulado; parsing TS/TSX. Não foi possível executar `pnpm install`, `next build`, Google OAuth, Supabase/Render/Vercel reais neste ambiente. Nenhum deles deve ser comunicado como concluído.
+- [ ] Rodar login Google/consentimento e logout no domínio público; confirmar sessão após refresh.
+- [ ] Configurar chave/cota Gemini e obter resposta real `ai_grounded`; contingência por regras não cumpre o requisito de IA.
+- [ ] Aplicar Prisma em produção com comparação/baseline segura e backup; nunca reset/db push.
+- [ ] Confirmar bucket privado com teto de 12 MiB e segredos apenas nos servidores corretos.
+- [ ] Publicar Vercel/Render/Supabase manualmente após autorização; validar cold start, RAM Linux e reinício durante análise.
+- [ ] Testar demo agosto, imagem adicional, GeoTIFF + SCL e downloads pela URL pública.
+- [ ] Testar duas contas Google reais e 404 para análise, arquivos e chat de outro usuário.
+- [ ] Conferir cron diário, expiração de acesso, limpeza física e logs sem segredos.
+- [ ] Revisar nota PDF de duas páginas, fontes primárias, licenças e atribuição dos dados.
+- [ ] Gravar vídeo <=3 minutos da aplicação publicada mostrando imagem adicional e limitações.
+- [ ] Revisar histórico Git/segredos/assets antes de eventual publicação autorizada; confirmar repositório público pelo usuário.
+
+Verificações locais e screenshots do aplicativo não substituem esses gates públicos. Não foi executado push, deploy ou alteração de visibilidade nesta auditoria.
