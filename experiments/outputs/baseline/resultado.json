@@ -1,0 +1,45 @@
+{
+  "image": "imagem_multiespectral.tif",
+  "acquisition_date": "2025-08-16",
+  "crs_original": "EPSG:32723",
+  "width": 512,
+  "height": 512,
+  "leaflet_bounds": [
+    [
+      -21.3532177,
+      -46.7050161
+    ],
+    [
+      -21.3064531,
+      -46.6551712
+    ]
+  ],
+  "scales": [
+    0.0001,
+    0.0001,
+    0.0001,
+    0.0001
+  ],
+  "offsets": [
+    -0.1,
+    -0.1,
+    -0.1,
+    -0.1
+  ],
+  "valid_pixels": 262144,
+  "candidate_pixel_count_before_filter": 120086,
+  "candidate_polygon_count": 64,
+  "candidate_area_ha": 1160.055,
+  "ndvi_median": 0.5587,
+  "scl_applied": true,
+  "method": "spectral_screening_v0",
+  "index_thresholds": {
+    "ndvi_min": 0.6,
+    "gndvi_min": 0.25,
+    "evi2_min": 0.25
+  },
+  "min_area_ha": 0.5,
+  "is_coffee_detection_validated": false,
+  "warning": "Triagem exploratória de vegetação compatível, NÃO identificação de café. Culturas não cafeeiras e vegetação nativa podem gerar falsos positivos; é necessário usar dados temporais e referência independente para validação.",
+  "created_at": "2026-10-28T06:27:34.782113+00:00"
+}

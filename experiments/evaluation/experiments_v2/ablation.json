@@ -1,0 +1,332 @@
+{
+  "august_0.45": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-08-16",
+      "candidate_polygon_count": 28,
+      "candidate_area_ha": 28.922,
+      "valid_pixels": 261804,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_multiespectral.tif",
+      "ndvi_median": 0.5592,
+      "model_score_threshold": 0.45,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:38.055442+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 28.92,
+      "candidate_overlap_reference_coffee_ha": 14.39,
+      "candidate_overlap_reference_forest_ha": 1.19,
+      "candidate_overlap_other_classes_ha": 13.34,
+      "reference_coffee_area_covered_percent": 33.5
+    }
+  },
+  "august_0.5": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-08-16",
+      "candidate_polygon_count": 24,
+      "candidate_area_ha": 22.661,
+      "valid_pixels": 261804,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_multiespectral.tif",
+      "ndvi_median": 0.5592,
+      "model_score_threshold": 0.5,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:40.362752+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 22.66,
+      "candidate_overlap_reference_coffee_ha": 12.14,
+      "candidate_overlap_reference_forest_ha": 1.03,
+      "candidate_overlap_other_classes_ha": 9.49,
+      "reference_coffee_area_covered_percent": 28.2
+    }
+  },
+  "august_0.55": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-08-16",
+      "candidate_polygon_count": 20,
+      "candidate_area_ha": 16.691,
+      "valid_pixels": 261804,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_multiespectral.tif",
+      "ndvi_median": 0.5592,
+      "model_score_threshold": 0.55,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:42.696143+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 16.69,
+      "candidate_overlap_reference_coffee_ha": 10.05,
+      "candidate_overlap_reference_forest_ha": 0.77,
+      "candidate_overlap_other_classes_ha": 5.87,
+      "reference_coffee_area_covered_percent": 23.4
+    }
+  },
+  "august_0.6": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-08-16",
+      "candidate_polygon_count": 14,
+      "candidate_area_ha": 12.121,
+      "valid_pixels": 261804,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_multiespectral.tif",
+      "ndvi_median": 0.5592,
+      "model_score_threshold": 0.6,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:44.915758+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 12.12,
+      "candidate_overlap_reference_coffee_ha": 8.26,
+      "candidate_overlap_reference_forest_ha": 0.21,
+      "candidate_overlap_other_classes_ha": 3.65,
+      "reference_coffee_area_covered_percent": 19.2
+    }
+  },
+  "august_0.65": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-08-16",
+      "candidate_polygon_count": 14,
+      "candidate_area_ha": 9.74,
+      "valid_pixels": 261804,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_multiespectral.tif",
+      "ndvi_median": 0.5592,
+      "model_score_threshold": 0.65,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:47.121271+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 9.74,
+      "candidate_overlap_reference_coffee_ha": 6.92,
+      "candidate_overlap_reference_forest_ha": 0.18,
+      "candidate_overlap_other_classes_ha": 2.64,
+      "reference_coffee_area_covered_percent": 16.1
+    }
+  },
+  "october_0.45": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-10-25",
+      "candidate_polygon_count": 21,
+      "candidate_area_ha": 15.491,
+      "valid_pixels": 262016,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_adicional_multiespectral.tif",
+      "ndvi_median": 0.6616,
+      "model_score_threshold": 0.45,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:49.400686+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 15.49,
+      "candidate_overlap_reference_coffee_ha": 9.9,
+      "candidate_overlap_reference_forest_ha": 0.09,
+      "candidate_overlap_other_classes_ha": 5.5,
+      "reference_coffee_area_covered_percent": 23.0
+    }
+  },
+  "october_0.5": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-10-25",
+      "candidate_polygon_count": 15,
+      "candidate_area_ha": 10.96,
+      "valid_pixels": 262016,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_adicional_multiespectral.tif",
+      "ndvi_median": 0.6616,
+      "model_score_threshold": 0.5,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:52.195962+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 10.96,
+      "candidate_overlap_reference_coffee_ha": 7.94,
+      "candidate_overlap_reference_forest_ha": 0.0,
+      "candidate_overlap_other_classes_ha": 3.02,
+      "reference_coffee_area_covered_percent": 18.5
+    }
+  },
+  "october_0.55": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-10-25",
+      "candidate_polygon_count": 11,
+      "candidate_area_ha": 7.89,
+      "valid_pixels": 262016,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_adicional_multiespectral.tif",
+      "ndvi_median": 0.6616,
+      "model_score_threshold": 0.55,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:54.327307+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 7.89,
+      "candidate_overlap_reference_coffee_ha": 6.36,
+      "candidate_overlap_reference_forest_ha": 0.0,
+      "candidate_overlap_other_classes_ha": 1.53,
+      "reference_coffee_area_covered_percent": 14.8
+    }
+  },
+  "october_0.6": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-10-25",
+      "candidate_polygon_count": 8,
+      "candidate_area_ha": 5.97,
+      "valid_pixels": 262016,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_adicional_multiespectral.tif",
+      "ndvi_median": 0.6616,
+      "model_score_threshold": 0.6,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:56.418552+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 5.97,
+      "candidate_overlap_reference_coffee_ha": 5.43,
+      "candidate_overlap_reference_forest_ha": 0.0,
+      "candidate_overlap_other_classes_ha": 0.54,
+      "reference_coffee_area_covered_percent": 12.6
+    }
+  },
+  "october_0.65": {
+    "stats": {
+      "method": "rf_purified_multiclass_2.0",
+      "acquisition_date": "2025-10-25",
+      "candidate_polygon_count": 4,
+      "candidate_area_ha": 4.35,
+      "valid_pixels": 262016,
+      "leaflet_bounds": [
+        [
+          -21.3532177,
+          -46.7050161
+        ],
+        [
+          -21.3064531,
+          -46.6551712
+        ]
+      ],
+      "image": "imagem_adicional_multiespectral.tif",
+      "ndvi_median": 0.6616,
+      "model_score_threshold": 0.65,
+      "model_score_not_calibrated": true,
+      "coffee_validated": false,
+      "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+      "created_at": "2026-10-28T18:17:58.466856+00:00"
+    },
+    "reference": {
+      "candidate_approx_ha": 4.35,
+      "candidate_overlap_reference_coffee_ha": 4.29,
+      "candidate_overlap_reference_forest_ha": 0.0,
+      "candidate_overlap_other_classes_ha": 0.06,
+      "reference_coffee_area_covered_percent": 10.0
+    }
+  }
+}

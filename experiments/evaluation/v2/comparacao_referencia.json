@@ -1,0 +1,22 @@
+{
+  "reference": "MapBiomas Brasil Coleção 11, 2025, 30 m; rótulos reamostrados para 10 m",
+  "reference_coffee_approx_ha": 43.0,
+  "reference_forest_approx_ha": 941.93,
+  "comparison_is_validation_against_field_truth": false,
+  "comparisons": {
+    "old": {
+      "candidate_approx_ha": 96.02,
+      "candidate_overlap_reference_coffee_ha": 29.07,
+      "candidate_overlap_reference_forest_ha": 7.07,
+      "candidate_overlap_other_classes_ha": 59.88,
+      "reference_coffee_area_covered_percent": 67.6
+    },
+    "v2": {
+      "candidate_approx_ha": 9.74,
+      "candidate_overlap_reference_coffee_ha": 6.92,
+      "candidate_overlap_reference_forest_ha": 0.18,
+      "candidate_overlap_other_classes_ha": 2.64,
+      "reference_coffee_area_covered_percent": 16.1
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "S2B_T23KLS_20251025T132232_L2A",
+  "datetime": "2025-10-25T13:28:08.082000Z",
+  "tile_cloud_cover_percent": 0.798446,
+  "catalog": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-c1-l2a/items/S2B_T23KLS_20251025T132232_L2A",
+  "assets": {
+    "blue": "https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/23/K/LS/2025/10/S2B_T23KLS_20251025T132232_L2A/B02.tif",
+    "green": "https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/23/K/LS/2025/10/S2B_T23KLS_20251025T132232_L2A/B03.tif",
+    "red": "https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/23/K/LS/2025/10/S2B_T23KLS_20251025T132232_L2A/B04.tif",
+    "nir": "https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/23/K/LS/2025/10/S2B_T23KLS_20251025T132232_L2A/B08.tif",
+    "scl": "https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/23/K/LS/2025/10/S2B_T23KLS_20251025T132232_L2A/SCL.tif"
+  },
+  "modifications": "recorte e alinhamento à grade espacial do kit; B02/B03/B04/B08",
+  "attribution": "Contains modified Copernicus Sentinel data (2025)"
+}

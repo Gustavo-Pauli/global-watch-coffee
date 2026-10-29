@@ -1,0 +1,24 @@
+{
+  "method": "rf_purified_multiclass_2.0",
+  "acquisition_date": "2025-07-21",
+  "candidate_polygon_count": 27,
+  "candidate_area_ha": 23.861,
+  "valid_pixels": 262143,
+  "leaflet_bounds": [
+    [
+      -21.3532177,
+      -46.7050161
+    ],
+    [
+      -21.3064531,
+      -46.6551712
+    ]
+  ],
+  "image": "imagem_adicional_multiespectral.tif",
+  "ndvi_median": 0.6916,
+  "model_score_threshold": 0.5,
+  "model_score_not_calibrated": true,
+  "coffee_validated": false,
+  "limitations": "MapBiomas 30m para rótulos fracos; sem verificação de campo; áreas candidatas, não cafezais confirmados.",
+  "created_at": "2026-10-28T18:23:18.328182+00:00"
+}

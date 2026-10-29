@@ -1,0 +1,7 @@
+# Geospatial rasters, pretrained models, and review graphics are binary
+*.tif binary
+*.tiff binary
+*.joblib binary
+*.png binary
+*.pdf binary
+*.zip binary

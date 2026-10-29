@@ -1,0 +1,248 @@
+{
+  "model_version": "rf_purified_multiclass_2.0",
+  "trained_images": [
+    "sample/imagem_multiespectral.tif",
+    "additional/imagem_adicional_multiespectral.tif",
+    "unseen/imagem_adicional_multiespectral.tif"
+  ],
+  "weak_reference": "reference/mapbiomas_2025_recorte_30m.tif",
+  "training_source_cell_samples": 16360,
+  "coffee_cell_samples": 546,
+  "erosion_native_cells": 1,
+  "features": [
+    "blue",
+    "green",
+    "red",
+    "nir",
+    "ndvi",
+    "gndvi",
+    "evi2",
+    "ndvi_mean5",
+    "ndvi_std5",
+    "nir_mean5",
+    "nir_std5",
+    "nir_red_ratio"
+  ],
+  "spatial_holdout": {
+    "coffee_reference_precision": 0.5165,
+    "coffee_reference_recall": 0.2701,
+    "coffee_reference_f1": 0.3547,
+    "forest_commission_rate": 0.0,
+    "reference_coffee_count": 174,
+    "evaluated_points": 4574,
+    "confusion_matrix_order": [
+      "other",
+      "coffee",
+      "forest",
+      "pasture",
+      "mosaic"
+    ],
+    "confusion_matrix": [
+      [
+        1024,
+        19,
+        1,
+        268,
+        145
+      ],
+      [
+        11,
+        47,
+        5,
+        54,
+        57
+      ],
+      [
+        2,
+        0,
+        750,
+        3,
+        51
+      ],
+      [
+        168,
+        21,
+        4,
+        744,
+        173
+      ],
+      [
+        150,
+        4,
+        19,
+        247,
+        607
+      ]
+    ]
+  },
+  "leave_one_date_out": [
+    {
+      "heldout_scene": "sample/imagem_multiespectral.tif",
+      "metrics": {
+        "coffee_reference_precision": 0.4465,
+        "coffee_reference_recall": 0.5275,
+        "coffee_reference_f1": 0.4836,
+        "forest_commission_rate": 0.005,
+        "reference_coffee_count": 182,
+        "evaluated_points": 5450,
+        "confusion_matrix_order": [
+          "other",
+          "coffee",
+          "forest",
+          "pasture",
+          "mosaic"
+        ],
+        "confusion_matrix": [
+          [
+            894,
+            12,
+            3,
+            398,
+            93
+          ],
+          [
+            19,
+            96,
+            0,
+            25,
+            42
+          ],
+          [
+            4,
+            7,
+            723,
+            4,
+            662
+          ],
+          [
+            574,
+            35,
+            0,
+            604,
+            187
+          ],
+          [
+            184,
+            65,
+            8,
+            175,
+            636
+          ]
+        ]
+      }
+    },
+    {
+      "heldout_scene": "additional/imagem_adicional_multiespectral.tif",
+      "metrics": {
+        "coffee_reference_precision": 0.2955,
+        "coffee_reference_recall": 0.2143,
+        "coffee_reference_f1": 0.2484,
+        "forest_commission_rate": 0.0,
+        "reference_coffee_count": 182,
+        "evaluated_points": 5457,
+        "confusion_matrix_order": [
+          "other",
+          "coffee",
+          "forest",
+          "pasture",
+          "mosaic"
+        ],
+        "confusion_matrix": [
+          [
+            649,
+            43,
+            49,
+            284,
+            375
+          ],
+          [
+            0,
+            39,
+            52,
+            19,
+            72
+          ],
+          [
+            1,
+            0,
+            1346,
+            0,
+            53
+          ],
+          [
+            216,
+            37,
+            17,
+            695,
+            435
+          ],
+          [
+            63,
+            13,
+            286,
+            69,
+            644
+          ]
+        ]
+      }
+    },
+    {
+      "heldout_scene": "unseen/imagem_adicional_multiespectral.tif",
+      "metrics": {
+        "coffee_reference_precision": 0.5745,
+        "coffee_reference_recall": 0.2967,
+        "coffee_reference_f1": 0.3913,
+        "forest_commission_rate": 0.01071,
+        "reference_coffee_count": 182,
+        "evaluated_points": 5453,
+        "confusion_matrix_order": [
+          "other",
+          "coffee",
+          "forest",
+          "pasture",
+          "mosaic"
+        ],
+        "confusion_matrix": [
+          [
+            941,
+            2,
+            6,
+            380,
+            71
+          ],
+          [
+            56,
+            54,
+            6,
+            43,
+            23
+          ],
+          [
+            54,
+            15,
+            1263,
+            4,
+            64
+          ],
+          [
+            1017,
+            3,
+            12,
+            293,
+            75
+          ],
+          [
+            557,
+            20,
+            102,
+            123,
+            269
+          ]
+        ]
+      }
+    }
+  ],
+  "training_data_warning": "MapBiomas 30m, supervisão fraca, sem rótulos de campo; nenhum score é acurácia real.",
+  "threshold": 0.5,
+  "forest_class_id": 2
+}

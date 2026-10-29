@@ -1,0 +1,35 @@
+[
+  {
+    "polygon_id": 33,
+    "candidate_area_ha": 47.8527,
+    "center": {
+      "lat": -21.33812,
+      "lon": -46.675109
+    },
+    "image": "poligono_33_inspecao.png",
+    "google_maps_satellite_review_url": "https://www.google.com/maps/@-21.338120,-46.675109,17z/data=!3m1!1e3",
+    "visual_inspection_limitation": "10m pixels and thematic labels are not field validation; finer imagery must be checked manually."
+  },
+  {
+    "polygon_id": 32,
+    "candidate_area_ha": 5.6002,
+    "center": {
+      "lat": -21.337711,
+      "lon": -46.682477
+    },
+    "image": "poligono_32_inspecao.png",
+    "google_maps_satellite_review_url": "https://www.google.com/maps/@-21.337711,-46.682477,17z/data=!3m1!1e3",
+    "visual_inspection_limitation": "10m pixels and thematic labels are not field validation; finer imagery must be checked manually."
+  },
+  {
+    "polygon_id": 29,
+    "candidate_area_ha": 5.5505,
+    "center": {
+      "lat": -21.333927,
+      "lon": -46.656488
+    },
+    "image": "poligono_29_inspecao.png",
+    "google_maps_satellite_review_url": "https://www.google.com/maps/@-21.333927,-46.656488,17z/data=!3m1!1e3",
+    "visual_inspection_limitation": "10m pixels and thematic labels are not field validation; finer imagery must be checked manually."
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "method": "random_forest_weak_supervision_mapbiomas_2025",
+  "image": "imagem_adicional_multiespectral.tif",
+  "acquisition_date": "2025-10-25",
+  "secondary_image": null,
+  "leaflet_bounds": [
+    [
+      -21.3532177,
+      -46.7050161
+    ],
+    [
+      -21.3064531,
+      -46.6551712
+    ]
+  ],
+  "candidate_polygon_count": 109,
+  "candidate_area_ha": 83.275,
+  "valid_pixels": 262016,
+  "model_source": "MapBiomas Brasil Coleção 11, mapa anual 2025, classe 46 (café), 30 m",
+  "is_coffee_detection_validated": false,
+  "limitations": "Classificação exploratória supervisionada por mapa anual de 30 m do MapBiomas, sem campo. Acordo com a referência não prova presença real de café; pouco generalizável fora de Guaxupé.",
+  "created_at": "2026-10-28T08:27:42.067347+00:00"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "global-watch-coffee",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "dev:web": "pnpm --filter @global-watch/web dev",
+    "dev:worker": "pnpm --filter @global-watch/geo-worker dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:geo": "pnpm --filter @global-watch/geo-worker test",
+    "auth:migrate": "pnpm --filter @global-watch/web auth:migrate",
+    "check:files": "python scripts/check_repository.py"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.6"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

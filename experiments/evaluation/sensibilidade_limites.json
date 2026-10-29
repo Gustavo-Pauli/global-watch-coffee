@@ -1,0 +1,49 @@
+{
+  "purpose": "threshold_sensitivity_for_research_not_ground_truth",
+  "model_was_retrained": false,
+  "model_was_tuned_using_reference": false,
+  "is_field_validation": false,
+  "warning": "Comparacao com fonte usada para treinar o modelo: nao e avaliacao independente.",
+  "results": [
+    {
+      "cutoff": 0.5,
+      "polygon_count": 51,
+      "candidate_area_ha_geodesic": 132.007,
+      "candidate_area_ha_rasterized": 132.0,
+      "reference_coffee_overlap_ha": 33.04,
+      "reference_forest_overlap_ha": 16.01,
+      "reference_other_overlap_ha": 82.95,
+      "reference_coffee_covered_pct": 76.84
+    },
+    {
+      "cutoff": 0.6,
+      "polygon_count": 35,
+      "candidate_area_ha_geodesic": 96.025,
+      "candidate_area_ha_rasterized": 96.02,
+      "reference_coffee_overlap_ha": 29.07,
+      "reference_forest_overlap_ha": 7.07,
+      "reference_other_overlap_ha": 59.88,
+      "reference_coffee_covered_pct": 67.6
+    },
+    {
+      "cutoff": 0.7,
+      "polygon_count": 27,
+      "candidate_area_ha_geodesic": 72.824,
+      "candidate_area_ha_rasterized": 72.82,
+      "reference_coffee_overlap_ha": 25.14,
+      "reference_forest_overlap_ha": 3.4,
+      "reference_other_overlap_ha": 44.28,
+      "reference_coffee_covered_pct": 58.47
+    },
+    {
+      "cutoff": 0.8,
+      "polygon_count": 18,
+      "candidate_area_ha_geodesic": 50.873,
+      "candidate_area_ha_rasterized": 50.87,
+      "reference_coffee_overlap_ha": 21.35,
+      "reference_forest_overlap_ha": 0.94,
+      "reference_other_overlap_ha": 28.58,
+      "reference_coffee_covered_pct": 49.65
+    }
+  ]
+}

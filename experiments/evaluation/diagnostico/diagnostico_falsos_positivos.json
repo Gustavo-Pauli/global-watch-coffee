@@ -1,0 +1,329 @@
+{
+  "analysis": "rasterized_polygon_agreement_with_training_reference",
+  "explicit_warning": "NAO e acuracia independente nem confirmacao de cultivo em campo.",
+  "reference": "MapBiomas Brasil Colecao 11, cobertura anual 2025, 30 m, classe 46 cafe",
+  "pixel_area_ha": 0.01,
+  "variants": {
+    "baseline": {
+      "candidate_area_ha_approx_rasterized": 1159.99,
+      "reference_coffee_overlap_ha": 24.46,
+      "reference_forest_overlap_ha": 881.42,
+      "reference_other_overlap_ha": 254.11,
+      "reference_coffee_covered_pct": 56.88,
+      "candidate_overlap_by_mapbiomas_class": [
+        {
+          "class_code": 3,
+          "class_name": "Formacao florestal",
+          "candidate_overlap_ha": 881.42
+        },
+        {
+          "class_code": 21,
+          "class_name": "Mosaico de usos",
+          "candidate_overlap_ha": 117.09
+        },
+        {
+          "class_code": 15,
+          "class_name": "Pastagem",
+          "candidate_overlap_ha": 60.32
+        },
+        {
+          "class_code": 41,
+          "class_name": "Outras lavouras temporarias",
+          "candidate_overlap_ha": 54.39
+        },
+        {
+          "class_code": 46,
+          "class_name": "Cafe",
+          "candidate_overlap_ha": 24.46
+        },
+        {
+          "class_code": 20,
+          "class_name": "Cana",
+          "candidate_overlap_ha": 13.73
+        },
+        {
+          "class_code": 9,
+          "class_name": "Silvicultura",
+          "candidate_overlap_ha": 4.86
+        },
+        {
+          "class_code": 0,
+          "class_name": "Sem dados de referencia",
+          "candidate_overlap_ha": 2.56
+        },
+        {
+          "class_code": 24,
+          "class_name": "Area urbanizada",
+          "candidate_overlap_ha": 1.14
+        },
+        {
+          "class_code": 33,
+          "class_name": "Corpo d'agua",
+          "candidate_overlap_ha": 0.02
+        }
+      ]
+    },
+    "rf_aug": {
+      "candidate_area_ha_approx_rasterized": 97.17,
+      "reference_coffee_overlap_ha": 28.25,
+      "reference_forest_overlap_ha": 10.83,
+      "reference_other_overlap_ha": 58.09,
+      "reference_coffee_covered_pct": 65.7,
+      "candidate_overlap_by_mapbiomas_class": [
+        {
+          "class_code": 46,
+          "class_name": "Cafe",
+          "candidate_overlap_ha": 28.25
+        },
+        {
+          "class_code": 21,
+          "class_name": "Mosaico de usos",
+          "candidate_overlap_ha": 25.72
+        },
+        {
+          "class_code": 15,
+          "class_name": "Pastagem",
+          "candidate_overlap_ha": 22.44
+        },
+        {
+          "class_code": 3,
+          "class_name": "Formacao florestal",
+          "candidate_overlap_ha": 10.83
+        },
+        {
+          "class_code": 41,
+          "class_name": "Outras lavouras temporarias",
+          "candidate_overlap_ha": 9.91
+        },
+        {
+          "class_code": 9,
+          "class_name": "Silvicultura",
+          "candidate_overlap_ha": 0.02
+        }
+      ]
+    },
+    "rf_jul": {
+      "candidate_area_ha_approx_rasterized": 102.27,
+      "reference_coffee_overlap_ha": 28.44,
+      "reference_forest_overlap_ha": 5.52,
+      "reference_other_overlap_ha": 68.31,
+      "reference_coffee_covered_pct": 66.14,
+      "candidate_overlap_by_mapbiomas_class": [
+        {
+          "class_code": 15,
+          "class_name": "Pastagem",
+          "candidate_overlap_ha": 31.38
+        },
+        {
+          "class_code": 46,
+          "class_name": "Cafe",
+          "candidate_overlap_ha": 28.44
+        },
+        {
+          "class_code": 21,
+          "class_name": "Mosaico de usos",
+          "candidate_overlap_ha": 22.29
+        },
+        {
+          "class_code": 41,
+          "class_name": "Outras lavouras temporarias",
+          "candidate_overlap_ha": 11.83
+        },
+        {
+          "class_code": 3,
+          "class_name": "Formacao florestal",
+          "candidate_overlap_ha": 5.52
+        },
+        {
+          "class_code": 20,
+          "class_name": "Cana",
+          "candidate_overlap_ha": 2.76
+        },
+        {
+          "class_code": 9,
+          "class_name": "Silvicultura",
+          "candidate_overlap_ha": 0.05
+        }
+      ]
+    },
+    "rf_both": {
+      "candidate_area_ha_approx_rasterized": 96.02,
+      "reference_coffee_overlap_ha": 29.07,
+      "reference_forest_overlap_ha": 7.07,
+      "reference_other_overlap_ha": 59.88,
+      "reference_coffee_covered_pct": 67.6,
+      "candidate_overlap_by_mapbiomas_class": [
+        {
+          "class_code": 46,
+          "class_name": "Cafe",
+          "candidate_overlap_ha": 29.07
+        },
+        {
+          "class_code": 15,
+          "class_name": "Pastagem",
+          "candidate_overlap_ha": 26.15
+        },
+        {
+          "class_code": 21,
+          "class_name": "Mosaico de usos",
+          "candidate_overlap_ha": 23.42
+        },
+        {
+          "class_code": 41,
+          "class_name": "Outras lavouras temporarias",
+          "candidate_overlap_ha": 10.26
+        },
+        {
+          "class_code": 3,
+          "class_name": "Formacao florestal",
+          "candidate_overlap_ha": 7.07
+        },
+        {
+          "class_code": 9,
+          "class_name": "Silvicultura",
+          "candidate_overlap_ha": 0.05
+        }
+      ]
+    }
+  },
+  "temporal_comparison": {
+    "intersection_over_union_aug_alone_vs_two_dates": 0.7737,
+    "candidate_only_aug_ha": 12.9,
+    "candidate_only_two_dates_ha": 11.75
+  },
+  "largest_rf_both_polygons_by_area_disagreeing_with_reference": [
+    {
+      "polygon_id": 33,
+      "polygon_area_ha_geodesic": 47.8527,
+      "polygon_area_ha_rasterized": 47.85,
+      "reference_coffee_pct": 24.7,
+      "reference_forest_pct": 5.3,
+      "reference_other_pct": 70.0,
+      "reference_non_coffee_area_ha": 36.02,
+      "dominant_reference_class": "Mosaico de usos",
+      "dominant_reference_class_code": 21
+    },
+    {
+      "polygon_id": 32,
+      "polygon_area_ha_geodesic": 5.6002,
+      "polygon_area_ha_rasterized": 5.6,
+      "reference_coffee_pct": 20.7,
+      "reference_forest_pct": 0.0,
+      "reference_other_pct": 79.3,
+      "reference_non_coffee_area_ha": 4.44,
+      "dominant_reference_class": "Pastagem",
+      "dominant_reference_class_code": 15
+    },
+    {
+      "polygon_id": 29,
+      "polygon_area_ha_geodesic": 5.5505,
+      "polygon_area_ha_rasterized": 5.55,
+      "reference_coffee_pct": 34.8,
+      "reference_forest_pct": 1.1,
+      "reference_other_pct": 64.1,
+      "reference_non_coffee_area_ha": 3.62,
+      "dominant_reference_class": "Cafe",
+      "dominant_reference_class_code": 46
+    },
+    {
+      "polygon_id": 18,
+      "polygon_area_ha_geodesic": 5.8303,
+      "polygon_area_ha_rasterized": 5.83,
+      "reference_coffee_pct": 47.5,
+      "reference_forest_pct": 1.7,
+      "reference_other_pct": 50.8,
+      "reference_non_coffee_area_ha": 3.06,
+      "dominant_reference_class": "Cafe",
+      "dominant_reference_class_code": 46
+    },
+    {
+      "polygon_id": 26,
+      "polygon_area_ha_geodesic": 5.2702,
+      "polygon_area_ha_rasterized": 5.27,
+      "reference_coffee_pct": 58.1,
+      "reference_forest_pct": 6.1,
+      "reference_other_pct": 35.9,
+      "reference_non_coffee_area_ha": 2.21,
+      "dominant_reference_class": "Cafe",
+      "dominant_reference_class_code": 46
+    },
+    {
+      "polygon_id": 21,
+      "polygon_area_ha_geodesic": 2.1702,
+      "polygon_area_ha_rasterized": 2.17,
+      "reference_coffee_pct": 0.0,
+      "reference_forest_pct": 13.4,
+      "reference_other_pct": 86.6,
+      "reference_non_coffee_area_ha": 2.17,
+      "dominant_reference_class": "Pastagem",
+      "dominant_reference_class_code": 15
+    },
+    {
+      "polygon_id": 20,
+      "polygon_area_ha_geodesic": 1.4601,
+      "polygon_area_ha_rasterized": 1.46,
+      "reference_coffee_pct": 0.0,
+      "reference_forest_pct": 1.4,
+      "reference_other_pct": 98.6,
+      "reference_non_coffee_area_ha": 1.46,
+      "dominant_reference_class": "Mosaico de usos",
+      "dominant_reference_class_code": 21
+    },
+    {
+      "polygon_id": 35,
+      "polygon_area_ha_geodesic": 2.2501,
+      "polygon_area_ha_rasterized": 2.25,
+      "reference_coffee_pct": 48.9,
+      "reference_forest_pct": 0.0,
+      "reference_other_pct": 51.1,
+      "reference_non_coffee_area_ha": 1.15,
+      "dominant_reference_class": "Cafe",
+      "dominant_reference_class_code": 46
+    },
+    {
+      "polygon_id": 25,
+      "polygon_area_ha_geodesic": 1.0801,
+      "polygon_area_ha_rasterized": 1.08,
+      "reference_coffee_pct": 0.0,
+      "reference_forest_pct": 1.9,
+      "reference_other_pct": 98.1,
+      "reference_non_coffee_area_ha": 1.08,
+      "dominant_reference_class": "Pastagem",
+      "dominant_reference_class_code": 15
+    },
+    {
+      "polygon_id": 15,
+      "polygon_area_ha_geodesic": 0.9801,
+      "polygon_area_ha_rasterized": 0.98,
+      "reference_coffee_pct": 0.0,
+      "reference_forest_pct": 0.0,
+      "reference_other_pct": 100.0,
+      "reference_non_coffee_area_ha": 0.98,
+      "dominant_reference_class": "Pastagem",
+      "dominant_reference_class_code": 15
+    },
+    {
+      "polygon_id": 1,
+      "polygon_area_ha_geodesic": 0.86,
+      "polygon_area_ha_rasterized": 0.86,
+      "reference_coffee_pct": 0.0,
+      "reference_forest_pct": 0.0,
+      "reference_other_pct": 100.0,
+      "reference_non_coffee_area_ha": 0.86,
+      "dominant_reference_class": "Mosaico de usos",
+      "dominant_reference_class_code": 21
+    },
+    {
+      "polygon_id": 7,
+      "polygon_area_ha_geodesic": 0.8601,
+      "polygon_area_ha_rasterized": 0.86,
+      "reference_coffee_pct": 0.0,
+      "reference_forest_pct": 53.5,
+      "reference_other_pct": 46.5,
+      "reference_non_coffee_area_ha": 0.86,
+      "dominant_reference_class": "Formacao florestal",
+      "dominant_reference_class_code": 3
+    }
+  ],
+  "does_not_change_model_or_predictions": true
+}

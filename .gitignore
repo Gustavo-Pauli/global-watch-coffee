@@ -1,0 +1,35 @@
+# Never publish secrets, service credentials or local environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/.env.local
+**/service-account*.json
+*.pem
+*.key
+
+# JS tools and build cache
+**/node_modules/
+**/.next/
+**/.turbo/
+**/dist/
+**/out/
+**/tsconfig.tsbuildinfo
+.pnpm-store/
+
+# Python local / runtime
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.venv/
+*.pyc
+*.egg-info/
+apps/geo-worker/.storage/
+private_data/
+*.sqlite3
+*.sqlite3-*
+
+# OS / local configuration
+.DS_Store
+.vscode/
+.idea/

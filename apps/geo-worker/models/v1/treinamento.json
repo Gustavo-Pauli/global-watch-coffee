@@ -1,0 +1,34 @@
+{
+  "type": "spatial_holdout_agreement_with_mapbiomas_labels",
+  "explicit_warning": "NÃO é acurácia de detecção de café em campo.",
+  "reference": "MapBiomas Brasil Coleção 11, mapa anual 2025, classe 46 (café), 30 m",
+  "training_images": [
+    "sample/imagem_multiespectral.tif",
+    "additional/imagem_adicional_multiespectral.tif"
+  ],
+  "training_pixels": 40019,
+  "reference_coffee_training_pixels": 5828,
+  "reference_holdout_pixels": 27788,
+  "reference_coffee_holdout_pixels": 2772,
+  "reference_agreement_precision": 0.4366,
+  "reference_agreement_recall": 0.4113,
+  "reference_agreement_f1": 0.4236,
+  "spatial_block_size_pixels": 64,
+  "features": [
+    "blue",
+    "green",
+    "red",
+    "nir",
+    "ndvi",
+    "gndvi",
+    "evi2",
+    "ndvi_mean5",
+    "ndvi_std5",
+    "nir_mean5",
+    "nir_std5",
+    "nir_red_ratio"
+  ],
+  "model": "RandomForest, 100 árvores, profundidade máxima 13, min_leaf 12",
+  "not_ground_truth": true,
+  "notes": "Rótulos 30 m reamostrados para 10 m; separação espacial por blocos. Duas datas da mesma área. Transferência para outras regiões não foi validada."
+}
