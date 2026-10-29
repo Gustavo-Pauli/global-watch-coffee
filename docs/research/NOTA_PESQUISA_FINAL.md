@@ -16,7 +16,7 @@
 
 **GeoTIFF + SCL → reflectância, índices e texturas → Random Forest multiclasse e coerência espacial → polígonos e hectares.**
 
-A reflectância é obtida por `DN × 0,0001 − 0,1` segundo o kit, uma única vez; `DN=0` é inválido. A máscara SCL é reamostrada por vizinho mais próximo para excluir nuvens e sombras. São calculados NDVI, GNDVI, EVI2 e texturas locais. Na inferência, há coerência 3 × 3, região mínima de 0,2 ha, GeoJSON em WGS84 (EPSG:4326) e cálculo geodésico da área.
+A reflectância é obtida por `DN × 0,0001 − 0,1` segundo o kit, uma única vez; NoData é excluído pelas máscaras GDAL. A máscara SCL é reamostrada por vizinho mais próximo para excluir nuvens e sombras. São calculados NDVI, GNDVI, EVI2 e texturas locais. Na inferência, há coerência 3 × 3, região mínima de 0,2 ha, GeoJSON em WGS84 (EPSG:4326) e cálculo geodésico da área.
 
 O treinamento utiliza **supervisão fraca** do MapBiomas Coleção 11/2025 (classe 46 = café). A revisão introduziu as classes café, floresta, pastagem, mosaico e outros; rótulos com erosão de uma célula no mapa original de aproximadamente 30 m e apenas um ponto amostrado por célula; julho, agosto e outubro. Avaliação por blocos espaciais e leave-one-date-out.
 
@@ -69,6 +69,6 @@ A revisão reduziu a sobreposição com floresta em outubro (66,45 → 0,00 ha),
 
 **Resultados por upload:** `candidatos.geojson` (EPSG:4326 e hectares por polígono), `imagem_classificada.png`, `imagem_mapa.png`, `classificacao.tif`, `resultado.json`. Hectares resultam da vetorização raster e cálculo geodésico.
 
-**Proveniência:** IDs e URLs STAC em `sample/`, `additional/`, `unseen/` e `reference/`. Crédito: “Contains modified Copernicus Sentinel data (2025)”. A página oficial de [Cobertura 30 m — Coleção 11](https://brasil.mapbiomas.org/iniciativas-e-produtos/cobertura-e-uso-da-terra/cobertura-30m/cobertura/) declara os dados sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), conferida em 29/10/2026. Manter atribuição, link da licença e indicação do recorte/reamostragem. Bibliotecas Python abertas registradas nos requisitos. Esta revisão de licença foi incorporada ao Markdown e ao [registro de proveniência](../delivery/PESQUISA_PROVENIENCIA.md); o PDF existente ainda contém a ressalva anterior de verificação.
+**Proveniência:** IDs e URLs STAC em `sample/`, `additional/`, `unseen/` e `reference/`. Crédito: “Contains modified Copernicus Sentinel data (2025)”. A página oficial de [Cobertura 30 m — Coleção 11](https://brasil.mapbiomas.org/iniciativas-e-produtos/cobertura-e-uso-da-terra/cobertura-30m/cobertura/) declara os dados sob [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), conferida em 29/10/2026. Manter atribuição, link da licença e indicação do recorte/reamostragem. Bibliotecas Python abertas registradas nos requisitos. Esta revisão foi incorporada ao Markdown, ao PDF de duas páginas e ao [registro de proveniência](../delivery/PESQUISA_PROVENIENCIA.md).
 
 **IA:** ChatGPT/GPT-6 e Deep Research apoiaram pesquisa, código e documentação. Não substituíram processamento de pixels nem geraram rótulos ou hectares. O chat generativo depende de chave no servidor; sem ela, a aplicação informa a contingência determinística.

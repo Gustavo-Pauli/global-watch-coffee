@@ -63,7 +63,7 @@ Procedimento, preflight de role/grants e backout seguro: [PRISMA_MIGRATION.md](P
 | Smoke após RLS e build final | Sessão válida, consulta autenticada, headers e logout passaram; token invalidado passa a receber 401. Nova revisão de login/mobile com reduced motion: 1 teste passou |
 | `python scripts/check_repository.py`, `git diff --check` | Passaram |
 | `pnpm audit --prod --json` | Zero vulnerabilidades conhecidas reportadas na consulta |
-| PDF de pesquisa | Duas páginas com texto extraível, conferidas estruturalmente com pypdf. Não foi alterado/renderizado nesta auditoria |
+| PDF de pesquisa | Licença alinhada à evidência primária; duas páginas com texto extraível conferidas com pypdf e revisão visual de ambas renderizadas com PyMuPDF. Método e resultados preservados |
 | Retenção HTTP com Storage real | Passou em Next production `localhost:3001` + banco isolado: 401 sem token, 8 objetos vencidos removidos, 8 ativos preservados, rate limits conferidos; fixtures removidos |
 | `pnpm release:check --mode=local` | Verificações automáticas de banco, migrations, RLS/grants, Storage, worker e ambos health passaram; exit 1 somente por chave Gemini ausente |
 
@@ -140,4 +140,4 @@ A continuação encontrou e corrigiu um problema adicional no cron: exceções d
 
 O preflight é uma ferramenta operacional somente leitura. Confere permissões e migrations sem imprimir valores de credenciais e sem executar migração/publicação; mantém gates humanos explícitos e não chama Gemini. [Procedimento](PREFLIGHT.md).
 
-As três publicações foram conferidas em fontes primárias, três cenas STAC responderam com os IDs/datas/assets esperados e oito checksums do kit coincidiram. A licença dos dados MapBiomas foi identificada como CC BY 4.0; proveniência, nota Markdown e gerador foram alinhados, preservando a data original. O PDF permanece com a ressalva anterior e não foi regenerado; o documento de proveniência acompanha a nota até revisão conjunta do PDF. A licença para código/pesos próprios permanece decisão do titular. [Evidências](PESQUISA_PROVENIENCIA.md).
+As três publicações foram conferidas em fontes primárias, três cenas STAC responderam com os IDs/datas/assets esperados e oito checksums do kit coincidiram. A licença dos dados MapBiomas foi identificada como CC BY 4.0; proveniência, notas Markdown/PDF e gerador foram alinhados, preservando a data original. O PDF foi regenerado no Windows e suas duas páginas foram renderizadas e revisadas; o gerador usa fontes do sistema, sem adicionar arquivos de fontes. A licença para código/pesos próprios permanece decisão do titular. [Evidências](PESQUISA_PROVENIENCIA.md).

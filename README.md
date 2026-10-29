@@ -102,4 +102,6 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 
 MapBiomas é supervisão fraca, não verdade de campo; outubro participou do treinamento final e não é teste independente. Scores não são confiança calibrada. Modelos v1 são pesquisa histórica, v2 é o modelo do worker. Crédito: Contains modified Copernicus Sentinel data (2025); manter atribuições dos dados e dos mapas.
 
+Para gerar a nota de pesquisa, instale o extra Python `[research]` e execute `python scripts/build_research_pdf.py`. O gerador usa DejaVu Sans instalado no Linux ou Arial do Windows e não depende de caminhos Linux no Windows. Confira sempre o limite de duas páginas e a renderização depois de alterar o texto.
+
 ChatGPT auxiliou pesquisa, implementação e documentação; processamento e números dependem de pixels reais e verificações registradas. Prithvi e Clay foram pesquisados, não executados. As referências visuais do redesign foram usadas apenas para orientação, sem copiar marcas, dados, layouts ou assets de terceiros.

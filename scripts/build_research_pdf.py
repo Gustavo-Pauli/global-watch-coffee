@@ -1,10 +1,11 @@
 """Gera a nota de pesquisa, com duas páginas e informação técnica verificável.
 
-Execute: python build_research_pdf.py
+Execute a partir da raiz: python scripts/build_research_pdf.py
 A seção de comparação evidencia que modelos fundacionais foram pesquisados,
 mas não executados; métricas indicam concordância com referência fraca.
 """
 from pathlib import Path
+import os
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
@@ -19,10 +20,16 @@ from reportlab.platypus import (
 
 ROOT = Path(__file__).resolve().parents[1] / "docs" / "research"
 PDF = ROOT / "NOTA_PESQUISA_FINAL.pdf"
-DEJAVU = Path("/usr/share/fonts/truetype/dejavu")
-# Fontes inclusas em sistemas Linux usuais; não redistribuir os arquivos de fontes.
-pdfmetrics.registerFont(TTFont("DejaVuGW", str(DEJAVU / "DejaVuSans.ttf")))
-pdfmetrics.registerFont(TTFont("DejaVuGW-Bold", str(DEJAVU / "DejaVuSans-Bold.ttf")))
+# Use installed system fonts on Linux or Windows; never copy font files into Git.
+font_pairs = [
+    (Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'), Path('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf')),
+    (Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts/arial.ttf', Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts/arialbd.ttf'),
+]
+font_pair = next((pair for pair in font_pairs if all(path.is_file() for path in pair)), None)
+if font_pair is None:
+    raise RuntimeError('Install DejaVu Sans on Linux or use the installed Arial fonts on Windows.')
+pdfmetrics.registerFont(TTFont("DejaVuGW", str(font_pair[0])))
+pdfmetrics.registerFont(TTFont("DejaVuGW-Bold", str(font_pair[1])))
 pdfmetrics.registerFontFamily("DejaVuGW", normal="DejaVuGW", bold="DejaVuGW-Bold", italic="DejaVuGW", boldItalic="DejaVuGW-Bold")
 
 NAVY = colors.HexColor("#142F37")
@@ -82,6 +89,8 @@ styles = {
 
 
 def p(text, style="body"):
+    for dash in ('\u2010', '\u2011', '\u2012', '\u2013', '\u2014'):
+        text = text.replace(dash, '-')
     return Paragraph(text, styles[style])
 
 
@@ -223,7 +232,7 @@ S(mt)
 
 S(section("02", "Fluxo executado em Python"))
 S(Pipeline())
-S(p("<b>Pré-processamento:</b> reflectância = DN × 0,0001 − 0,1 (metadados do kit; transformação feita uma vez; DN=0 inválido). SCL reamostrada por vizinho mais próximo para mascarar nuvens/sombras; NDVI, GNDVI, EVI2 e texturas locais. <b>Saída:</b> coerência 3×3, regiões ≥0,2 ha, GeoJSON WGS84 e área geodésica.","small"))
+S(p("<b>Pré-processamento:</b> reflectância = DN × 0,0001 − 0,1 (metadados do kit; transformação feita uma vez); exclusão de NoData pelas máscaras GDAL. SCL reamostrada por vizinho mais próximo para mascarar nuvens/sombras; NDVI, GNDVI, EVI2 e texturas locais. <b>Saída:</b> coerência 3×3, regiões ≥0,2 ha, GeoJSON WGS84 e área geodésica.","small"))
 S(p("<b>Treinamento:</b> MapBiomas Coleção 11/2025 (classe 46 = café) como <b>supervisão fraca</b>. A revisão introduziu classes café/floresta/pastagem/mosaico/outros, erosão de 1 célula no rótulo nativo de 30 m, amostragem de 1 ponto por célula e três datas; avaliação com blocos espaciais e teste temporal.","small"))
 
 S(section("03", "Alternativas e decisão técnica"))
@@ -269,7 +278,7 @@ S(bullet("<b>Saída operacional:</b> scores RF não calibrados; corte de score e
 
 S(section("08", "Reprodutibilidade, direitos de uso e IA"))
 S(p("<b>Arquivos gerados por upload:</b> <font face='DejaVuGW-Bold'>candidatos.geojson</font> (EPSG:4326; áreas individuais), <font face='DejaVuGW-Bold'>imagem_classificada.png</font>, <font face='DejaVuGW-Bold'>imagem_mapa.png</font>, <font face='DejaVuGW-Bold'>classificacao.tif</font> e <font face='DejaVuGW-Bold'>resultado.json</font>. Hectares vêm das geometrias vetorizadas e do cálculo geodésico.","small"))
-S(p("<b>Proveniência e licenças:</b> URLs/IDs STAC em <font face='DejaVuGW-Bold'>sample/</font>, <font face='DejaVuGW-Bold'>additional/</font>, <font face='DejaVuGW-Bold'>unseen/</font> e <font face='DejaVuGW-Bold'>reference/</font>. Crédito Copernicus: “Contains modified Copernicus Sentinel data (2025)”. MapBiomas exige atribuição; verificar termos da Coleção 11 para eventual redistribuição. Bibliotecas Python abertas estão declaradas nos requisitos.","small"))
+S(p("<b>Proveniência e licenças:</b> URLs/IDs STAC em <font face='DejaVuGW-Bold'>sample/</font>, <font face='DejaVuGW-Bold'>additional/</font>, <font face='DejaVuGW-Bold'>unseen/</font> e <font face='DejaVuGW-Bold'>reference/</font>. Crédito: “Contains modified Copernicus Sentinel data (2025)”. MapBiomas <link href='https://brasil.mapbiomas.org/iniciativas-e-produtos/cobertura-e-uso-da-terra/cobertura-30m/cobertura/' color='#286257'>Coleção 11</link>: <link href='https://creativecommons.org/licenses/by/4.0/' color='#286257'>CC BY 4.0</link>, conferida em 29/10/2026; atribuir, vincular a licença e indicar recorte/reamostragem. Bibliotecas Python abertas declaradas em <font face='DejaVuGW-Bold'>pyproject.toml</font>.","small"))
 S(p("<b>Uso de IA:</b> ChatGPT/GPT-6 e Deep Research apoiaram pesquisa, programação e documentação; nenhum substituiu a análise dos pixels, gerou rótulos ou estimou hectares. O chat generativo depende de credencial no servidor; sem ela, a aplicação informa a contingência determinística.","small"))
 
 
