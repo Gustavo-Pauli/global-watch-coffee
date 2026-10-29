@@ -95,6 +95,7 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 - [Design e estados da interface](docs/delivery/UI_DESIGN.md)
 - [Preflight de configuração e permissões](docs/delivery/PREFLIGHT.md)
 - [Validação real de retenção e novas tentativas](docs/delivery/RETENCAO_VALIDACAO.md)
+- [Validação do Gemini real pela API e pelo navegador](docs/delivery/GEMINI_VALIDACAO.md)
 - [Fontes, licenças e proveniência verificadas](docs/delivery/PESQUISA_PROVENIENCIA.md)
 - [Deploy gratuito e validação pública](docs/delivery/DEPLOY.md)
 - [Nota de pesquisa editável](docs/research/NOTA_PESQUISA_FINAL.md) e [PDF](docs/research/NOTA_PESQUISA_FINAL.pdf)

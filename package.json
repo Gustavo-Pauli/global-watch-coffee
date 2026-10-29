@@ -22,6 +22,7 @@
     "test:db": "pnpm --filter @global-watch/web test:db",
     "test:browser": "pnpm --filter @global-watch/web test:browser",
     "test:retention:live": "pnpm --filter @global-watch/web test:retention:live",
+    "test:gemini:live": "pnpm --filter @global-watch/web test:gemini:live",
     "release:check": "pnpm --filter @global-watch/web release:check"
   },
   "devDependencies": {

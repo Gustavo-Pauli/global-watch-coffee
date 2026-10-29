@@ -58,16 +58,29 @@ export function explain(question: string, facts: Facts) {
 }
 
 export function numericsSupported(answer: string, facts: Facts) {
+  // Formatting may wrap just the value, separating it from its semantic unit.
+  // Only remove paired inline markup; validate the normalized content below.
+  const plain = answer
+    .replace(/`([^`\r\n]+)`/g, '$1')
+    .replace(/(\*\*|__)(?=\S)([^\r\n]*?\S)\1/g, '$2')
+    .replace(/(\*|_)(?=\S)([^\r\n]*?\S)\1/g, '$2')
+    .replace(/[\u00a0\u202f]/g, ' ');
   // A polygon ID or year must never authorize an area/accuracy claim.
-  if (/%|\d(?:[.,]\d+)?e[+-]?\d/i.test(answer)) return false;
+  if (/%|\d(?:[.,]\d+)?e[+-]?\d/i.test(plain)) return false;
   const parse = (s: string) => Number(s.includes(',') ? s.replace(/\./g, '').replace(',', '.') : s);
   const matches = (value: number, expected: number | null) => expected !== null &&
     [expected, Number(expected.toFixed(2)), Number(expected.toFixed(3))].includes(value);
   let valid = true;
-  let text = answer.replace(/Sentinel[-\s]?2/gi, 'Sentinel');
+  let text = plain.replace(/Sentinel[-\s]?2/gi, 'Sentinel');
   text = text.replace(/\d{4}-\d{2}-\d{2}/g, date => { if (date !== facts.date) valid = false; return ''; });
   text = text.replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g, (_, d, m, y) => {
     if (`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}` !== facts.date) valid = false;
+    return '';
+  });
+  const mapBiomasResolution = /\bMapBiomas\s+(\d+)\s*m\b(?![²³])/gi;
+  const knownResolutions = new Set(Array.from(facts.limitations.matchAll(mapBiomasResolution), match => Number(match[1])));
+  text = text.replace(mapBiomasResolution, (_, resolution) => {
+    if (!knownResolutions.has(Number(resolution))) valid = false;
     return '';
   });
   const numeric = '-?\\d+(?:\\.\\d{3})*,\\d+|-?\\d+(?:[.,]\\d+)?';

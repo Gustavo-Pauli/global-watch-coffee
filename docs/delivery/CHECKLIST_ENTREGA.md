@@ -3,7 +3,7 @@
 A matriz com evidências está em [AUDITORIA_FINAL.md](AUDITORIA_FINAL.md). O enunciado original está em `data/sample/DESAFIO.txt`.
 
 - [ ] Rodar login Google/consentimento e logout no domínio público; confirmar sessão após refresh.
-- [ ] Configurar chave/cota Gemini e obter resposta real `ai_grounded`; contingência por regras não cumpre o requisito de IA.
+- [ ] Configurar chave/cota Gemini no ambiente público e repetir `ai_grounded`; a geração local já passou em API e navegador conforme GEMINI_VALIDACAO.md. Contingência por regras não cumpre o requisito de IA.
 - [ ] Aplicar Prisma em produção com comparação/baseline segura e backup; nunca reset/db push.
 - [ ] Confirmar bucket privado com teto de 12 MiB e segredos apenas nos servidores corretos.
 - [ ] Publicar Vercel/Render/Supabase manualmente após autorização; validar cold start, RAM Linux e reinício durante análise.

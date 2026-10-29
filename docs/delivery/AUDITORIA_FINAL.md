@@ -53,7 +53,7 @@ Procedimento, preflight de role/grants e backout seguro: [PRISMA_MIGRATION.md](P
 |---|---|
 | Instalação JavaScript com lock congelado/postinstall | Passou; Prisma Client gerado. Allowlist de scripts Prisma/engines/esbuild conferida com rebuild e nova instalação. Não é prova de cold cache ou máquina limpa |
 | `pnpm db:validate`, `pnpm db:status` | Schema válido; duas migrations locais aplicadas |
-| `pnpm test:web` | **17 testes unitários passaram** após continuação; suíte DB fica explicitamente skipped sem TEST_DATABASE_URL. Inclui chat adversarial/rounding, JSON stream, Origin, cleanup e preflight |
+| `pnpm test:web` | **20 testes unitários passaram** após validação Gemini; suíte DB fica explicitamente skipped sem TEST_DATABASE_URL. Inclui chat adversarial/rounding/Markdown, limites de espera, JSON stream, Origin, cleanup e preflight |
 | `pnpm test:db` com banco descartável explícito | **11 testes contados pelo runner** (10 subtestes e suíte principal) passaram; 32 chamadas concorrentes, ownership, expiração, cotas/CAS/rollback, callbacks, metadados, CHECKs, catálogo RLS/grants e adapter Better Auth |
 | Python pytest | **50 testes passaram**, 21,76 s na execução registrada pelo auditor do worker. Pixels reais, TIFF/GeoJSON, SSRF, tamanho, formatos, concorrência, retry e falhas parciais |
 | Python compileall e pip check | Passaram; dependências da `.venv` existente consistentes |
@@ -65,7 +65,8 @@ Procedimento, preflight de role/grants e backout seguro: [PRISMA_MIGRATION.md](P
 | `pnpm audit --prod --json` | Zero vulnerabilidades conhecidas reportadas na consulta |
 | PDF de pesquisa | Licença alinhada à evidência primária; duas páginas com texto extraível conferidas com pypdf e revisão visual de ambas renderizadas com PyMuPDF. Método e resultados preservados |
 | Retenção HTTP com Storage real | Passou em Next production `localhost:3001` + banco isolado: 401 sem token, 8 objetos vencidos removidos, 8 ativos preservados, rate limits conferidos; fixtures removidos |
-| `pnpm release:check --mode=local` | Verificações automáticas de banco, migrations, RLS/grants, Storage, worker e ambos health passaram; exit 1 somente por chave Gemini ausente |
+| `pnpm release:check --mode=local` | Depois da configuração Gemini, verificações automáticas passaram com zero bloqueios e exit 0; `readyForRelease=false` continua explícito pelos gates humanos |
+| Gemini real + rota autenticada + navegador | Respostas `ai_grounded` para área/contagem e NDVI, rejeição da precisão inventada e chat real capturado; ver GEMINI_VALIDACAO.md para latência e limites |
 
 Não há linter configurado; não foi alegado resultado de lint. A CI foi atualizada para executar instalação frozen, geração/validação Prisma, migrations em PostgreSQL 16 de teste, regressões e build, mas o workflow **não foi executado no GitHub** nesta tarefa.
 
@@ -91,7 +92,7 @@ Capturas em 1440x1000 e 390x844; o navegador não apresentou erros JavaScript no
 | Nova análise | [Desktop](screenshots/desktop-new-analysis.png) |
 | Processamento real | [Desktop](screenshots/desktop-processing.png) |
 | Resultado real com imagem e polígonos | [Desktop](screenshots/desktop-results.png) · [Mobile](screenshots/mobile-results.png) |
-| Chat de contingência | [Desktop](screenshots/desktop-chat.png) |
+| Chat de contingência / Gemini real | [Contingência](screenshots/desktop-chat.png) · [Gemini real](screenshots/desktop-chat-gemini.png) |
 | Upload preenchido / rejeição de formato | [Upload](screenshots/desktop-upload.png) · [Erro real de validação](screenshots/desktop-invalid-upload.png) |
 
 ## Conformidade com o enunciado
@@ -103,7 +104,7 @@ Capturas em 1440x1000 e 390x844; o navegador não apresentou erros JavaScript no
 | Índice espectral, classificação, polígonos e hectares | Implementado e testado; agosto produz 24 candidatos / 22,661 ha | Campo/generalização não validados, sem alegar acurácia |
 | Imagem adicional | Julho e outubro presentes e cobertos pelo processamento/testes; outubro participa do treino | Demonstrar imagem adicional na URL pública/vídeo |
 | Mapa, imagem, legenda, data, arquivos | Testados no navegador com Storage real | Rever domínio público e redes/dispositivos reais |
-| Chatbot com IA fundamentada | Integração Gemini e regressões com mocks implementadas; contingência real rotulada | **GEMINI_API_KEY ausente**: chamada generativa real não validada e requisito de IA ainda não fechado |
+| Chatbot com IA fundamentada | Gemini real validado na rota autenticada e no navegador com fatos da cena pública processada; contingência rotulada e tentativa de precisão inventada rejeitada | Validar chave/cota e fluxo no domínio público; disponibilidade externa pode oscilar |
 | UI desktop/mobile, vazio/processamento/erro | Redesign implementado e capturado; fluxo real e erro de validação testados | Revisão humana final e acessibilidade ampliada |
 | Segurança de rotas/ownership/upload | Regressões e integração de duas sessões passaram | Duas contas Google reais e Data API Supabase remoto |
 | Hospedagem gratuita | Código/configuração e limites documentados | **Nenhum deploy realizado**, sem URL pública confirmada |
@@ -115,11 +116,11 @@ Capturas em 1440x1000 e 390x844; o navegador não apresentou erros JavaScript no
 
 1. **Jobs em memória não sobrevivem a restart.** Worker tenta callback com retry e Next reconcilia stale em 12 minutos; isso não é fila durável nem retomada. Não foi adicionada infraestrutura paga.
 2. **Recursos gratuitos precisam de prova no destino.** Medição Windows: agosto 4,06 s / 255,0 MiB; entrada sintética de um milhão de pixels 10,16 s / 409,2 MiB. Exclui transferências e não comprova RAM Linux/Render nem pior caso. Render Free suspende e pode cancelar jobs.
-3. **Gemini real bloqueado por ausência de chave.** Mocks não provam disponibilidade, cota, faturamento ou qualidade factual real. Triagem numérica/linguística e instruções reduzem alucinações, mas não provam a verdade semântica de texto livre; uma resposta pode cair no fallback conservador. Testar perguntas adversariais e formato de números com o modelo real.
+3. **Gemini depende de serviço externo.** A chave foi configurada e a chamada real foi validada; ocorreram timeouts nas primeiras amostras, registrados no documento próprio. A janela de espera foi ajustada dentro do orçamento da rota. Triagem numérica/linguística e instruções reduzem alucinações, mas não provam toda a semântica de texto livre; uma resposta pode cair no fallback conservador. A amostra local não prova cota, faturamento ou disponibilidade em produção.
 4. **Modelos e dados são exploratórios.** MapBiomas é rótulo fraco de aproximadamente 30 m; outubro influenciou/participa do treino final. v2 é compatível com sklearn 1.8.0; v1 histórico 1.9.1 ainda avisa em testes de pesquisa. Não re-treinado nem usado para maquiar métricas.
 5. **Uploads nativos têm risco residual.** Limites de bytes/pixels, GDAL cache/thread e validações não equivalem a sandbox de GDAL. Bandas sem descrições dependem de preparação correta; apenas imagens compatíveis são suportadas.
 6. **Storage/retentividade.** URLs assinadas são bearer temporários; quem as obtiver pode usá-las até expirar. Bucket tem limite real, mas criação de capacidades tem janela de configuração em cache de 30 segundos. Acesso expira após três dias; limpeza física depende do cron/retry. A limpeza HTTP e de objetos reais passou com fixtures de data vencida; não houve passagem real de três dias nem teste do agendamento Vercel.
-7. **Produção e testes humanos.** Google real, Data API remota, cold start, reinício, cron público e Gemini ainda exigem validação com serviços/destino finais. O plano gratuito não tem SLA de produção contínua.
+7. **Produção e testes humanos.** Google real, Data API remota, cold start, reinício, cron público e Gemini no domínio publicado ainda exigem validação com os destinos finais. O plano gratuito não tem SLA de produção contínua.
 
 ## Checklist objetivo para colocar online
 
@@ -139,5 +140,7 @@ Configuração detalhada e fontes oficiais atuais: [DEPLOY.md](DEPLOY.md). Nenhu
 A continuação encontrou e corrigiu um problema adicional no cron: exceções de rede/SDK interrompiam a execução, e uma chamada de Storage não tinha timeout próprio. O serviço agora contém falhas por registro, usa cutoff fixo e aplica um sinal de até 10 segundos, reduzido ao orçamento restante. Novos testes cobrem retry, falhas parciais, backlog, expiração durante a execução e timeout; a rota foi validada com banco/HTTP/Storage reais separados. [Detalhes e reprodução](RETENCAO_VALIDACAO.md).
 
 O preflight é uma ferramenta operacional somente leitura. Confere permissões e migrations sem imprimir valores de credenciais e sem executar migração/publicação; mantém gates humanos explícitos e não chama Gemini. [Procedimento](PREFLIGHT.md).
+
+Após o usuário configurar a chave, o Gemini foi validado com fatos recém-calculados da cena pública de agosto, rota autenticada e navegador. Falsos negativos de Markdown/resolução MapBiomas foram corrigidos e o orçamento de espera ficou explícito; contingências não foram contadas como IA. [Resultados e reprodução](GEMINI_VALIDACAO.md).
 
 As três publicações foram conferidas em fontes primárias, três cenas STAC responderam com os IDs/datas/assets esperados e oito checksums do kit coincidiram. A licença dos dados MapBiomas foi identificada como CC BY 4.0; proveniência, notas Markdown/PDF e gerador foram alinhados, preservando a data original. O PDF foi regenerado no Windows e suas duas páginas foram renderizadas e revisadas; o gerador usa fontes do sistema, sem adicionar arquivos de fontes. A licença para código/pesos próprios permanece decisão do titular. [Evidências](PESQUISA_PROVENIENCIA.md).

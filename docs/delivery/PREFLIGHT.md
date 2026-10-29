@@ -57,7 +57,7 @@ As consultas de catálogo e de `_prisma_migrations` são SQL de diagnóstico, fo
 | Exit `1` | Uma ou mais falhas automáticas, incluindo ausência de chave Gemini |
 | Exit `2` | Argumentos inválidos, arquivo selecionado indisponível ou falha interna sanitizada |
 
-Com a configuração local inspecionada em 29/10/2026, banco/RLS/role/migrations/constraints/Storage e consistência do worker passaram. A execução inicial usou `--skip-health`; uma segunda execução com os dois servidores ativos confirmou health do Next e do worker. Nas duas, o comando retornou **exit 1 somente por ausência de `GEMINI_API_KEY`**, sem ocultar esse requisito atrás da contingência por regras. Na raiz, o atalho é `pnpm release:check --mode=local`.
+Com a configuração local inspecionada em 29/10/2026, banco/RLS/role/migrations/constraints/Storage e consistência do worker passaram. As primeiras execuções retornaram exit 1 por chave Gemini ausente. Depois de o usuário configurar a chave, o comando retornou **exit 0, zero bloqueios automáticos**, com health do Next e worker confirmados. `readyForRelease=false` permanece intencional. A geração real foi validada separadamente em [GEMINI_VALIDACAO.md](GEMINI_VALIDACAO.md). Na raiz, o atalho é `pnpm release:check --mode=local`.
 
 O relatório não confirma Google OAuth real, resposta generativa fundamentada, cotas/faturamento dos provedores, políticas remotas efetivas da Data API, callback de processamento, cold start/restart, memória Render, passagem de três dias/cron, URL pública, vídeo ou visibilidade GitHub. Use o procedimento em [DEPLOY.md](DEPLOY.md), a [migração segura](PRISMA_MIGRATION.md) e a [auditoria](AUDITORIA_FINAL.md).
 

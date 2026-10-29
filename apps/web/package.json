@@ -18,6 +18,7 @@
     "test:db": "node --conditions=react-server --import tsx --test tests/database.integration.test.ts",
     "test:browser": "playwright test",
     "test:retention:live": "node --env-file=.env.local --import tsx scripts/retention-live.ts",
+    "test:gemini:live": "node --env-file=.env.local --import tsx scripts/gemini-live.ts",
     "release:check": "node --import tsx scripts/release-preflight.ts"
   },
   "dependencies": {

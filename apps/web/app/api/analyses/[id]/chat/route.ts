@@ -7,8 +7,9 @@ import { reportFacts } from '@/lib/chat';
 import { groundedAnswer } from '@/lib/gemini';
 import { jsonBody } from '@/lib/request';
 export const runtime = 'nodejs';
-export const maxDuration = 35;
+export const maxDuration = 60;
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const started = Date.now();
   if (!originAllowed(request)) return Response.json({ detail: 'Origem não autorizada.' }, { status: 403 });
   const owner = await sessionUserId();
   if (!owner) return Response.json({ detail: 'Entre com Google.' }, { status: 401 });
@@ -32,5 +33,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   } catch {
     return Response.json({detail:'Resultados indisponíveis.'},{status:503});
   }
-  return Response.json(await groundedAnswer(question, facts));
+  // Leave ten seconds below the function ceiling; slow DB/Storage reads reduce
+  // the remaining provider budget instead of pushing the request past it.
+  const timeoutMs = Math.max(0, Math.min(35_000, 50_000 - (Date.now() - started)));
+  return Response.json(await groundedAnswer(question, facts, { timeoutMs }));
 }
