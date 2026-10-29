@@ -32,6 +32,7 @@ As referências de produtos terceiros serviram apenas para hierarquia, densidade
 | Média | Respostas antigas da UI e URLs de imagem podiam sobreviver à troca de contexto | Abort de polling/chat, verificação de identidade/seleção e revogação de object URLs. Histórico e downloads preservam isolamento entre sessões |
 | Baixa | Semântica de acesso e limpeza não correspondia à promessa de retenção exata | Acesso expira em três dias; cron diário remove fisicamente depois, com orçamento/retry e metadata preservada em falha de Storage. Docs corrigidos |
 | Baixa | Documentação ainda dizia build indisponível, orientava CLI antigo e publicação automática | README, migração, deploy, GitHub, arquitetura e checklist atualizados; guia v1 marcado histórico; CI usa lock congelado e banco de teste |
+| Baixa | pnpm 10 registrava scripts do Prisma/engines/esbuild como ignorados | Allowlist explícita somente desses três pacotes em pnpm-workspace.yaml; rebuild e nova instalação frozen confirmaram zero scripts ignorados |
 
 Também foram adicionados `nosniff`, proteção contra frames, política de referência restritiva e `private, no-store` nas APIs/redirecionamentos privados. A auditoria de dependências npm de produção retornou zero advisories conhecidos; isso não equivale a ausência de vulnerabilidades no aplicativo ou no código nativo GDAL.
 
@@ -50,7 +51,7 @@ Procedimento, preflight de role/grants e backout seguro: [PRISMA_MIGRATION.md](P
 
 | Verificação | Resultado e limite |
 |---|---|
-| Instalação JavaScript com lock congelado/postinstall | Passou; Prisma Client gerado. Não é prova de cold cache ou máquina limpa |
+| Instalação JavaScript com lock congelado/postinstall | Passou; Prisma Client gerado. Allowlist de scripts Prisma/engines/esbuild conferida com rebuild e nova instalação. Não é prova de cold cache ou máquina limpa |
 | `pnpm db:validate`, `pnpm db:status` | Schema válido; duas migrations locais aplicadas |
 | `pnpm test:web` | **5 testes unitários passaram**; suíte DB fica explicitamente skipped sem TEST_DATABASE_URL. Inclui chat adversarial/rounding, JSON stream e Origin |
 | `pnpm test:db` com banco descartável explícito | **11 testes contados pelo runner** (10 subtestes e suíte principal) passaram; 32 chamadas concorrentes, ownership, expiração, cotas/CAS/rollback, callbacks, metadados, CHECKs, catálogo RLS/grants e adapter Better Auth |

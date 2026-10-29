@@ -19,6 +19,8 @@ python -m venv apps/geo-worker/.venv
 
 Crie os arquivos locais a partir de `.env.example` **somente se não existirem**. Nunca sobrescreva credenciais nem recrie a `.venv` existente. O Next lê `apps/web/.env.local`; o worker lê `apps/geo-worker/.env`, independentemente do diretório atual.
 
+`pnpm-workspace.yaml` permite explicitamente os scripts de instalação de `@prisma/engines`, `prisma` e `esbuild`; não habilita scripts arbitrários de todas as dependências. A instalação gera o cliente Prisma automaticamente.
+
 | Configuração | Onde |
 |---|---|
 | `DATABASE_URL`, `DIRECT_URL` opcional | Next/Prisma; runtime pelo pooler, CLI por conexão direta ou pooler de sessão |
