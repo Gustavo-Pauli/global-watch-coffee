@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import rasterio
@@ -23,6 +24,7 @@ SOURCE = (
 
 
 def extract(reference_image: Path, out_dir: Path) -> dict:
+    accessed_at = datetime.now(timezone.utc)
     out_dir.mkdir(parents=True, exist_ok=True)
     native_file = out_dir / "mapbiomas_2025_recorte_30m.tif"
     with rasterio.open(reference_image) as target:
@@ -46,8 +48,13 @@ def extract(reference_image: Path, out_dir: Path) -> dict:
     document = {
         "origin": "MapBiomas Brasil — Coleção 11 — Cobertura e Uso da Terra, 2025",
         "source": SOURCE,
-        "license": "Dados públicos com atribuição; confirmar licença específica Coleção 11 (CC BY ou CC BY-SA conforme material oficial)",
-        "citation": "Projeto MapBiomas — Coleção 11, acessado em 28/10/2026",
+        "license": "CC BY 4.0 — atribuição, link da licença e indicação das modificações",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "license_evidence": "https://brasil.mapbiomas.org/iniciativas-e-produtos/cobertura-e-uso-da-terra/cobertura-30m/cobertura/",
+        # Historical date of the documented manual licence check, not the next download.
+        "license_verified_at": "2026-10-29",
+        "accessed_at": accessed_at.isoformat(),
+        "citation": f"Projeto MapBiomas — Coleção 11, acessado em {accessed_at:%d/%m/%Y} (UTC)",
         "coffee_class": 46,
         "forest_class": 3,
         "original_resolution": "aproximadamente 30 metros",

@@ -1,7 +1,10 @@
 {
   "origin": "MapBiomas Brasil — Coleção 11 — Cobertura e Uso da Terra, 2025",
   "source": "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection11/lulc/coverage/brazil_coverage/brazil_coverage-col11_2025.tif",
-  "license": "Público com atribuição obrigatória; verificar licença exata dos dados Coleção 11 (materiais oficiais usam CC BY e CC BY-SA)",
+  "license": "CC BY 4.0 — atribuição, link da licença e indicação das modificações",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "license_evidence": "https://brasil.mapbiomas.org/iniciativas-e-produtos/cobertura-e-uso-da-terra/cobertura-30m/cobertura/",
+  "license_verified_at": "2026-10-29",
   "citation": "Projeto MapBiomas — Coleção 11, acessado em 28/10/2026",
   "coffee_class": 46,
   "forest_class": 3,
