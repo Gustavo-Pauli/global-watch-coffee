@@ -82,17 +82,18 @@ O backend de navegador integrado estava indisponível. O fallback usado foi Play
 
 ## Interface e capturas
 
-O redesign é um workspace escuro neutro, com um destaque oliva, histórico compacto, mapa central e um painel contextual. Nova análise, processamento, resultado, downloads, método e consulta têm estados reais. Não foram criados módulos de clima, alertas, séries temporais ou precisão. No mobile, mapa/painel empilham e histórico abre como drawer. Labels, foco visível, Escape, abas por teclado e reduced motion foram considerados; não houve auditoria WCAG completa.
+Após rejeição visual da primeira versão, o redesign foi refeito: coleção em `/analyses`, workspace por análise, upload em dialog, ferramentas fecháveis e perfil funcional via Better Auth. Inter local, superfícies neutras e navegação lateral/rail. No mobile há navegação em sheet e ferramentas sobre o mapa, sem empilhamento permanente de colunas. Não foram criados módulos de clima, alertas, séries temporais ou precisão. Não houve auditoria WCAG completa nem aprovação visual final do usuário. Nesta alteração, **nenhum commit foi feito**, conforme solicitado.
 
-Capturas em 1440x1000 e 390x844; o navegador não apresentou erros JavaScript no fluxo completo e não houve overflow horizontal nas larguras verificadas. [Sistema visual e fluxos](UI_DESIGN.md).
+O novo build/typecheck e os 20 testes unitários web passaram. A revisão de produção local cobre 1440, 768, 390 e 320 px, perfil persistido, logout desktop/mobile, foco/teclado e mapa com arquivos reais. Dois novos processamentos reais completaram antes da falha final de clique causada pelo indicador de desenvolvimento do Next, corrigido; a regressão posterior de conta/UI passou sem novos jobs, preservando a cota global em 9. [Decisões, comandos, evidências e limites](UI_REDESIGN.md) e [sistema visual](UI_DESIGN.md). Capturas de Gemini geradas antes desta revisão continuam históricas.
 
 | Tela | Captura do próprio aplicativo |
 |---|---|
 | Login desktop / celular | [Desktop](screenshots/desktop-login.png) · [Mobile](screenshots/mobile-login.png) |
 | Nova análise | [Desktop](screenshots/desktop-new-analysis.png) |
+| Coleção e perfil | [Coleção](screenshots/desktop-analyses.png) · [Perfil](screenshots/desktop-profile.png) · [Perfil móvel](screenshots/mobile-profile.png) |
 | Processamento real | [Desktop](screenshots/desktop-processing.png) |
 | Resultado real com imagem e polígonos | [Desktop](screenshots/desktop-results.png) · [Mobile](screenshots/mobile-results.png) |
-| Chat de contingência / Gemini real | [Contingência](screenshots/desktop-chat.png) · [Gemini real](screenshots/desktop-chat-gemini.png) |
+| Assistente na nova UI / execuções históricas | [Nova UI com classificação real](screenshots/desktop-chat-ready.png) · [Resposta por regras na revisão](screenshots/desktop-chat.png) · [Gemini real anterior](screenshots/desktop-chat-gemini.png) |
 | Upload preenchido / rejeição de formato | [Upload](screenshots/desktop-upload.png) · [Erro real de validação](screenshots/desktop-invalid-upload.png) |
 
 ## Conformidade com o enunciado

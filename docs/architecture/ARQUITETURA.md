@@ -32,7 +32,11 @@ Browser do usuário autenticado
 
 O worker recebe **apenas URLs assinadas, IDs de tarefa e segredo servidor-servidor**; não recebe OAuth, ID arbitrário de usuário, credenciais de banco ou chave administrativa Supabase. Todos os endpoints do usuário verificam a sessão Better Auth e consultam a análise pelo proprietário e expiração via Prisma. O worker não pode consultar análises de outros usuários. O schema e o baseline seguro estão em [PRISMA_MIGRATION.md](../delivery/PRISMA_MIGRATION.md).
 
-## Por que assíncrono?
+## Interface e navegação
+
+O layout compartilhado `app/(platform)/layout.tsx` compõe autenticação, navegação e conta. A coleção `/analyses` e o workspace `/analyses/[id]` são páginas independentes, mantendo as APIs existentes. A identidade da análise está na URL; o perfil usa os endpoints de usuário do Better Auth. Estado de modais é reiniciado ao trocar de usuário; polling, chat, downloads e imagens são limpos ao desmontar o workspace. A composição permite crescimento de módulos sem adicionar recursos ou dados fictícios. Detalhes em [UI_DESIGN.md](../delivery/UI_DESIGN.md).
+
+## Processamento assíncrono
 
 Render Free pode levar cerca de um minuto para despertar. Uma função Vercel não deve manter aberta a resposta até o final de todo o geoprocessamento. Next inicia a tarefa, retorna HTTP 202, a UI consulta `GET /api/analyses/[id]` até concluir. O callback interno só é aceito com `X-Worker-Token` correto; o Next só marca `ready` depois de verificar e ler os artefatos Python do Storage.
 

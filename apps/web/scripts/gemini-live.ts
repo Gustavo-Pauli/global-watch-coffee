@@ -79,19 +79,20 @@ async function main() {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
     await context.addCookies([{ name: cookieName, value: cookieValue, url: base, httpOnly: true, sameSite: 'Lax' }]);
     const page = await context.newPage();
-    await page.goto(base);
-    await page.locator('.history-row').click();
-    await expect(page.getByRole('region', { name: 'Área candidata', exact: true })).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator('.leaflet-image-layer')).toBeVisible();
-    await page.getByRole('tab', { name: 'Consultar análise', exact: true }).click();
+    await page.goto(`${base}/analyses/${id}`);
+    await expect(page.getByLabel('Legenda e área estimada', { exact: true })).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator('.leaflet-image-layer')).toBeVisible({ timeout: 30_000 });
+    await expect.poll(() => page.locator('.leaflet-image-layer').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await page.getByRole('button', { name: 'Assistente', exact: true }).click();
     const answered = page.waitForResponse(response => response.url().endsWith(`/api/analyses/${id}/chat`) && response.request().method() === 'POST', { timeout: 65_000 });
     await page.getByRole('textbox', { name: 'Pergunta sobre a análise' }).fill('Qual é a área candidata desta imagem?');
     await page.getByRole('button', { name: 'Enviar pergunta' }).click();
-    assert.equal((await (await answered).json()).type, 'ai_grounded');
-    await expect(page.locator('.chat-message.assistant .answer-source')).toBeVisible({ timeout: 10_000 });
+    const browserReply = await (await answered).json() as ChatAnswer;
+    assert.equal(browserReply.type, 'ai_grounded');
+    await expect(page.locator('.chat-message.assistant p')).toHaveText(browserReply.answer, { timeout: 10_000 });
     const screenshotRoot = resolve(__dirname, '../../../docs/delivery/screenshots');
     await mkdir(screenshotRoot, { recursive: true });
-    await page.screenshot({ path: join(screenshotRoot, 'desktop-chat-gemini.png'), fullPage: true });
+    await page.screenshot({ path: join(screenshotRoot, 'desktop-chat-gemini.png'), fullPage: true, animations: 'disabled' });
     console.log(JSON.stringify({ model: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite', publicDemoFacts: { areaHa: result.candidate_area_ha, polygons: result.candidate_polygon_count, ndvi: result.ndvi_median }, checks, browserAIGrounded: true, oauthHandshakeTested: false }));
   } finally {
     await browser?.close();

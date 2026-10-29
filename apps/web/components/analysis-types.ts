@@ -1,7 +1,7 @@
-import type { FeatureCollection } from 'geojson';
+import type { FeatureCollection } from "geojson";
 
 export type Bounds = [[number, number], [number, number]];
-export type AnalysisStatus = 'uploading' | 'processing' | 'ready' | 'error';
+export type AnalysisStatus = "uploading" | "processing" | "ready" | "error";
 export type AnalysisResult = {
   method: string;
   acquisition_date: string | null;
@@ -14,7 +14,12 @@ export type AnalysisResult = {
   model_score_not_calibrated: boolean;
 };
 export type AnalysisData = {
-  analysis: { id: string; status: AnalysisStatus; scene: string | null; date: string | null };
+  analysis: {
+    id: string;
+    status: AnalysisStatus;
+    scene: string | null;
+    date: string | null;
+  };
   result: AnalysisResult;
   geojson: FeatureCollection;
 };
@@ -25,32 +30,71 @@ export type HistoryItem = {
   status: AnalysisStatus;
   created: number;
 };
-export type WorkStage = 'preparing' | 'uploading' | 'processing' | 'opening' | null;
-export type ChatMessage = { role: 'assistant' | 'user'; text: string; mode?: string };
-export type DownloadKind = 'geojson' | 'classified' | 'tif' | 'rgb';
+export type WorkStage =
+  | "preparing"
+  | "uploading"
+  | "processing"
+  | "opening"
+  | null;
+export type ChatMessage = {
+  role: "assistant" | "user";
+  text: string;
+  mode?: string;
+};
+export type DownloadKind = "geojson" | "classified" | "tif" | "rgb";
 
 export const SCENES = [
-  { value: 'august', label: 'Agosto', date: '2025-08-16', description: 'Cena original' },
-  { value: 'july', label: 'Julho', date: '2025-07-21', description: 'Cena adicional' },
-  { value: 'october', label: 'Outubro', date: '2025-10-25', description: 'Teste temporal' },
+  {
+    value: "august",
+    label: "Agosto",
+    date: "2025-08-16",
+    description: "Imagem Sentinel-2",
+  },
+  {
+    value: "july",
+    label: "Julho",
+    date: "2025-07-21",
+    description: "Imagem Sentinel-2",
+  },
+  {
+    value: "october",
+    label: "Outubro",
+    date: "2025-10-25",
+    description: "Imagem Sentinel-2",
+  },
 ] as const;
 
 export function formatNumber(value: number, digits = 2) {
-  if (!Number.isFinite(value)) return '—';
-  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(value);
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: digits,
+    minimumFractionDigits: digits,
+  }).format(value);
 }
 export function formatDate(value: string | null, long = false) {
-  if (!value) return 'Data não informada';
+  if (!value) return "Data não informada";
   const date = new Date(`${value.slice(0, 10)}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return 'Data não informada';
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: long ? 'long' : 'short', year: 'numeric' }).format(date);
+  if (Number.isNaN(date.getTime())) return "Data não informada";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: long ? "long" : "short",
+    year: "numeric",
+  }).format(date);
 }
 export function sceneLabel(scene: string | null) {
-  return SCENES.find(item => item.value === scene)?.description ?? 'Imagem enviada';
+  return (
+    SCENES.find((item) => item.value === scene)?.description ?? "Imagem enviada"
+  );
 }
 export function sceneDate(scene: string | null, date: string | null) {
-  return date ?? SCENES.find(item => item.value === scene)?.date ?? null;
+  return date ?? SCENES.find((item) => item.value === scene)?.date ?? null;
+}
+export function analysisTitle(id: string) {
+  return `Análise ${id.slice(0, 8)}`;
 }
 export const STATUS_LABELS: Record<AnalysisStatus, string> = {
-  uploading: 'Aguardando envio', processing: 'Processando', ready: 'Concluída', error: 'Falha no processamento',
+  uploading: "Aguardando envio",
+  processing: "Processando",
+  ready: "Concluída",
+  error: "Falha no processamento",
 };

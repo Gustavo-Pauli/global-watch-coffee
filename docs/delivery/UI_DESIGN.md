@@ -1,37 +1,40 @@
-# Interface cartográfica — Global Watch Coffee
+# Interface da plataforma — Global Watch Coffee
 
-## Direção e limites
+## Organização
 
-A interface usa um espaço de trabalho cartográfico original: histórico compacto à esquerda, mapa no centro e ferramentas contextuais à direita. O painel contextual muda entre nova análise, resultado, consulta e explicação do método. O chat não ocupa uma coluna adicional permanente.
+A entrada autenticada é uma coleção de análises em `/analyses`: busca, filtro de status, ordenação por criação e ação **Nova análise**. Cada registro abre um workspace próprio em `/analyses/:id`. Refresh e histórico do navegador preservam a identidade da análise. A raiz `/` redireciona à coleção. O login Google é uma tela dedicada, sem mapa decorativo ou apresentação de marketing.
 
-As referências fornecidas orientaram densidade, hierarquia, contexto cartográfico e estados de formulário. Não foram copiadas marcas, dados ou layouts literais. Nenhum screenshot externo foi adicionado ao repositório. Não há séries temporais, clima, alertas ou precisão inventados.
+O shell compartilhado separa navegação, conta e conteúdo. A navegação é uma sidebar na coleção e uma rail no workspace; no celular abre em um sheet. Apenas o módulo implementado é mostrado. A composição por rotas permite acrescentar módulos depois sem colocar navegação vazia hoje.
 
 ## Sistema visual
 
-- Tipografia: Arial/Helvetica/system sans, disponível localmente, sem dependência de fonte externa. Texto operacional de 11–12 px no desktop, títulos contextuais de 20–25 px; controles e leitura principal maiores no mobile.
-- Superfícies: carvão esverdeado `#131513`, `#1b1e1b`, divisórias `#33382f` e texto `#edf0e8`.
-- Destaque único: oliva claro `#c4d58c`. Cor de erro discreta usada exclusivamente como sinal de estado.
-- Ritmo: incrementos de 4 px, controles de aproximadamente 40 px, cantos de 4–5 px. Sem vidro, gradientes, glows ou hero de marketing.
-- Dados: a área candidata é a medida principal. Polígonos, NDVI mediano e pixels válidos aparecem como linhas de dados; downloads são ações identificadas por tipo real.
-- Estados: sem sessão, histórico vazio, preparação, envio direto, processamento, carregamento, resultado, falha, arquivo indisponível e fallback do chat.
+- Inter variável servida localmente por Fontsource; corpo 13–14 px e metadados 12 px. Inputs de toque usam 16 px.
+- Superfícies carvão neutras `#171717`, `#1d1d1f`, divisórias `#343437`, texto `#ededee`. Verde contido `#c0d6a6` nas geometrias e seleção; botão primário neutro.
+- Controles de aproximadamente 36 px no desktop e alvos ampliados no toque. Cantos de 5–8 px, sem grades de KPIs, gradientes, glows ou vidro.
+- Radix Dialog, Dropdown Menu, Avatar, Tabs e Switch com CSS próprio. Menus/dialogs não são imitações feitas apenas com `div` e handlers.
 
-## Fluxos
+## Fluxos reais
 
-1. Sem sessão, o mapa de referência mostra a região de Guaxupé e o painel explica o acesso com Google. Esse mapa não representa uma análise nem contém polígonos simulados.
-2. Nova análise permite escolher uma das três cenas reais ou enviar imagem com quatro bandas e máscara SCL opcional. A data de aquisição de upload é opcional e começa vazia.
-3. Os arquivos são enviados diretamente ao Storage. O estado de envio é distinguido do processamento; não há porcentagem fictícia. O resultado é acompanhado via API existente.
-4. O resultado mostra a imagem efetivamente produzida, polígonos interativos, controle de camadas, enquadramento, zoom, escala, atribuição cartográfica e legenda.
-5. O histórico permite retomar resultados ou acompanhar processamento. Erros e uploads interrompidos têm mensagem explícita. Trocar de seleção cancela somente a espera no navegador.
-6. As consultas ao chat ficam vinculadas à análise selecionada e são descartadas ao trocar a análise/conta. O fallback determinístico é identificado, sem apresentá-lo como IA.
+**Nova análise:** dialog com upload como opção inicial e exemplos como alternativa. Arquivo obrigatório, requisitos de quatro bandas/CRS junto ao campo e opções de SCL/data em disclosure. Extensão, arquivo vazio e limites são verificados no navegador; o servidor e o Python continuam responsáveis pela validação efetiva. O fluxo usa upload direto ao Storage e distingue preparação, envio e início, sem porcentagens fictícias.
 
-## Responsividade e acessibilidade
+**Processamento:** a análise recebe rota própria e pode ser acompanhada depois pela coleção. Sair da tela interrompe somente a espera do navegador; não alega cancelar o job já aceito. Falhas e upload incompleto mostram ações de nova análise/retentativa.
 
-Em telas intermediárias o histórico se torna um drawer. No mobile, mapa e painel são empilhados; o mapa conserva altura utilizável e o conteúdo é rolável. Não há mapa espremido entre três colunas no celular.
+**Resultado:** mapa ocupa o workspace, com imagem RGB efetivamente produzida, polígonos interativos, enquadramento, zoom, escala e atribuição. Zoom fracionário enquadra a imagem sem perder uma faixa inteira de resolução de zoom. Legenda, hectares e data ficam visíveis. O mapa de referência é escurecido; a imagem calculada mantém suas cores reais.
 
-Controles têm nomes acessíveis, foco visível, grupos de formulário, labels de arquivos e radio buttons reais. Há link para pular ao painel. Resultados e chat usam abas identificadas e mensagens de erro usam `role=alert`. Motion respeita `prefers-reduced-motion`. O drawer prende o foco enquanto aberto, fecha com Escape e devolve o foco ao controle de origem. No mobile, o login aparece logo após a introdução, antes da explicação das três etapas.
+**Ferramentas:** Camadas, Informações e Assistente abrem um painel por vez, que pode ser fechado. Informações reúne contagem, NDVI e método/limitações expansíveis. Arquivos é um menu para GeoJSON, PNG com polígonos, GeoTIFF classificado e RGB. Camadas controla apenas a imagem RGB e os polígonos existentes; não inventa um raster NDVI.
 
-O mapa base tem um aviso explícito de falha e ação de recarregar quando tiles externos não carregam. As camadas calculadas são independentes desse mapa base. A seleção de outra análise ou a troca de conta cancela a espera do navegador, sem alegar cancelar um trabalho já aceito pelo worker. Números ausentes/inválidos são exibidos como travessão, sem `NaN` ou métricas substitutas.
+**Chat:** vinculado à análise da rota. Mostra a classificação real, perguntas e respostas. Fallback `rules_fallback_not_ai` é identificado como resposta por regras/IA indisponível; não se apresenta como resposta generativa. Trocar a análise ou encerrar a sessão desmonta esse contexto e aborta requisições pendentes.
 
-## Verificação
+**Conta:** avatar/nome abre menu com **Meu perfil** e **Sair da conta**. Nome salva via Better Auth e a sessão é atualizada. Email é somente leitura. Foco volta ao menu após fechar o perfil. Não existem telas fictícias de times, cobrança ou configurações.
 
-A revisão de screenshots e integrações deve ser registrada em `AUDITORIA_FINAL.md`, distinguindo screenshots de dados reais, fixtures de sessão de teste e validação humana de Google OAuth. O redesign conserva as rotas existentes; não usa uma simulação de análise para preencher os resultados.
+## Acessibilidade e mobile
+
+Dialogs usam título, descrição, foco contido, Escape e retorno de foco ao botão de origem. O sheet móvel segue o mesmo comportamento. Ferramentas do mapa são regiões não modais: mantêm o mapa utilizável, recebem foco ao abrir e fecham com Escape, sem interferir em outro dialog/menu aberto. Botões possuem rótulos; formulários têm labels e erros anunciados. O campo do chat preserva o foco durante a espera. Há link de salto, contraste e foco visível; animações respeitam reduced motion.
+
+No celular os painéis têm largura limitada ao viewport, altura limitada e rolagem interna. Não são três colunas empilhadas permanentemente. A data continua visível no cabeçalho do resultado. A tabela oculta colunas secundárias em telas estreitas, mantendo registro/status/abertura.
+
+## Dados e limites preservados
+
+Não foram adicionados clima, alertas, séries, acurácia ou dados inventados. Áreas continuam candidatas, sem validação de campo. APIs, autorização por proprietário, processamento Python, armazenamento privado, cotas e retenção foram preservados. A coleção usa os até 30 registros recentes já retornados pela API; busca/filtro são locais nesse conjunto. Não se promete paginação ou busca global ainda não implementada. O nome original do upload não é persistido pelo schema atual; a identificação usa o ID real da análise.
+
+As referências enviadas, incluindo MapBiomas, orientam hierarquia e padrões de interação. Não são assets e não foram copiadas para o repositório. Decisões, fontes oficiais e critérios de revisão: [UI_REDESIGN.md](UI_REDESIGN.md). Evidências técnicas e visuais não substituem a avaliação visual do usuário.

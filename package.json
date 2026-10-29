@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "packageManager": "pnpm@10.12.1",
   "scripts": {
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev",
     "dev:web": "pnpm --filter @global-watch/web dev",
     "dev:worker": "pnpm --filter @global-watch/geo-worker dev",
     "build": "turbo run build",

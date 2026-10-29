@@ -2,7 +2,7 @@
 
 Aplicação de geoprocessamento para identificar **áreas candidatas a cafezais existentes** em GeoTIFFs Sentinel-2. Os resultados são exploratórios: não comprovam café, não avaliam aptidão agrícola e não representam precisão validada em campo.
 
-Next.js + React + Better Auth/Google, **Prisma + PostgreSQL**, Supabase Storage privado e worker Python/FastAPI. O mapa ocupa a área principal; histórico, nova análise, resultados, downloads e chat usam painéis contextuais. Não existem dados fictícios de clima, alertas ou séries temporais.
+Next.js + React + Better Auth/Google, **Prisma + PostgreSQL**, Supabase Storage privado e worker Python/FastAPI. A coleção em `/analyses` organiza as imagens; cada análise tem workspace cartográfico próprio. Upload, camadas, informações, arquivos e chat abrem sob demanda. O menu da conta permite editar o nome e sair. Não existem dados fictícios de clima, alertas ou séries temporais.
 
 O estado verificável da entrega, comandos e limitações estão em [AUDITORIA_FINAL.md](docs/delivery/AUDITORIA_FINAL.md). Build local não comprova deploy. Nenhum push, alteração de visibilidade ou deploy é executado automaticamente.
 
@@ -48,6 +48,17 @@ pnpm.cmd db:deploy
 
 ### Servidores
 
+No Git Bash, é possível iniciar os dois serviços na raiz com a `.venv` ativa:
+
+```bash
+source apps/geo-worker/.venv/Scripts/activate
+pnpm dev
+```
+
+Esse comando usa as tarefas persistentes já configuradas no `turbo.json`, sem o parâmetro obsoleto `--parallel` ([Turborepo](https://turborepo.dev/docs/reference/run#--parallel)). As portas 3000 e 8000 precisam estar livres. Se os serviços já estiverem abertos em outros terminais, encerre essas instâncias antes de iniciar o conjunto. No Windows, outro worker ocupando 8000 pode causar `WinError 10013`.
+
+Para executar em terminais separados:
+
 ```powershell
 # Terminal 1 (Python da .venv, sem depender do PATH global):
 & apps/geo-worker/.venv/Scripts/python.exe -m uvicorn geo_worker.server:app --app-dir apps/geo-worker/src --reload --host 127.0.0.1 --port 8000
@@ -85,6 +96,8 @@ pnpm.cmd release:check --mode=local
 
 Para revisão visual: execute o app local, instale Chrome ou `pnpm --filter @global-watch/web exec playwright install chromium`, e execute `pnpm test:browser`. O fluxo real opt-in usa `RUN_LIVE_BROWSER=1`, cria usuários/sessões descartáveis e limpa seus próprios objetos; usa a configuração local e consome a cota de processamento. **Não testa o consentimento OAuth Google**. Capturas do aplicativo ficam em `docs/delivery/screenshots`; não há screenshots externos copiados.
 
+A regressão adicional `RUN_UI_BROWSER=1` testa o workspace pronto e conta no build local de produção sem iniciar jobs. Ela usa arquivos realmente processados da cena pública e fixtures próprios no PostgreSQL/Storage. Preparação e limites em [UI_REDESIGN.md](docs/delivery/UI_REDESIGN.md); `UI_FIXTURE_DIR` aponta para os seis artefatos. A busca da coleção atua sobre até 30 registros recentes retornados pela API.
+
 O preflight é somente leitura, não exibe segredos e retorna código 1 se faltar uma configuração obrigatória, inclusive a chave Gemini. Nunca declara produção pronta sozinho. A verificação de retenção real tem opt-in e banco/servidor isolados; consulte os procedimentos antes de executá-la.
 
 ## Documentos
@@ -93,6 +106,7 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 - [Migração Prisma sem perda de dados](docs/delivery/PRISMA_MIGRATION.md)
 - [Auditoria do geoprocessamento](docs/delivery/AUDITORIA_GEO.md)
 - [Design e estados da interface](docs/delivery/UI_DESIGN.md)
+- [Decisões e validação do novo redesign](docs/delivery/UI_REDESIGN.md)
 - [Preflight de configuração e permissões](docs/delivery/PREFLIGHT.md)
 - [Validação real de retenção e novas tentativas](docs/delivery/RETENCAO_VALIDACAO.md)
 - [Validação do Gemini real pela API e pelo navegador](docs/delivery/GEMINI_VALIDACAO.md)
