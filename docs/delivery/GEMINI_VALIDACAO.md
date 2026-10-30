@@ -1,5 +1,19 @@
 # Gemini real: verificação local
 
+## Revisão de 30/10/2026
+
+O chat envia os últimos seis turnos, validados no backend como contexto não confiável. O método foi conferido no Python: Random Forest multiclasse, bandas, NDVI/GNDVI/EVI2 e textura; ajuda de exportação e contexto técnico só são fornecidos ao modelo quando pertinentes. Dados medidos continuam vindo dos resultados após ownership. Respostas focam a pergunta em uma a três frases, sem repetir o relatório inteiro.
+
+Foram reproduzidos falsos negativos com IDs naturais (inclusive “o de ID 16”), “MapBiomas de 30 metros”, arredondamentos e datas por extenso. Esses formatos passaram a ser reconhecidos; testes continuam rejeitando IDs, datas, resoluções e medidas inventadas. A contingência confundia “candidata” com “data”; isso foi corrigido. O rótulo agora informa se houve cota, demora, configuração, resposta incompleta ou texto não validado. HTTP 500/502/503/504 permite uma única repetição no mesmo orçamento de até 35 s; não há retry de rejeição factual para contornar a validação.
+
+Na execução final, sete perguntas reais retornaram `ai_grounded`: área/contagem, método, verificação em campo, maior polígono, data/fundo, exportação e NDVI. As durações HTTP locais ficaram entre 1,678 e 2,560 s. O pedido de precisão inventada foi recusado por uma resposta generativa válida. Duas perguntas consecutivas também passaram no navegador; o teste conferiu que a segunda enviou a primeira pergunta/resposta no histórico. [Conversa capturada](screenshots/desktop-chat-gemini.png).
+
+Rodadas anteriores revelaram variações legítimas que acionavam o guard; foram registradas como falhas, corrigidas e não contadas como respostas generativas. Os testes usam a cena pública de 24 polígonos, 22,661 ha e NDVI 0,5592, identidades/sessões/Storage descartáveis, sem consumir cota de processamento Python. As cotas do provedor são consumidas. A prova local não garante disponibilidade futura ou semântica de toda resposta; contingência continua possível e não substitui a exigência de IA no ambiente público.
+
+Build e verificações atuais estão em [REVISAO_ENTREGA_2026-10-30.md](REVISAO_ENTREGA_2026-10-30.md). O teste `scripts/gemini-live.ts` exige opt-in e valida histórico, fatos e recusa de precisão inventada sem imprimir credenciais.
+
+## Histórico de 29/10/2026
+
 Validado em 29/10/2026 depois de o usuário configurar a chave em `apps/web/.env.local`. Nenhum arquivo de credenciais foi sobrescrito, nenhuma chave foi impressa ou commitada e nenhuma configuração de faturamento foi alterada.
 
 ## Origem dos fatos e ambiente

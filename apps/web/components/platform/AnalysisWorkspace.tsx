@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import * as DropdownMenu from "radix-ui/dropdown-menu";
 import * as Tabs from "radix-ui/tabs";
 import {
@@ -19,7 +20,9 @@ import {
   isAborted,
   errorMessage,
   waitForPoll,
+  requestSignal,
 } from "@/lib/client-api";
+import { usePlatform } from "./PlatformShell";
 import type {
   AnalysisData,
   ChatMessage,
@@ -31,6 +34,7 @@ import {
   formatDate,
   formatNumber,
   sceneDate,
+  chatFallbackLabel,
 } from "../analysis-types";
 import PageHeader from "./PageHeader";
 import AboutResult from "./AboutResult";
@@ -50,7 +54,7 @@ const SatelliteMap = dynamic(() => import("../SatelliteMap"), {
 const FILES: { kind: DownloadKind; label: string; extension: string }[] = [
   {
     kind: "geojson",
-    label: "Polígonos de plantações de café",
+    label: "Polígonos",
     extension: "GeoJSON",
   },
   { kind: "classified", label: "Imagem com polígonos", extension: "PNG" },
@@ -60,11 +64,13 @@ const FILES: { kind: DownloadKind; label: string; extension: string }[] = [
 type InspectorTab = "information" | "chat";
 
 export default function AnalysisWorkspace({ id }: { id: string }) {
+  const { newAnalysis } = usePlatform();
   const [data, setData] = useState<AnalysisData | null>(null);
   const [phase, setPhase] = useState<
     "opening" | "processing" | "error" | "ready"
   >("opening");
   const [error, setError] = useState("");
+  const [terminalError, setTerminalError] = useState(false);
   const [notice, setNotice] = useState("");
   const [overlay, setOverlay] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
@@ -132,6 +138,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
     let objectUrl: string | null = null;
     setPhase("opening");
     setError("");
+    setTerminalError(false);
     setNotice("");
     setData(null);
     setOverlay(null);
@@ -143,24 +150,28 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
           const response = await fetch(`/api/analyses/${id}`, {
             credentials: "same-origin",
             cache: "no-store",
-            signal,
+            signal: requestSignal(signal),
           });
           const body = await response.json().catch(() => null);
           if (response.status === 202) {
-            if (body?.analysis?.status === "uploading")
+            if (body?.analysis?.status === "uploading") {
+              setTerminalError(true);
               throw new Error(
                 "O envio desta imagem não foi concluído. Crie uma nova análise para reenviar os arquivos.",
               );
+            }
             setPhase("processing");
             await waitForPoll(signal, 4000);
             continue;
           }
-          if (!response.ok)
+          if (!response.ok) {
+            if (response.status === 422 || response.status === 404) setTerminalError(true);
             throw new Error(
               typeof body?.detail === "string"
                 ? body.detail
                 : "Não foi possível abrir esta análise.",
             );
+          }
           result = body as AnalysisData;
           break;
         }
@@ -175,7 +186,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
           const response = await fetch(`/api/analyses/${id}/files/map`, {
             credentials: "same-origin",
             cache: "no-store",
-            signal,
+            signal: requestSignal(signal, 60_000),
           });
           if (!response.ok) throw new Error("Imagem indisponível");
           const blob = await response.blob();
@@ -236,7 +247,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
       const response = await fetch(`/api/analyses/${id}/files/${kind}`, {
         credentials: "same-origin",
         cache: "no-store",
-        signal: controller.signal,
+        signal: requestSignal(controller.signal, 60_000),
       });
       if (!response.ok) throw new Error("Arquivo indisponível");
       const blob = await response.blob();
@@ -273,19 +284,20 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
     setQuestion("");
     setChatLoading(true);
     try {
-      const response = await requestJSON<{ answer: string; type: string }>(
+      const response = await requestJSON<{ answer: string; type: string; reason?: string }>(
         `/api/analyses/${id}/chat`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question: text }),
+          body: JSON.stringify({ question: text, history: messages.filter(message => message.mode !== 'error').slice(-6).map(message => ({ role: message.role, text: message.text.slice(0, 1200) })) }),
           signal: controller.signal,
+          timeoutMs: 55_000,
         },
       );
       if (!controller.signal.aborted && active.current)
         setMessages((items) => [
           ...items,
-          { role: "assistant", text: response.answer, mode: response.type },
+          { role: "assistant", text: response.answer, mode: response.type, reason: response.reason },
         ]);
     } catch (caught) {
       if (!isAborted(caught) && active.current)
@@ -334,13 +346,18 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                 <h2>Não foi possível abrir a análise</h2>
                 <p role="alert">{error}</p>
                 <div className="state-actions">
-                  <button
+                  {terminalError ? (
+                    <>
+                      <button className="button button-primary" onClick={newAnalysis}>Nova análise</button>
+                      <Link className="button button-secondary" href="/analyses">Voltar às análises</Link>
+                    </>
+                  ) : <button
                     className="button button-secondary"
                     onClick={() => setRevision((value) => value + 1)}
                   >
                     <RotateCcw size={15} />
                     Tentar novamente
-                  </button>
+                  </button>}
                 </div>
               </>
             ) : (
@@ -436,6 +453,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   onRaster={setShowRaster}
                   showPolygons={showPolygons}
                   onPolygons={setShowPolygons}
+                  acquisitionDate={date}
                 />
                 <DropdownMenu.Root>
                   <DropdownMenu.Trigger asChild>
@@ -453,7 +471,8 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content
                       className="menu-content download-menu"
-                      align="end"
+                      side="left"
+                      align="start"
                       sideOffset={8}
                       collisionPadding={12}
                     >
@@ -634,7 +653,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                                   : "Assistente"}
                                 {message.mode === "rules_fallback_not_ai" && (
                                   <span className="response-mode">
-                                    Resposta por regras · IA indisponível
+                                    {chatFallbackLabel(message.reason)}
                                   </span>
                                 )}
                               </span>

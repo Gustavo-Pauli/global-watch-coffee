@@ -1,5 +1,7 @@
 # Conversa e navegação do mapa — 30/10/2026
 
+**Atualização de 30/10:** painel com abertura animada e popups para a esquerda, incluindo mobile; conversa generativa com histórico validada. [Evidências atuais](REVISAO_ENTREGA_2026-10-30.md). A seção de verificação abaixo é histórica.
+
 ## Organização
 
 Informações e Assistente usam **o mesmo painel de 340 px**, com toda a altura da área principal à direita, abaixo do cabeçalho. A posição, as dimensões, o cabeçalho das abas e o botão de fechar são idênticos. Só o conteúdo muda. O mapa cede essa faixa horizontal enquanto o painel está aberto, mantendo seu centro geográfico. Alternar abas não redimensiona o canvas nem desloca os controles.

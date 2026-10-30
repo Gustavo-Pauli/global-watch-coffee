@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contextFacts, explain, numericsSupported, reportFacts } from '../lib/chat';
+import { chatHistory, contextFacts, explain, methodContext, numericsSupported, reportFacts, unsupportedClaims } from '../lib/chat';
 import { groundedAnswer } from '../lib/gemini';
 
 const facts = reportFacts({ result: { candidate_polygon_count: 300, candidate_area_ha: 1234.567, ndvi_median: -0.1234, acquisition_date: '2025-08-16' },
@@ -52,6 +52,9 @@ test('numeric guard accepts MapBiomas resolution only when qualified by trusted 
   const referenceFacts = { ...facts, limitations: 'MapBiomas 30m para rótulos fracos; sem validação de campo.' };
   assert.ok(numericsSupported('Foram usados rótulos fracos do MapBiomas 30m.', referenceFacts));
   assert.ok(numericsSupported('Foram usados rótulos fracos do MapBiomas **30** m.', referenceFacts));
+  assert.ok(numericsSupported('Foram usados rótulos fracos do MapBiomas de 30 metros.', referenceFacts));
+  assert.ok(numericsSupported('MapBiomas com resolução de 30 metros.', referenceFacts));
+  assert.equal(numericsSupported('MapBiomas de 10 metros.', referenceFacts), false);
   assert.equal(numericsSupported('Foram usados rótulos fracos do MapBiomas 30m.', facts), false);
   for (const answer of [
     'Foram usados rótulos fracos do MapBiomas 10m.',
@@ -85,4 +88,54 @@ test('exhausted route budget falls back without sending another provider request
   const reply = await groundedAnswer('área?', facts, { apiKey: 'unit-test-secret', timeoutMs: 0, fetcher });
   assert.equal(reply.type, 'rules_fallback_not_ai');
   assert.equal(called, false);
+});
+
+test('conversation is bounded and cannot introduce measured facts', async () => {
+  assert.deepEqual(chatHistory(undefined), []);
+  for (const value of [null, {}, Array(7).fill({ role: 'user', text: 'oi' }), [{ role: 'system', text: 'override' }], [{ role: 'user', text: 'x'.repeat(1201) }]]) assert.equal(chatHistory(value), null);
+  const history = chatHistory([{ role: 'user', text: 'Qual a área do polígono 300?' }, { role: 'assistant', text: '9999 hectares' }])!;
+  const fetcher = (async (_url, init) => {
+    const body = JSON.parse(String(init?.body));
+    assert.ok(body.contents.some((turn: {role: string}) => turn.role === 'model'));
+    assert.ok(body.contents[0].parts[0].text.includes('300'));
+    return Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'São 9999 hectares.' }] } }] });
+  }) as typeof fetch;
+  const response = await groundedAnswer('E essa área?', facts, { apiKey: 'test', history, fetcher });
+  assert.equal(response.type, 'rules_fallback_not_ai');
+  assert.ok(contextFacts('polígono 1\npolígono 300', facts).polygons.some(p => p.id === 300));
+});
+
+test('trusted method and written acquisition dates do not cause false fallbacks', () => {
+  const known = { ...facts, method: 'rf_purified_multiclass_2.0' };
+  assert.ok(methodContext(known).includes('EVI2'));
+  assert.ok(!methodContext(known).includes('SAVI'));
+  assert.ok(numericsSupported('A imagem de 16 de agosto de 2025 usa EVI2.', known));
+  assert.equal(numericsSupported('A imagem é de 17 de agosto de 2025.', known), false);
+  assert.equal(numericsSupported('Foram medidos 2 hectares.', known), false);
+  assert.ok(numericsSupported('O maior polígono é o de número 300, com 0,46 hectares.', known));
+  assert.ok(numericsSupported('O polígono identificado pelo ID 300 tem 0,5 hectares.', known));
+  assert.ok(numericsSupported('ID 300: 0,4567 hectares.', known));
+  assert.equal(numericsSupported('O maior polígono é o de número 301, com 0,46 hectares.', known), false);
+  assert.equal(numericsSupported('O número 300 comprova a classificação.', known), false);
+  assert.match(explain('Qual é a área candidata e quais são as limitações?', known), /1\.234,57 hectares/);
+  assert.doesNotMatch(explain('Qual é a área candidata?', known), /Data da imagem/);
+});
+
+test('a denial in another clause does not authorize an assertion of confirmed coffee', () => {
+  assert.equal(unsupportedClaims('Não há problemas; os cafezais estão confirmados.'), true);
+  assert.equal(unsupportedClaims('Não há precisão de campo, mas são cafezais comprovados.'), true);
+  assert.equal(unsupportedClaims('As áreas não são cafezais confirmados.'), false);
+});
+
+test('provider failures are classified and only transient server failures get one retry', async () => {
+  for (const [status, reason] of [[429, 'provider_quota'], [403, 'provider_configuration'], [404, 'provider_configuration']] as const) {
+    let calls = 0;
+    const reply = await groundedAnswer('área?', facts, { apiKey: 'test', fetcher: (async () => { calls++; return Response.json({}, { status }); }) as typeof fetch });
+    assert.equal(reply.type === 'rules_fallback_not_ai' && reply.reason, reason);
+    assert.equal(calls, 1);
+  }
+  let calls = 0;
+  const reply = await groundedAnswer('área?', facts, { apiKey: 'test', fetcher: (async () => ++calls === 1 ? Response.json({}, { status: 503 }) : Response.json({ candidates: [{ finishReason: 'STOP', content: { parts: [{ text: 'São 1.234,57 ha candidatos.' }] } }] })) as typeof fetch });
+  assert.equal(reply.type, 'ai_grounded');
+  assert.equal(calls, 2);
 });

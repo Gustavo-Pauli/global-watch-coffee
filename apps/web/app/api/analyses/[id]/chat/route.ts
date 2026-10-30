@@ -3,7 +3,7 @@ import { sessionUserId } from '@/lib/session';
 import { ownAnalysis } from '@/lib/analyses';
 import { readJson, outputPath } from '@/lib/storage';
 import { rateLimit } from '@/lib/rate-limit';
-import { reportFacts } from '@/lib/chat';
+import { chatHistory, reportFacts } from '@/lib/chat';
 import { groundedAnswer } from '@/lib/gemini';
 import { jsonBody } from '@/lib/request';
 export const runtime = 'nodejs';
@@ -20,6 +20,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const question = body?.question;
   if (typeof question !== 'string' || question.trim().length < 2 || question.length > 1200)
     return Response.json({ detail: 'Pergunta deve ter entre 2 e 1200 caracteres.' }, { status: 422 });
+  const history = chatHistory(body.history);
+  if (!history) return Response.json({ detail: 'Histórico de conversa inválido.' }, { status: 422 });
   if (!await rateLimit(owner, 'chat', 12, 60))
     return Response.json({ detail: 'Limite de perguntas por minuto.' }, { status: 429 });
   let facts;
@@ -36,5 +38,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   // Leave ten seconds below the function ceiling; slow DB/Storage reads reduce
   // the remaining provider budget instead of pushing the request past it.
   const timeoutMs = Math.max(0, Math.min(35_000, 50_000 - (Date.now() - started)));
-  return Response.json(await groundedAnswer(question, facts, { timeoutMs }));
+  return Response.json(await groundedAnswer(question.trim(), facts, { timeoutMs, history }));
 }

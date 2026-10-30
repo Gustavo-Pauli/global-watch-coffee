@@ -40,7 +40,17 @@ export type ChatMessage = {
   role: "assistant" | "user";
   text: string;
   mode?: string;
+  reason?: string;
 };
+
+export function chatFallbackLabel(reason?: string) {
+  if (reason === 'unsupported_numbers' || reason === 'unsupported_claims') return 'Resposta por regras · texto da IA não validado';
+  if (reason === 'provider_quota') return 'Resposta por regras · limite da IA atingido';
+  if (reason === 'provider_timeout') return 'Resposta por regras · IA demorou a responder';
+  if (reason === 'not_configured' || reason === 'provider_configuration') return 'Resposta por regras · IA não configurada';
+  if (reason === 'invalid_response') return 'Resposta por regras · resposta da IA incompleta';
+  return 'Resposta por regras · IA indisponível';
+}
 export type DownloadKind = "geojson" | "classified" | "tif" | "rgb";
 
 export const SCENES = [

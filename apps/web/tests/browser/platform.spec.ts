@@ -525,6 +525,23 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await sidebar.getByRole('button', { name: 'Expandir navegação', exact: true }).click();
     await settled(page);
     await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
+    // These are our own disposable records; verify recoverable actions against
+    // the real terminal API states rather than retrying a failed job forever.
+    for (const status of ['error', 'uploading'] as const) {
+      await prisma.analysis.update({ where: { id }, data: { status, errorCode: status === 'error' ? 'processing_failed' : null } });
+      await page.goto(`/analyses/${id}`);
+      const state = page.locator('.analysis-state');
+      await expect(state.getByRole('alert')).toBeVisible();
+      await expect(state.getByRole('button', { name: 'Tentar novamente', exact: true })).toHaveCount(0);
+      await state.getByRole('button', { name: 'Nova análise', exact: true }).click();
+      await expect(page.getByRole('dialog', { name: 'Nova análise', exact: true })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await state.getByRole('link', { name: 'Voltar às análises', exact: true }).click();
+      await expect(page).toHaveURL(/\/analyses$/);
+    }
+    await prisma.analysis.update({ where: { id }, data: { status: 'ready', errorCode: null } });
+    await page.reload();
+    await expect(record).toBeVisible();
     await record.click();
     await readyMap(page);
     await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
@@ -598,8 +615,10 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const layerPicker = page.getByRole('dialog', { name: 'Camadas', exact: true });
     await expect(layerPicker.getByRole('radiogroup', { name: 'Mapa de fundo', exact: true })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'Satélite', exact: true })).toBeChecked();
-    await expect(layerPicker).toContainText('Mosaico de diferentes datas');
-    await expect(layerPicker.locator('time')).toHaveCount(0);
+    await expect(layerPicker).toContainText('Mosaico · data de aquisição não informada');
+    await expect(layerPicker.locator('time')).toHaveAttribute('datetime', '2025-08-16');
+    await expect(layerPicker).toHaveAttribute('data-side', 'left');
+    await expect(page.getByRole('tooltip', { name: 'Camadas', exact: true })).not.toBeVisible();
     await capture(page, 'desktop-layers.png');
     const raster = page.getByRole('switch', { name: 'Imagem analisada', exact: true });
     await raster.click();
@@ -630,6 +649,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(page.getByRole('tooltip', { name: 'Baixar arquivos', exact: true })).toBeVisible();
     await expect(page.locator('.map-tool-tooltip')).toHaveAttribute('data-side', 'left');
     await page.getByRole('button', { name: 'Baixar arquivos', exact: true }).click();
+    await expect(page.locator('.download-menu')).toHaveAttribute('data-side', 'left');
+    await expect(page.getByRole('tooltip', { name: 'Baixar arquivos', exact: true })).not.toBeVisible();
+    await capture(page, 'desktop-download.png');
     const downloaded = page.waitForEvent('download');
     await page.getByRole('menuitem', { name: /GeoJSON/ }).click();
     const file = await downloaded;
@@ -786,6 +808,23 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await mobile.reload();
     await readyMap(mobile);
     await noOverflow(mobile);
+    await mobile.getByRole('button', { name: 'Camadas', exact: true }).click();
+    const mobileLayers = mobile.getByRole('dialog', { name: 'Camadas', exact: true });
+    await expect(mobileLayers).toHaveAttribute('data-side', 'left');
+    const layerBounds = (await mobileLayers.boundingBox())!;
+    expect(layerBounds.x).toBeGreaterThanOrEqual(0);
+    expect(layerBounds.x + layerBounds.width).toBeLessThanOrEqual(320);
+    await expect(mobileLayers.locator('time')).toHaveAttribute('datetime', '2025-08-16');
+    await capture(mobile, 'mobile-layers.png');
+    await mobile.getByRole('button', { name: 'Fechar camadas', exact: true }).click();
+    await mobile.getByRole('button', { name: 'Baixar arquivos', exact: true }).click();
+    await expect(mobile.locator('.download-menu')).toHaveAttribute('data-side', 'left');
+    await expect(mobile.getByRole('tooltip', { name: 'Baixar arquivos', exact: true })).not.toBeVisible();
+    const downloadBounds = (await mobile.locator('.download-menu').boundingBox())!;
+    expect(downloadBounds.x).toBeGreaterThanOrEqual(0);
+    expect(downloadBounds.x + downloadBounds.width).toBeLessThanOrEqual(320);
+    await capture(mobile, 'mobile-download.png');
+    await mobile.keyboard.press('Escape');
     await capture(mobile, 'mobile-narrow-results.png');
     const narrowFrame = await mapFrame(mobile);
     await mobile.getByRole('button', { name: 'Mostrar resultados', exact: true }).click();

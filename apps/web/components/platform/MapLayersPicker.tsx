@@ -4,7 +4,7 @@ import * as Popover from "radix-ui/popover";
 import * as RadioGroup from "radix-ui/radio-group";
 import * as Switch from "radix-ui/switch";
 import { Layers, X } from "lucide-react";
-import { BASEMAPS, basemapSource, type BasemapId } from "../map-sources";
+import { BASEMAPS, type BasemapId } from "../map-sources";
 import { formatDate } from "../analysis-types";
 import MapToolButton from "./MapToolButton";
 
@@ -17,10 +17,10 @@ type Props = {
   onRaster: (value: boolean) => void;
   showPolygons: boolean;
   onPolygons: (value: boolean) => void;
+  acquisitionDate: string | null;
 };
 
 export default function MapLayersPicker(props: Props) {
-  const source = basemapSource(props.basemap);
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
@@ -32,7 +32,8 @@ export default function MapLayersPicker(props: Props) {
         <Popover.Content
           className="map-layers-popover"
           sideOffset={9}
-          align="end"
+          side="left"
+          align="start"
           collisionPadding={12}
           aria-label="Camadas"
         >
@@ -73,17 +74,13 @@ export default function MapLayersPicker(props: Props) {
                 />
                 <span className="basemap-option-copy">
                   <strong>{item.title}</strong>
+                  {item.id !== "none" && (
+                    <span>{item.time.kind === "acquisition" ? formatDate(item.time.date) : item.time.label}</span>
+                  )}
                 </span>
               </label>
             ))}
           </RadioGroup.Root>
-          {source.time.kind !== "reference" && (
-            <p className="source-context">
-              {source.time.kind === "mosaic"
-                ? source.time.label
-                : formatDate(source.time.date)}
-            </p>
-          )}
           {!props.hasKey && (
             <p className="form-error">
               Mapa de referência indisponível neste ambiente.
@@ -92,6 +89,7 @@ export default function MapLayersPicker(props: Props) {
           <div className="analysis-layers">
             <div className="analysis-layers-heading">
               <h3>Resultado</h3>
+              <span>Aquisição: <time dateTime={props.acquisitionDate ?? undefined}>{formatDate(props.acquisitionDate)}</time></span>
             </div>
             <div className="compact-layer-row">
               <label htmlFor="analysis-raster">

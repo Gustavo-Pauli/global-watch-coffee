@@ -171,8 +171,9 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await expect(page).toHaveURL(new RegExp(`/analyses/${analysisId}$`));
     await expect(page.locator('.leaflet-image-layer')).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
-    const closeInspector = page.getByRole('button', { name: 'Fechar painel', exact: true });
-    if (await closeInspector.isVisible()) await closeInspector.click();
+    // The breakpoint closes the desktop panel asynchronously. Wait for that
+    // state instead of racing a click against React removing the same button.
+    await expect(page.getByRole('button', { name: 'Fechar painel', exact: true })).toHaveCount(0);
     await noHorizontalOverflow(page);
     await screenshot(page, 'mobile-results.png');
     await page.getByRole('button', { name: 'Mostrar resultados', exact: true }).click();

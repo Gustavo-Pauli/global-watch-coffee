@@ -103,6 +103,7 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 
 ## Documentos
 
+- [Revisão de 30/10: correções, conversa e pendências públicas](docs/delivery/REVISAO_ENTREGA_2026-10-30.md)
 - [Auditoria final e matriz de conformidade](docs/delivery/AUDITORIA_FINAL.md)
 - [Migração Prisma sem perda de dados](docs/delivery/PRISMA_MIGRATION.md)
 - [Auditoria do geoprocessamento](docs/delivery/AUDITORIA_GEO.md)

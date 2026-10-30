@@ -28,7 +28,7 @@ export const BASEMAPS: readonly BasemapSource[] = [
     title: "Satélite",
     description: "Imagem de referência do entorno",
     provider: "MapTiler",
-    time: { kind: "mosaic", label: "Mosaico de diferentes datas" },
+    time: { kind: "mosaic", label: "Mosaico · data de aquisição não informada" },
     maxNativeZoom: 22,
     url: (key) =>
       key
@@ -40,7 +40,7 @@ export const BASEMAPS: readonly BasemapSource[] = [
     title: "Ruas",
     description: "Estradas, acessos e municípios",
     provider: "MapTiler",
-    time: { kind: "reference", label: "Mapa cartográfico" },
+    time: { kind: "reference", label: "Mapa cartográfico · sem data de aquisição" },
     maxNativeZoom: 22,
     url: (key) =>
       key

@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type ComponentProps } from "react";
+import { forwardRef, useState, type ComponentProps } from "react";
 import * as Tooltip from "radix-ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils";
 type Props = ComponentProps<typeof Button> & { label: string };
 
 const MapToolButton = forwardRef<HTMLButtonElement, Props>(
-  ({ label, className, children, ...props }, ref) => (
-    <Tooltip.Root>
+  ({ label, className, children, ...props }, ref) => {
+    const [open, setOpen] = useState(false);
+    const expanded = props["aria-expanded"] === true || props["aria-expanded"] === "true";
+    return <Tooltip.Root open={open && !expanded} onOpenChange={setOpen}>
       <Tooltip.Trigger asChild>
         <Button
           ref={ref}
@@ -35,8 +37,8 @@ const MapToolButton = forwardRef<HTMLButtonElement, Props>(
           {label}
         </Tooltip.Content>
       </Tooltip.Portal>
-    </Tooltip.Root>
-  ),
+    </Tooltip.Root>;
+  },
 );
 MapToolButton.displayName = "MapToolButton";
 

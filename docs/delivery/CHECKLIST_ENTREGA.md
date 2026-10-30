@@ -1,4 +1,6 @@
-﻿# Checklist de entrega — 30/10/2026
+# Checklist de entrega — 30/10/2026
+
+**Estado conferido em 30/10:** [checks locais atuais](REVISAO_ENTREGA_2026-10-30.md) passaram. GitHub continua privado; URL pública foi solicitada. Commit local autorizado nesta etapa; push, publicação e mudança de visibilidade não executados.
 
 A matriz com evidências está em [AUDITORIA_FINAL.md](AUDITORIA_FINAL.md). O enunciado original está em `data/sample/DESAFIO.txt`.
 

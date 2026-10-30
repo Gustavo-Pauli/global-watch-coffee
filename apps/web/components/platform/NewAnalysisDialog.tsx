@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import * as Dialog from "radix-ui/dialog";
 import { LoaderCircle, X } from "lucide-react";
 import AnalysisForm from "../AnalysisForm";
-import { requestJSON, errorMessage, isAborted } from "@/lib/client-api";
+import { requestJSON, requestSignal, errorMessage, isAborted } from "@/lib/client-api";
 
 type SignedUpload = { signedUrl: string; path: string; token: string };
 async function directUpload(
@@ -21,7 +21,7 @@ async function directUpload(
     method: "PUT",
     headers: { "x-upsert": "false" },
     body: form,
-    signal,
+    signal: requestSignal(signal, 120_000),
   });
   if (!response.ok)
     throw new Error(`Não foi possível enviar ${file.name}. Tente novamente.`);
@@ -66,6 +66,7 @@ export default function NewAnalysisDialog({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ scene }),
           signal,
+          timeoutMs: 60_000,
         });
         id = result.id;
       } else {
@@ -77,6 +78,7 @@ export default function NewAnalysisDialog({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal,
+          timeoutMs: 60_000,
           body: JSON.stringify({
             image: { name: image.name, size: image.size },
             scl: scl ? { name: scl.name, size: scl.size } : null,
@@ -93,6 +95,7 @@ export default function NewAnalysisDialog({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: prepared.id }),
           signal,
+          timeoutMs: 60_000,
         });
         id = prepared.id;
       }
@@ -101,7 +104,9 @@ export default function NewAnalysisDialog({
         router.push(`/analyses/${id}`);
       }
     } catch (caught) {
-      if (!isAborted(caught)) setError(errorMessage(caught));
+      if (!isAborted(caught)) setError(
+        `${caught instanceof DOMException && caught.name === "TimeoutError" ? "O envio demorou demais." : errorMessage(caught)} Confira a lista antes de reenviar: a análise pode ter sido criada.`,
+      );
     } finally {
       if (!signal.aborted) setStage(null);
       operation.current = null;

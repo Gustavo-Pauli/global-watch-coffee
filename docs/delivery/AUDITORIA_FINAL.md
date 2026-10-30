@@ -1,4 +1,6 @@
-﻿# Auditoria final — Global Watch Coffee
+# Auditoria final — Global Watch Coffee
+
+**Atualização de 30/10:** a [revisão para entrega](REVISAO_ENTREGA_2026-10-30.md) reúne os checks mais recentes, correções do chat/UI e pendências públicas. Números e afirmações de execuções abaixo são históricos.
 
 **Data: 29/10/2026 · execução local Windows · entrega prevista: 30/10/2026.**
 

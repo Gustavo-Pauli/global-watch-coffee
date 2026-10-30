@@ -1,5 +1,7 @@
 # Mapas de referência, datas e painel da análise
 
+**Atualização de 30/10:** Camadas/Baixar abrem à esquerda; aquisição da imagem analisada aparece no grupo Resultado. Fundo MapTiler informa ausência de data exata. [Revisão atual](REVISAO_ENTREGA_2026-10-30.md); os contadores de execuções abaixo são históricos.
+
 ## Decisão de produto
 
 O usuário não precisa configurar uma fonte para começar. **Satélite** é o fundo padrão quando `NEXT_PUBLIC_MAPTILER_KEY` está configurada. **Ruas** ajuda a localizar municípios e acessos. **Sem fundo** permite focar na imagem e nos resultados, inclusive quando o provedor não estiver disponível. A escolha do fundo é uma preferência local do navegador.

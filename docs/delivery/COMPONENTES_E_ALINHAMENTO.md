@@ -1,5 +1,7 @@
 # Componentes e alinhamento — 30/10/2026
 
+**Revisão atual:** veja [30/10 — entrega](REVISAO_ENTREGA_2026-10-30.md). Camadas/Baixar agora abrem à esquerda; o painel tem transição de abertura. A seção de verificação abaixo registra a etapa anterior, sem novos jobs naquele momento.
+
 ## Composição
 
 A coleção e seu cabeçalho usam toda a largura disponível, com padding de **24 px** no desktop ou **16 px** no celular. Não existe limite central de 1120 px nem margem automática. Título, busca e tabela começam na mesma borda; Nova análise termina na borda direita do conteúdo. O cabeçalho mostra apenas o título, sem contagem. O mapa tem gutters próprios de 14/12 px.
