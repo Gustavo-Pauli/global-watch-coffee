@@ -8,7 +8,7 @@ Atualizado em 29/10/2026. O runtime usa Prisma ORM **7.10.1**, `@prisma/adapter-
 
 `apps/web/prisma/schema.prisma` representa as seis tabelas originais: `user`, `session`, `account`, `verification`, `app_analyses` e `app_rate_limits`. `@map`/`@@map` preservam colunas/tabelas físicas; tipos `TEXT`, `UUID`, `JSONB`, `DATE`, `TIMESTAMPTZ(6)`, índices existentes e FKs de sessão/conta são mantidos. Não foram adicionadas FKs de proprietário à tabela de análises: elas não existiam, e adicioná-las exige auditar registros órfãos previamente. Toda consulta pública de análise aplica proprietário e expiração.
 
-A baseline `0_existing_schema/migration.sql` inclui os CHECKs PostgreSQL `input_source` e `app_analyses_status_check`, que não são representáveis no DSL Prisma. **Não substituir a baseline por uma nova geração sem manter esses CHECKs.** O arquivo `database.sql` anterior é referência histórica; novos ambientes usam as migrations Prisma, sem executar os dois inicializadores juntos.
+A baseline `0_existing_schema/migration.sql` inclui os CHECKs PostgreSQL `input_source` e `app_analyses_status_check`, que não são representáveis no DSL Prisma. **Não substituir a baseline por uma nova geração sem manter esses CHECKs.** Novos ambientes usam exclusivamente as migrations Prisma; o inicializador SQL antigo foi removido.
 
 ## Banco existente: não reaplicar CREATE TABLE
 

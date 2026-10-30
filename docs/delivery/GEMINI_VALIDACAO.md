@@ -1,65 +1,19 @@
-# Gemini real: verificação local
+# Chat Gemini: funcionamento e reprodução
 
-## Revisão de 30/10/2026
+O servidor envia ao provedor apenas fatos da análise do proprietário e histórico limitado. Área, contagem, data, maior polígono, NDVI da cena, médias por polígono e qualidade vêm do processamento. O guard valida números por campo e ID; percentuais de pixels não autorizam afirmações de precisão. Limitações e origem MapBiomas integram o contexto.
 
-O chat envia os últimos seis turnos, validados no backend como contexto não confiável. O método foi conferido no Python: Random Forest multiclasse, bandas, NDVI/GNDVI/EVI2 e textura; ajuda de exportação e contexto técnico só são fornecidos ao modelo quando pertinentes. Dados medidos continuam vindo dos resultados após ownership. Respostas focam a pergunta em uma a três frases, sem repetir o relatório inteiro.
+Na revisão local de 30/10/2026, nove perguntas reais e uma conversa de dois turnos no navegador retornaram `ai_grounded`. Foram abordados área/contagem, método, verificação em campo, priorização de vistoria, aquisição versus mosaico de fundo, exportação, NDVI mediano, NDVI do polígono e SCL/pixels elegíveis. Uma solicitação de precisão inventada foi rejeitada pelo guard. [Conversa do próprio aplicativo](screenshots/desktop-chat-gemini.png).
 
-Foram reproduzidos falsos negativos com IDs naturais (inclusive “o de ID 16”), “MapBiomas de 30 metros”, arredondamentos e datas por extenso. Esses formatos passaram a ser reconhecidos; testes continuam rejeitando IDs, datas, resoluções e medidas inventadas. A contingência confundia “candidata” com “data”; isso foi corrigido. O rótulo agora informa se houve cota, demora, configuração, resposta incompleta ou texto não validado. HTTP 500/502/503/504 permite uma única repetição no mesmo orçamento de até 35 s; não há retry de rejeição factual para contornar a validação.
+A contingência `rules_fallback_not_ai` distingue ausência de configuração, quota, timeout, indisponibilidade, resposta incompleta e conteúdo não validado. Ela não é apresentada como geração por IA. A prova local não garante a disponibilidade futura do provedor.
 
-Na execução final, sete perguntas reais retornaram `ai_grounded`: área/contagem, método, verificação em campo, maior polígono, data/fundo, exportação e NDVI. As durações HTTP locais ficaram entre 1,678 e 2,560 s. O pedido de precisão inventada foi recusado por uma resposta generativa válida. Duas perguntas consecutivas também passaram no navegador; o teste conferiu que a segunda enviou a primeira pergunta/resposta no histórico. [Conversa capturada](screenshots/desktop-chat-gemini.png).
+## Reproduzir
 
-Rodadas anteriores revelaram variações legítimas que acionavam o guard; foram registradas como falhas, corrigidas e não contadas como respostas generativas. Os testes usam a cena pública de 24 polígonos, 22,661 ha e NDVI 0,5592, identidades/sessões/Storage descartáveis, sem consumir cota de processamento Python. As cotas do provedor são consumidas. A prova local não garante disponibilidade futura ou semântica de toda resposta; contingência continua possível e não substitui a exigência de IA no ambiente público.
-
-Build e verificações atuais estão em [REVISAO_ENTREGA_2026-10-30.md](REVISAO_ENTREGA_2026-10-30.md). O teste `scripts/gemini-live.ts` exige opt-in e valida histórico, fatos e recusa de precisão inventada sem imprimir credenciais.
-
-## Histórico de 29/10/2026
-
-Validado em 29/10/2026 depois de o usuário configurar a chave em `apps/web/.env.local`. Nenhum arquivo de credenciais foi sobrescrito, nenhuma chave foi impressa ou commitada e nenhuma configuração de faturamento foi alterada.
-
-## Origem dos fatos e ambiente
-
-O modelo `gemini-3.5-flash-lite` respondeu à API real do Google. A cena pública de agosto do kit foi novamente processada em Python com RF v2, gerando **24 polígonos, 22,661 ha candidatos e NDVI mediano 0,5592**. Somente os fatos usados pelo chat (data, áreas, contagem, IDs/áreas de polígonos e limitações) foram enviados ao provedor. Não foram enviados cookies, tokens OAuth, dados de conta, imagens ou coordenadas dos polígonos.
-
-A integração usa Next em produção local, PostgreSQL local e Supabase Storage real. `scripts/gemini-live.ts` cria uma identidade/sessão descartável e uma análise pronta contendo os arquivos **efetivamente gerados** pelo classificador. Não acrescenta bypass de autenticação às rotas e não usa registros de usuários existentes. A prova de processamento/upload completo já está registrada na auditoria anterior; este teste concentra-se na rota autenticada do chat e no navegador.
-
-## Correções motivadas pelas chamadas reais
-
-- A validação rejeitava números corretos com marcação Markdown e a expressão `MapBiomas 30m` já presente nas limitações Python. Agora normaliza marcação pareada e aceita apenas a resolução qualificada que realmente consta nos fatos. Uma referência a 30 m não autoriza 30 ha nem uma precisão inventada.
-- O contexto agora informa se a lista de polígonos enviada está completa; a instrução deixa de induzir o modelo a declarar que toda lista é parcial. Esses nomes de campos não devem aparecer na resposta ao usuário.
-- Respostas são solicitadas em texto simples, com até 100 palavras. Números, datas, contagens e medidas continuam sujeitos à validação; percentuais e notação exponencial sem suporte permanecem rejeitados.
-- O provedor recebe até **35 segundos**, reduzidos ao orçamento restante de 50 segundos desde o início da rota. A função tem teto de 60 segundos, deixando margem abaixo desse teto. Se o orçamento acabar, não é enviada outra chamada e a contingência é identificada.
-
-## Resultado e limites da prova
-
-Foram obtidas respostas reais `type=ai_grounded` para área/quantidade de polígonos e NDVI. Um pedido para ignorar os dados e afirmar café confirmado com 99% de precisão foi rejeitado pela validação, retornando `rules_fallback_not_ai`, sem expor esse percentual como resultado. No navegador, a consulta também retornou `ai_grounded` e foi exibida com o rótulo de IA. Captura: [chat com Gemini real](screenshots/desktop-chat-gemini.png).
-
-Na execução final com o orçamento atualizado:
-
-| Caso | Resultado | Tentativas / duração HTTP local |
-|---|---|---|
-| Área e contagem | `ai_grounded`: 24 polígonos e 22,66 ha | 1 / 16,671 s |
-| NDVI mediano | `ai_grounded`: 0,56, arredondado de 0,5592 | 1 / 14,951 s |
-| Pedido adversarial de precisão inventada | `rules_fallback_not_ai`, motivo `unsupported_numbers` | 1 / 15,780 s |
-| Consulta no navegador | `ai_grounded`, rótulo de IA visível | Passou; captura revisada |
-
-Os tempos são amostras locais, não um benchmark ou SLA. Build, typecheck e 20 testes unitários web passaram; a integração PostgreSQL continua opt-in e foi explicitamente skipped nesse comando unitário.
-
-Durante as primeiras amostras houve timeouts do provedor; respostas numéricas legítimas também revelaram os falsos negativos descritos acima. O teste permite **uma** nova tentativa somente para `provider_unavailable`, registra cada tentativa e nunca trata fallback como resposta generativa. O produto não repete automaticamente uma chamada rejeitada para contornar a validação. Oscilações de disponibilidade, cotas e latência do Google continuam possíveis.
-
-Esta é uma amostra funcional local, não uma garantia de verdade semântica, resistência a toda injeção de prompt, cota gratuita ou funcionamento no domínio público. A triagem numérica e linguística é conservadora e pode escolher a contingência. O usuário deve manter a distinção entre candidatos e cafezais confirmados. O consentimento Google OAuth não foi automatizado neste teste.
-
-## Reproduzir sem dados pessoais
-
-Com a `.venv` existente, credenciais locais configuradas e um servidor web local em `http://localhost:3000`:
+Com o servidor local aberto e `.env.local` configurado, prepare os artefatos da cena pública na pasta indicada por `GEMINI_FIXTURE_DIR`. Depois, na raiz:
 
 ```powershell
-$demoOutput = Join-Path $env:TEMP 'global-watch-gemini-live'
-& apps/geo-worker/.venv/Scripts/python.exe -m geo_worker.coffee_v2 classify data/sample/imagem_multiespectral.tif --scl data/sample/qualidade_scl.tif --output $demoOutput --date 2025-08-16
 $env:RUN_LIVE_GEMINI = '1'
-pnpm test:gemini:live
-Remove-Item Env:RUN_LIVE_GEMINI
+$env:GEMINI_FIXTURE_DIR = 'CAMINHO_DOS_ARTEFATOS_REAIS'
+pnpm.cmd test:gemini:live
 ```
 
-O teste exige host local, utiliza o diretório temporário desse comando e limpa os seus próprios registros/objetos. Se a remoção de Storage falhar, conserva a metadata vencida para retry do cron. As chamadas consomem a cota do Gemini e alguns slots de chat da identidade descartável; não consomem a cota global de processamento Python. Não executar automaticamente em CI sem credenciais e autorização para chamadas reais.
-
-O preflight verifica apenas configuração/catálogos/health: sua ausência de bloqueios não substitui este teste real nem os gates de deploy. Modelo e limites de geração são verificáveis na [documentação de modelos](https://ai.google.dev/gemini-api/docs/models); disponibilidade efetiva foi conferida também com a API do projeto, sem imprimir a chave.
+O script usa PostgreSQL e Storage locais/configurados com identidades e prefixos descartáveis, verifica histórico e respostas, e limpa seus objetos. Não inicia processamento Python, mas consome cota Gemini. Não usar em produção nem enviar chaves pelo chat. O consentimento Google não é automatizado por esse teste.

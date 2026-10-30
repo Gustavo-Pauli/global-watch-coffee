@@ -8,7 +8,7 @@ O shell compartilhado separa navegação, conta e conteúdo. Ao entrar numa aná
 
 ## Sistema visual
 
-A revisão de componentes e alinhamento está em [COMPONENTES_E_ALINHAMENTO.md](COMPONENTES_E_ALINHAMENTO.md): coleção e cabeçalho com largura disponível e gutters de 24/16 px, sem container centralizado; marca textual Global Watch; componentes shadcn; contagem somente no rodapé da tabela. O status tem cores coerentes entre lista e seletor.
+Coleção e cabeçalho usam a largura disponível e gutters de 24/16 px, sem container centralizado; marca textual Global Watch; componentes shadcn; contagem somente no rodapé da tabela. O status tem cores coerentes entre lista e seletor.
 
 - Inter variável servida localmente por Fontsource; corpo 13–14 px e metadados 12 px. Inputs de toque usam 16 px.
 - Superfícies carvão neutras `#171717`, `#1d1d1f`, divisórias `#343437`, texto `#ededee`. Verde contido `#c0d6a6` nas geometrias e seleção; botão primário neutro.
@@ -37,13 +37,13 @@ A revisão de componentes e alinhamento está em [COMPONENTES_E_ALINHAMENTO.md](
 
 Dialogs usam título, descrição, foco contido, Escape e retorno de foco ao botão de origem. O sheet móvel segue o mesmo comportamento. Ferramentas do mapa são regiões não modais: mantêm o mapa utilizável, recebem foco ao abrir e fecham com Escape, sem interferir em outro dialog/menu aberto. Botões possuem rótulos; formulários têm labels e erros anunciados. O campo do chat preserva o foco durante a espera. Há link de salto, contraste e foco visível; animações respeitam reduced motion.
 
-No celular, o painel ocupa a área principal abaixo do cabeçalho em ambas as abas. O mapa e os controles ficam temporariamente ocultos. Fechar o painel restaura o mapa sem alterar sua posição. A data continua visível no cabeçalho. A tabela oculta colunas secundárias em telas estreitas, mantendo registro/status/abertura. Decisão e capturas: [CONVERSA_E_NAVEGACAO_DO_MAPA.md](CONVERSA_E_NAVEGACAO_DO_MAPA.md).
+No celular, o painel ocupa a área principal abaixo do cabeçalho em ambas as abas. O mapa e os controles ficam temporariamente ocultos. Fechar o painel restaura o mapa sem alterar sua posição. A data continua visível no cabeçalho. A tabela oculta colunas secundárias em telas estreitas, mantendo registro/status/abertura.
 
 ## Dados e limites preservados
 
 Não foram adicionados clima, alertas, séries, acurácia ou dados inventados. Áreas continuam candidatas, sem validação de campo. APIs, autorização por proprietário, processamento Python, armazenamento privado, cotas e retenção foram preservados. A coleção usa os até 30 registros recentes já retornados pela API; busca/filtro são locais nesse conjunto. Não se promete paginação ou busca global ainda não implementada. O nome original do upload não é persistido pelo schema atual; a identificação usa o ID real da análise.
 
-As referências enviadas, incluindo MapBiomas, orientam hierarquia e padrões de interação. Não são assets e não foram copiadas para o repositório. Decisões iniciais: [UI_REDESIGN.md](UI_REDESIGN.md). A evolução vigente de fontes/datas/painel está em [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md), e a revisão do shell e da hierarquia em [SHELL_E_HIERARQUIA.md](SHELL_E_HIERARQUIA.md). Evidências técnicas e visuais não substituem a avaliação visual do usuário.
+As referências enviadas, incluindo MapBiomas, orientam hierarquia e padrões de interação. Não são assets e não foram copiadas para o repositório. A evolução vigente de fontes/datas/painel está em [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md). Evidências técnicas e visuais não substituem a avaliação visual do usuário.
 
 ## Inspeção multiespectral — 30/10/2026
 
@@ -54,3 +54,9 @@ Camadas oferece Cor natural, Falsa cor e NDVI somente quando o resultado declara
 Explorar polígonos fica recolhido nas Informações: busca por número, ordenação por área/ID e paginação de 50 itens. Seleção na lista localiza o polígono; seleção no mapa mantém o painel como está. No celular, localizar fecha o painel para mostrar o mapa. Perguntar sobre o polígono apenas preenche o chat, sem enviar automaticamente.
 
 Qualidade e proveniência ficam em Sobre o resultado, sob divulgação progressiva. Metadados JSON estão no mesmo menu de downloads.
+
+## Tabela e seleção
+
+A linha inteira da tabela é um link nativo, com seta de abertura, hover de ponta a ponta e padding dentro das células. Teclado e abertura em nova aba preservam o comportamento do navegador. No mapa, clicar no fundo limpa popup e seleção; os controles de zoom preservam o polígono selecionado.
+
+A regressão `RUN_UI_BROWSER=1` usa seis artefatos reais de uma cena pública em `UI_FIXTURE_DIR`; `RUN_INSPECTION_BROWSER=1` usa os oito artefatos de esquema 2 em `INSPECTION_FIXTURE_DIR`. São fixtures de análise pronta e não substituem o fluxo live de upload/processamento. As evidências e os limites estão em [Validação da entrega](AUDITORIA_FINAL.md).

@@ -1,6 +1,6 @@
 ﻿# Deploy gratuito e verificação pública
 
-Guia revisado em 29/10/2026. A auditoria prepara o código e verifica fluxos locais; **não foi autorizado nem executado deploy**. Os planos gratuitos atendem à demonstração com limites e indisponibilidades, sem garantia de produção contínua.
+Configuração de Vercel, Render e Supabase. Os planos gratuitos atendem à demonstração com limites e indisponibilidades, sem garantia de produção contínua. A validação no domínio público está no [checklist](CHECKLIST_ENTREGA.md).
 
 ## 1. Pré-requisitos e segredos
 

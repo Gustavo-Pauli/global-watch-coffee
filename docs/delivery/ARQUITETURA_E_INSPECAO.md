@@ -36,4 +36,4 @@ O chat diferencia NDVI médio do polígono e mediana da cena, valida números po
 3. Verificar upload + SCL, imagem adicional, novas visualizações, seleção/lista, chat generativo, downloads, sessão/ownership e celular. Confirmar repositório público e cron.
 4. Conferir memória/cold start reais, cotas e retenção. Não resetar cotas para mascarar falhas.
 
-Não houve deploy, push, alteração de segredos, modelos ou dados de usuários nesta implementação. As referências externas continuam somente como orientação visual.
+Commits e push foram autorizados e realizados; a validação pública do deploy é acompanhada pelo usuário. Segredos, modelos e dados de usuários foram preservados. Referências externas serviram somente como orientação visual.

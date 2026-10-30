@@ -1,7 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 
-export const screenshots = path.resolve(process.env.BROWSER_SCREENSHOT_DIR || '../../docs/delivery/screenshots');
+export const screenshots = path.resolve(process.env.BROWSER_SCREENSHOT_DIR || path.join(tmpdir(), 'global-watch-browser-screenshots'));
 
 /** Wait for fonts and finite layout transitions before measuring the UI. */
 export async function settled(page: Page) {

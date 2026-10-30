@@ -47,7 +47,7 @@ pnpm.cmd db:validate
 pnpm.cmd db:deploy
 ```
 
-**Banco já utilizado:** não rode a migration inicial sobre tabelas existentes. Siga [PRISMA_MIGRATION.md](docs/delivery/PRISMA_MIGRATION.md) para comparar o schema e registrar o baseline sem recriar tabelas. `db:baseline` só é correto após essa comparação. `auth:migrate` agora é um alias de `prisma migrate deploy`; não execute mais o CLI `auth@latest` nem `database.sql` como mecanismo normal de atualização. O SQL antigo é referência histórica.
+**Banco já utilizado:** não rode a migration inicial sobre tabelas existentes. Siga [PRISMA_MIGRATION.md](docs/delivery/PRISMA_MIGRATION.md) para comparar o schema e registrar o baseline sem recriar tabelas. `db:baseline` só é correto após essa comparação. `auth:migrate` agora é um alias de `prisma migrate deploy`; não execute mais o CLI `auth@latest` como mecanismo normal de atualização.
 
 ### Servidores
 
@@ -77,7 +77,7 @@ No Git Bash, ative `source apps/geo-worker/.venv/Scripts/activate` antes de `pnp
 2. Next autoriza upload por URL assinada. Os bytes TIFF vão diretamente ao Storage, sem passar pelas funções Vercel.
 3. Next confirma os objetos, faz a transição atômica para processamento e envia o job ao worker autenticado.
 4. Python processa pixels reais, usando B02/B03/B04/B08, máscaras de qualidade, índices e RF v2. Retorna polígonos WGS84, hectares geodésicos, PNGs, GeoTIFF e JSON.
-5. Os seis arquivos são enviados ao Storage privado. Callback autenticado finaliza o estado no banco; repetições são idempotentes.
+5. Os oito arquivos das novas análises são enviados ao Storage privado. Callback autenticado finaliza o estado no banco; repetições são idempotentes.
 6. O usuário recupera o resultado e baixa arquivos por rotas que conferem propriedade. O chat usa apenas fatos calculados, com contingência rotulada quando a IA não está disponível.
 
 TIFF: 12 MiB, quatro bandas, CRS projetado em metros, até um milhão de pixels; SCL: 4 MiB e até um milhão de pixels. Cinco tentativas de criação por hora/usuário e dez processamentos globais/dia; apenas um job simultâneo no worker. Retenção lógica de três dias; remoção física pelo cron diário pode ocorrer depois do vencimento. URLs assinadas já emitidas continuam válidas até expirar.
@@ -97,33 +97,25 @@ pnpm.cmd release:check --mode=local
 
 `pnpm test:db` exige `TEST_DATABASE_URL` apontando para banco descartável cujo nome contenha `test` ou `audit`; consulte [migração](docs/delivery/PRISMA_MIGRATION.md). Os testes unitários ignoram essa integração quando a variável está ausente. Nunca aponte testes para produção.
 
-Para revisão visual: execute o app local, instale Chrome ou `pnpm --filter @global-watch/web exec playwright install chromium`, e execute `pnpm test:browser`. O fluxo real opt-in usa `RUN_LIVE_BROWSER=1`, cria usuários/sessões descartáveis e limpa seus próprios objetos; usa a configuração local e consome a cota de processamento. **Não testa o consentimento OAuth Google**. Capturas do aplicativo ficam em `docs/delivery/screenshots`; não há screenshots externos copiados.
+Para revisão visual: execute o app local, instale Chrome ou `pnpm --filter @global-watch/web exec playwright install chromium`, e execute `pnpm test:browser`. O fluxo real opt-in usa `RUN_LIVE_BROWSER=1`, cria usuários/sessões descartáveis e limpa seus próprios objetos; usa a configuração local e consome a cota de processamento. **Não testa o consentimento OAuth Google**. Capturas de testes vão para a pasta temporária `global-watch-browser-screenshots`, configurável por `BROWSER_SCREENSHOT_DIR`. A evidência Gemini documentada é mantida em `docs/delivery/screenshots`; não há screenshots externos copiados.
 
-A regressão adicional `RUN_UI_BROWSER=1` testa o workspace pronto e conta no servidor local sem iniciar jobs. Ela usa arquivos realmente processados da cena pública e fixtures próprios no PostgreSQL/Storage. Preparação e limites em [UI_REDESIGN.md](docs/delivery/UI_REDESIGN.md); `UI_FIXTURE_DIR` aponta para os seis artefatos. A busca da coleção atua sobre até 30 registros recentes retornados pela API.
+A regressão adicional `RUN_UI_BROWSER=1` testa o workspace pronto e conta no servidor local sem iniciar jobs. Ela usa arquivos realmente processados da cena pública e fixtures próprios no PostgreSQL/Storage. Preparação e limites em [UI_DESIGN.md](docs/delivery/UI_DESIGN.md); `UI_FIXTURE_DIR` aponta para os seis artefatos. A busca da coleção atua sobre até 30 registros recentes retornados pela API.
 
 O preflight é somente leitura, não exibe segredos e retorna código 1 se faltar uma configuração obrigatória, inclusive a chave Gemini. Nunca declara produção pronta sozinho. A verificação de retenção real tem opt-in e banco/servidor isolados; consulte os procedimentos antes de executá-la.
 
-## Documentos
+## Documentação da entrega
 
-- [Organização atual, inspeção e contrato de resultados](docs/delivery/ARQUITETURA_E_INSPECAO.md)
-- [Revisão de 30/10: correções, conversa e pendências públicas](docs/delivery/REVISAO_ENTREGA_2026-10-30.md)
-- [Auditoria final e matriz de conformidade](docs/delivery/AUDITORIA_FINAL.md)
-- [Migração Prisma sem perda de dados](docs/delivery/PRISMA_MIGRATION.md)
-- [Auditoria do geoprocessamento](docs/delivery/AUDITORIA_GEO.md)
-- [Design e estados da interface](docs/delivery/UI_DESIGN.md)
-- [Fontes do mapa, datas e painel com abas](docs/delivery/MAPAS_E_DATAS.md)
-- [Shell compartilhado e hierarquia das informações](docs/delivery/SHELL_E_HIERARQUIA.md)
-- [Decisões e validação do novo redesign](docs/delivery/UI_REDESIGN.md)
-- [Preflight de configuração e permissões](docs/delivery/PREFLIGHT.md)
-- [Validação real de retenção e novas tentativas](docs/delivery/RETENCAO_VALIDACAO.md)
-- [Validação do Gemini real pela API e pelo navegador](docs/delivery/GEMINI_VALIDACAO.md)
-- [Fontes, licenças e proveniência verificadas](docs/delivery/PESQUISA_PROVENIENCIA.md)
-- [Deploy gratuito e validação pública](docs/delivery/DEPLOY.md)
-- [Nota de pesquisa editável](docs/research/NOTA_PESQUISA_FINAL.md) e [PDF](docs/research/NOTA_PESQUISA_FINAL.pdf)
-- [Roteiro do vídeo](docs/delivery/ROTEIRO_VIDEO.md)
+- [Arquitetura](docs/architecture/ARQUITETURA.md) e [organização/contrato de resultados](docs/delivery/ARQUITETURA_E_INSPECAO.md)
+- [Resultados da validação e limites da evidência](docs/delivery/AUDITORIA_FINAL.md)
+- [Geoprocessamento e análise dos erros](docs/delivery/AUDITORIA_GEO.md)
+- [Deploy e migrations](docs/delivery/DEPLOY.md) · [banco existente/baseline](docs/delivery/PRISMA_MIGRATION.md)
+- [Interface e interação](docs/delivery/UI_DESIGN.md) · [mapas e datas](docs/delivery/MAPAS_E_DATAS.md)
+- [Pesquisa editável](docs/research/NOTA_PESQUISA_FINAL.md) e [PDF de duas páginas](docs/research/NOTA_PESQUISA_FINAL.pdf)
+- [Fontes e licenças](docs/delivery/PESQUISA_PROVENIENCIA.md)
+- [Checklist público](docs/delivery/CHECKLIST_ENTREGA.md) e [roteiro do vídeo](docs/delivery/ROTEIRO_VIDEO.md)
 
 MapBiomas é supervisão fraca, não verdade de campo; outubro participou do treinamento final e não é teste independente. Scores não são confiança calibrada. Modelos v1 são pesquisa histórica, v2 é o modelo do worker. Crédito: Contains modified Copernicus Sentinel data (2025); manter atribuições dos dados e dos mapas.
 
 Para gerar a nota de pesquisa, instale o extra Python `[research]` e execute `python scripts/build_research_pdf.py`. O gerador usa DejaVu Sans instalado no Linux ou Arial do Windows e não depende de caminhos Linux no Windows. Confira sempre o limite de duas páginas e a renderização depois de alterar o texto.
 
-ChatGPT auxiliou pesquisa, implementação e documentação; processamento e números dependem de pixels reais e verificações registradas. Prithvi e Clay foram pesquisados, não executados. As referências visuais do redesign foram usadas apenas para orientação, sem copiar marcas, dados, layouts ou assets de terceiros.
+ChatGPT e Codex auxiliaram pesquisa, implementação e documentação; processamento e números dependem de pixels reais e verificações registradas. Prithvi e Clay foram pesquisados, não executados. As referências visuais do redesign foram usadas apenas para orientação, sem copiar marcas, dados, layouts ou assets de terceiros.

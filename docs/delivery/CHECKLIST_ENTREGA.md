@@ -1,19 +1,15 @@
-# Checklist de entrega — 30/10/2026
+# Checklist de entrega
 
-**Estado conferido em 30/10:** [checks locais atuais](REVISAO_ENTREGA_2026-10-30.md) passaram. GitHub continua privado; URL pública foi solicitada. Commit local autorizado nesta etapa; push, publicação e mudança de visibilidade não executados.
+O [enunciado](../../data/sample/DESAFIO.txt) define os requisitos. As [evidências locais](AUDITORIA_FINAL.md) não substituem a conferência pública abaixo.
 
-A matriz com evidências está em [AUDITORIA_FINAL.md](AUDITORIA_FINAL.md). O enunciado original está em `data/sample/DESAFIO.txt`.
+- [ ] Login Google e logout no domínio público, callback correto e sessão após refresh.
+- [ ] Banco remoto migrado, bucket privado e credenciais configuradas na Vercel/Render.
+- [ ] Upload multiespectral + SCL e imagem adicional processados pela aplicação publicada.
+- [ ] Imagem/polígonos, data, hectares, novas visualizações e downloads reais.
+- [ ] Conversa Gemini generativa fundamentada; confirmar que não foi somente contingência por regras.
+- [ ] Duas contas reais: impedir acesso à análise, arquivos e chat de outro usuário.
+- [ ] Retenção/cron, cotas, cold start, interrupção e memória do worker no ambiente publicado.
+- [ ] Repositório público, fontes/atribuições e nota de pesquisa PDF de até duas páginas.
+- [ ] Vídeo de até três minutos mostrando o fluxo, a imagem adicional e limitações.
 
-- [ ] Rodar login Google/consentimento e logout no domínio público; confirmar sessão após refresh.
-- [ ] Configurar chave/cota Gemini no ambiente público e repetir `ai_grounded`; a geração local já passou em API e navegador conforme GEMINI_VALIDACAO.md. Contingência por regras não cumpre o requisito de IA.
-- [ ] Aplicar Prisma em produção com comparação/baseline segura e backup; nunca reset/db push.
-- [ ] Confirmar bucket privado com teto de 12 MiB e segredos apenas nos servidores corretos.
-- [ ] Publicar Vercel/Render/Supabase manualmente após autorização; validar cold start, RAM Linux e reinício durante análise.
-- [ ] Testar demo agosto, imagem adicional, GeoTIFF + SCL e downloads pela URL pública.
-- [ ] Testar duas contas Google reais e 404 para análise, arquivos e chat de outro usuário.
-- [ ] Conferir cron diário, expiração de acesso, limpeza física e logs sem segredos.
-- [ ] Revisar nota PDF de duas páginas, fontes primárias, licenças e atribuição dos dados.
-- [ ] Gravar vídeo <=3 minutos da aplicação publicada mostrando imagem adicional e limitações.
-- [ ] Revisar histórico Git/segredos/assets antes de eventual publicação autorizada; confirmar repositório público pelo usuário.
-
-Verificações locais e screenshots do aplicativo não substituem esses gates públicos. Não foi executado push, deploy ou alteração de visibilidade nesta auditoria.
+Operação: [deploy](DEPLOY.md). Apresentação: [roteiro](ROTEIRO_VIDEO.md). Não marcar itens sem observação real.

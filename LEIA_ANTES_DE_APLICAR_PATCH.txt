@@ -1,9 +1,0 @@
-PATCH DO MONOREPO GLOBAL WATCH - 29/10/2026
-
-1. Faça backup/commit antes de aplicar. Extraia na RAIZ do seu repo global-watch-coffee, sobrescrevendo apenas os arquivos indicados.
-2. Os arquivos requirements-*.txt antigos foram removidos na versão completa. Se ainda existirem na sua cópia, apague:
-   rm apps/geo-worker/requirements-api.txt apps/geo-worker/requirements-core.txt apps/geo-worker/requirements-dev.txt
-3. NUNCA sobrescreva arquivos .env, .env.local ou sua .venv.
-4. Siga docs/delivery/MIGRACAO_LOCAL.md e DEPLOY.md.
-5. O Python foi testado; o build Next.js AINDA precisa ser executado na sua máquina.
-6. Repositório conectado: Gustavo-Pauli/global-watch-coffee. Após push, alterar visibilidade para PUBLIC.
