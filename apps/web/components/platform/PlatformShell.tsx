@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "radix-ui/dialog";
@@ -9,7 +15,8 @@ import {
   FolderClosed,
   LoaderCircle,
   Menu,
-  Plus,
+  PanelLeftClose,
+  PanelLeftOpen,
   X,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -21,21 +28,39 @@ import NewAnalysisDialog from "./NewAnalysisDialog";
 const PlatformContext = createContext({
   newAnalysis: () => {},
   openNavigation: () => {},
+  sidebarCollapsed: false,
+  toggleSidebar: () => {},
 });
 export function usePlatform() {
   return useContext(PlatformContext);
 }
 
 export function NavigationToggle() {
-  const { openNavigation } = usePlatform();
+  const { openNavigation, sidebarCollapsed, toggleSidebar } = usePlatform();
   return (
-    <button
-      className="icon-button mobile-navigation"
-      aria-label="Abrir navegação"
-      onClick={openNavigation}
-    >
-      <Menu size={19} />
-    </button>
+    <>
+      <button
+        className="icon-button desktop-navigation"
+        aria-label={
+          sidebarCollapsed ? "Expandir navegação" : "Recolher navegação"
+        }
+        title={sidebarCollapsed ? "Expandir navegação" : "Recolher navegação"}
+        onClick={toggleSidebar}
+      >
+        {sidebarCollapsed ? (
+          <PanelLeftOpen size={19} />
+        ) : (
+          <PanelLeftClose size={19} />
+        )}
+      </button>
+      <button
+        className="icon-button mobile-navigation"
+        aria-label="Abrir navegação"
+        onClick={openNavigation}
+      >
+        <Menu size={19} />
+      </button>
+    </>
   );
 }
 
@@ -142,6 +167,30 @@ function AuthenticatedPlatform({
   const workspace = /^\/analyses\/[^/]+/.test(pathname);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      setSidebarCollapsed(
+        localStorage.getItem("global-watch:sidebar:v1") === "collapsed",
+      );
+    } catch {
+      /* Optional browser preference. */
+    }
+  }, []);
+  function toggleSidebar() {
+    setSidebarCollapsed((current) => {
+      const next = !current;
+      try {
+        localStorage.setItem(
+          "global-watch:sidebar:v1",
+          next ? "collapsed" : "expanded",
+        );
+      } catch {
+        /* Optional browser preference. */
+      }
+      return next;
+    });
+  }
 
   function navigation(compact: boolean, mobile = false) {
     return (
@@ -169,19 +218,6 @@ function AuthenticatedPlatform({
             <FolderClosed size={18} />
             {!compact && <span>Análises</span>}
           </Link>
-          {compact && (
-            <button
-              className="navigation-link"
-              aria-label="Nova análise"
-              title="Nova análise"
-              onClick={() => {
-                setNewOpen(true);
-                setNavigationOpen(false);
-              }}
-            >
-              <Plus size={19} />
-            </button>
-          )}
         </nav>
         <div className="navigation-account">
           <AccountMenu user={user} compact={compact} />
@@ -195,14 +231,20 @@ function AuthenticatedPlatform({
       value={{
         newAnalysis: () => setNewOpen(true),
         openNavigation: () => setNavigationOpen(true),
+        sidebarCollapsed,
+        toggleSidebar,
       }}
     >
-      <div className={`platform${workspace ? " is-workspace" : ""}`}>
+      <div
+        className={`platform${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
+      >
         <a className="skip-link" href="#main-content">
           Ir para o conteúdo
         </a>
-        <aside className={`platform-sidebar${workspace ? " is-rail" : ""}`}>
-          {navigation(workspace)}
+        <aside
+          className={`platform-sidebar${sidebarCollapsed ? " is-rail" : ""}`}
+        >
+          {navigation(sidebarCollapsed)}
         </aside>
         <div className="platform-content">{children}</div>
         <Dialog.Root open={navigationOpen} onOpenChange={setNavigationOpen}>

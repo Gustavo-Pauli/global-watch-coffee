@@ -3,6 +3,7 @@ import "@fontsource-variable/inter";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import "./map-workspace.css";
+import "./platform-shell.css";
 
 export const metadata: Metadata = {
   title: "Global Watch Coffee | Análise geoespacial",

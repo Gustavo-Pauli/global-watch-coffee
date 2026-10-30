@@ -9,7 +9,6 @@ import {
   FileImage,
   FolderClosed,
   LoaderCircle,
-  Plus,
   RefreshCw,
   Search,
   X,
@@ -22,7 +21,8 @@ import {
   sceneDate,
   STATUS_LABELS,
 } from "../analysis-types";
-import { NavigationToggle, usePlatform } from "./PlatformShell";
+import { usePlatform } from "./PlatformShell";
+import PageHeader from "./PageHeader";
 
 export function AnalysisStatusLabel({ status }: { status: AnalysisStatus }) {
   return (
@@ -104,27 +104,8 @@ export default function AnalysesPage() {
 
   return (
     <>
-      <header className="page-topbar">
-        <NavigationToggle />
-        <FolderClosed size={16} />
-        <span>Análises</span>
-      </header>
+      <PageHeader title="Análises" count={items.length} />
       <main className="collection-page" id="main-content">
-        <div className="collection-heading">
-          <div>
-            <h1>
-              Análises{" "}
-              <span className="record-count" aria-hidden="true">
-                {items.length}
-              </span>
-            </h1>
-            <p>Suas imagens e resultados de processamento.</p>
-          </div>
-          <button className="button button-primary" onClick={newAnalysis}>
-            <Plus size={16} />
-            Nova análise
-          </button>
-        </div>
         <div className="collection-toolbar">
           <label className="search-field">
             <Search size={16} />

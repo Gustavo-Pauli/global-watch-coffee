@@ -1,14 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import dynamic from "next/dynamic";
 import * as DropdownMenu from "radix-ui/dropdown-menu";
 import * as Tabs from "radix-ui/tabs";
 import {
-  ArrowLeft,
   ArrowUp,
-  CalendarDays,
   ChevronDown,
   Download,
   FileImage,
@@ -33,11 +30,13 @@ import type {
 } from "../analysis-types";
 import {
   analysisTitle,
+  formatCompactDate,
   formatDate,
   formatNumber,
   sceneDate,
 } from "../analysis-types";
-import { NavigationToggle, usePlatform } from "./PlatformShell";
+import PageHeader from "./PageHeader";
+import AboutResult from "./AboutResult";
 import MapLayersPicker from "./MapLayersPicker";
 import type { BasemapId } from "../map-sources";
 
@@ -59,7 +58,6 @@ const FILES: { kind: DownloadKind; label: string; extension: string }[] = [
 type InspectorTab = "information" | "chat";
 
 export default function AnalysisWorkspace({ id }: { id: string }) {
-  const { newAnalysis } = usePlatform();
   const [data, setData] = useState<AnalysisData | null>(null);
   const [phase, setPhase] = useState<
     "opening" | "processing" | "error" | "ready"
@@ -77,6 +75,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
     hasMapKey ? "satellite" : "none",
   );
   const focusInspector = useRef(false);
+  const focusReopen = useRef(false);
   const questionInput = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const media = window.matchMedia("(min-width: 900px)");
@@ -202,10 +201,14 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
   }, [id, revision]);
 
   const closeInspector = useCallback(() => {
+    focusReopen.current = true;
     setInspectorOpen(false);
-    trigger.current?.focus();
   }, []);
   useEffect(() => {
+    if (!inspectorOpen && focusReopen.current) {
+      trigger.current?.focus();
+      focusReopen.current = false;
+    }
     if (inspectorOpen && focusInspector.current) {
       panel.current
         ?.querySelector<HTMLElement>('[role="tab"][data-state="active"]')
@@ -299,49 +302,21 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
 
   return (
     <>
-      <header className="page-topbar workspace-topbar">
-        <NavigationToggle />
-        <Link
-          className="back-to-analyses"
-          href="/analyses"
-          aria-label="Voltar para Análises"
-        >
-          <ArrowLeft size={17} />
-          <span>Análises</span>
-        </Link>
-        <span className="breadcrumb-divider">/</span>
-        <h1>{analysisTitle(id)}</h1>
-        {data && (
-          <span
-            className="workspace-date"
-            title="Data de aquisição da imagem analisada"
-          >
-            <CalendarDays size={14} />
-            Imagem · {formatDate(date)}
-          </span>
-        )}
-        <div className="workspace-header-actions">
-          {data && (
-            <button
-              ref={trigger}
-              className="button button-secondary inspector-toggle"
-              aria-label="Painel da análise"
-              aria-expanded={inspectorOpen}
-              aria-controls="analysis-inspector"
-              onClick={() => {
-                if (inspectorOpen) closeInspector();
-                else {
-                  focusInspector.current = true;
-                  setInspectorOpen(true);
-                }
-              }}
+      <PageHeader
+        title={analysisTitle(id)}
+        meta={
+          data ? (
+            <time
+              className="header-acquisition"
+              dateTime={date ?? undefined}
+              aria-label={`Aquisição: ${formatDate(date)}`}
+              title={`Aquisição: ${formatDate(date, true)}`}
             >
-              <PanelRight size={17} />
-              <span>Detalhes</span>
-            </button>
-          )}
-        </div>
-      </header>
+              {formatCompactDate(date)}
+            </time>
+          ) : undefined
+        }
+      />
       <main className="analysis-workspace" id="main-content">
         {!data ? (
           <div className="analysis-state" aria-live="polite">
@@ -360,12 +335,6 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                     <RotateCcw size={15} />
                     Tentar novamente
                   </button>
-                  <button
-                    className="button button-primary"
-                    onClick={newAnalysis}
-                  >
-                    Nova análise
-                  </button>
                 </div>
               </>
             ) : (
@@ -378,14 +347,9 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                 </h2>
                 <p>
                   {phase === "processing"
-                    ? "A imagem está sendo analisada. Você pode voltar à lista e acompanhar por lá."
+                    ? "Os resultados aparecerão aqui quando o processamento terminar."
                     : "Carregando a imagem e os resultados."}
                 </p>
-                {phase === "processing" && (
-                  <Link className="button button-secondary" href="/analyses">
-                    Voltar às análises <ArrowLeft size={15} />
-                  </Link>
-                )}
               </>
             )}
           </div>
@@ -411,7 +375,6 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   basemap={basemap}
                   onBasemap={selectBasemap}
                   hasKey={hasMapKey}
-                  date={date}
                   hasImage={Boolean(overlay)}
                   showRaster={showRaster}
                   onRaster={setShowRaster}
@@ -423,7 +386,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   <DropdownMenu.Trigger asChild>
                     <button
                       className="tool-button"
-                      aria-label="Arquivos"
+                      aria-label="Baixar arquivos"
                       aria-busy={Boolean(downloading)}
                     >
                       {downloading ? (
@@ -431,7 +394,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                       ) : (
                         <Download size={17} />
                       )}
-                      <span>Arquivos</span>
+                      <span>Baixar</span>
                       <ChevronDown size={12} />
                     </button>
                   </DropdownMenu.Trigger>
@@ -462,6 +425,22 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
               </div>
+              {!inspectorOpen && (
+                <button
+                  ref={trigger}
+                  className="button button-secondary map-results-button"
+                  aria-label="Mostrar resultados"
+                  aria-expanded={false}
+                  aria-controls="analysis-inspector"
+                  onClick={() => {
+                    focusInspector.current = true;
+                    setInspectorOpen(true);
+                  }}
+                >
+                  <PanelRight size={16} />
+                  <span>Resultados</span>
+                </button>
+              )}
               <div className="map-legend" aria-label="Legenda e área estimada">
                 <span
                   className={`legend-swatch${showPolygons ? "" : " is-hidden"}`}
@@ -548,12 +527,6 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                     aria-label="Informações"
                   >
                     <div className="map-panel-body">
-                      <div className="image-acquisition">
-                        <span>Aquisição da imagem</span>
-                        <time dateTime={date ?? undefined}>
-                          {formatDate(date)}
-                        </time>
-                      </div>
                       <dl className="result-summary">
                         <div className="primary-result">
                           <dt>Área candidata</dt>
@@ -585,24 +558,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                           Nenhuma área candidata foi identificada nesta imagem.
                         </p>
                       )}
-                      <p className="result-caveat">
-                        Áreas potenciais de café, sem validação em campo.
-                      </p>
-                      <details className="method-details">
-                        <summary>Método e limitações</summary>
-                        <p>
-                          {data.result.method === "rf_purified_multiclass_2.0"
-                            ? "Random Forest com supervisão fraca do MapBiomas. A classificação combina bandas espectrais e índices de vegetação."
-                            : data.result.method}
-                        </p>
-                        <p>{data.result.limitations}</p>
-                        <dl className="detail-values">
-                          <div>
-                            <dt>Pixels válidos</dt>
-                            <dd>{formatNumber(data.result.valid_pixels, 0)}</dd>
-                          </div>
-                        </dl>
-                      </details>
+                      <AboutResult result={data.result} />
                     </div>
                   </Tabs.Content>
                   <Tabs.Content
@@ -644,11 +600,6 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                         </div>
                         {messages.length === 0 && (
                           <div className="chat-introduction">
-                            <h3>Sobre esta análise</h3>
-                            <p>
-                              Pergunte sobre as áreas candidatas, o NDVI ou as
-                              limitações do resultado.
-                            </p>
                             <button
                               className="suggestion-button"
                               onClick={() => {
@@ -739,7 +690,6 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                             )}
                           </button>
                         </div>
-                        <p>Respostas fundamentadas nos dados desta imagem.</p>
                       </form>
                     </>
                   </Tabs.Content>

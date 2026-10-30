@@ -97,7 +97,7 @@ pnpm.cmd release:check --mode=local
 
 Para revisão visual: execute o app local, instale Chrome ou `pnpm --filter @global-watch/web exec playwright install chromium`, e execute `pnpm test:browser`. O fluxo real opt-in usa `RUN_LIVE_BROWSER=1`, cria usuários/sessões descartáveis e limpa seus próprios objetos; usa a configuração local e consome a cota de processamento. **Não testa o consentimento OAuth Google**. Capturas do aplicativo ficam em `docs/delivery/screenshots`; não há screenshots externos copiados.
 
-A regressão adicional `RUN_UI_BROWSER=1` testa o workspace pronto e conta no build local de produção sem iniciar jobs. Ela usa arquivos realmente processados da cena pública e fixtures próprios no PostgreSQL/Storage. Preparação e limites em [UI_REDESIGN.md](docs/delivery/UI_REDESIGN.md); `UI_FIXTURE_DIR` aponta para os seis artefatos. A busca da coleção atua sobre até 30 registros recentes retornados pela API.
+A regressão adicional `RUN_UI_BROWSER=1` testa o workspace pronto e conta no servidor local sem iniciar jobs. Ela usa arquivos realmente processados da cena pública e fixtures próprios no PostgreSQL/Storage. Preparação e limites em [UI_REDESIGN.md](docs/delivery/UI_REDESIGN.md); `UI_FIXTURE_DIR` aponta para os seis artefatos. A busca da coleção atua sobre até 30 registros recentes retornados pela API.
 
 O preflight é somente leitura, não exibe segredos e retorna código 1 se faltar uma configuração obrigatória, inclusive a chave Gemini. Nunca declara produção pronta sozinho. A verificação de retenção real tem opt-in e banco/servidor isolados; consulte os procedimentos antes de executá-la.
 
@@ -108,6 +108,7 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 - [Auditoria do geoprocessamento](docs/delivery/AUDITORIA_GEO.md)
 - [Design e estados da interface](docs/delivery/UI_DESIGN.md)
 - [Fontes do mapa, datas e painel com abas](docs/delivery/MAPAS_E_DATAS.md)
+- [Shell compartilhado e hierarquia das informações](docs/delivery/SHELL_E_HIERARQUIA.md)
 - [Decisões e validação do novo redesign](docs/delivery/UI_REDESIGN.md)
 - [Preflight de configuração e permissões](docs/delivery/PREFLIGHT.md)
 - [Validação real de retenção e novas tentativas](docs/delivery/RETENCAO_VALIDACAO.md)

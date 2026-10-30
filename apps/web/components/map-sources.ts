@@ -49,7 +49,7 @@ export const BASEMAPS: readonly BasemapSource[] = [
   },
   {
     id: "none",
-    title: "Sem mapa",
+    title: "Sem fundo",
     description: "Apenas a imagem e os resultados",
     provider: null,
     time: { kind: "reference", label: "Sem fundo de referência" },

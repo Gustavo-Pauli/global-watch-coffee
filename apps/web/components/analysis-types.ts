@@ -81,6 +81,16 @@ export function formatDate(value: string | null, long = false) {
     year: "numeric",
   }).format(date);
 }
+export function formatCompactDate(value: string | null) {
+  if (!value) return "Sem data";
+  const date = new Date(`${value.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return "Sem data";
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+}
 export function sceneLabel(scene: string | null) {
   return (
     SCENES.find((item) => item.value === scene)?.description ?? "Imagem enviada"

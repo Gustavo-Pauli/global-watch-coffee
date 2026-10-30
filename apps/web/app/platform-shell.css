@@ -1,0 +1,191 @@
+/* Shared shell: route changes never change navigation mode. */
+.platform.is-sidebar-collapsed {
+  grid-template-columns: 64px minmax(0, 1fr);
+}
+.brand-link {
+  min-height: 64px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.primary-navigation {
+  padding-top: 18px;
+}
+.platform-page-header {
+  min-height: 64px;
+  height: 64px;
+  padding: 0 20px;
+  gap: 13px;
+  background: #18181a;
+}
+.header-identity {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.header-title-row h1 {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.header-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.header-acquisition {
+  font-size: 12px;
+  margin: 0;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-new-analysis {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.desktop-navigation {
+  display: inline-flex;
+}
+.map-results-button {
+  position: absolute;
+  top: 17px;
+  right: 17px;
+  z-index: 650;
+  min-height: 40px;
+  background: #202023;
+  border-color: #424246;
+  box-shadow: 0 3px 12px #0003;
+  font-size: 12px;
+}
+.result-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  margin-top: 17px;
+}
+.result-help:hover {
+  color: var(--text);
+}
+.result-summary {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.result-about-dialog {
+  width: min(490px, calc(100vw - 24px));
+}
+.result-explanation h3 {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 9px;
+}
+.result-explanation p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+.result-explanation h3:not(:first-child) {
+  margin-top: 23px;
+}
+.result-explanation details {
+  border-top: 1px solid var(--line);
+  margin-top: 23px;
+}
+.result-explanation summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  padding-top: 16px;
+  padding-bottom: 9px;
+}
+.result-explanation .detail-values > div {
+  align-items: start;
+}
+.result-explanation .detail-values dd {
+  max-width: 65%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.chat-introduction {
+  padding: 14px 18px;
+}
+.chat-introduction .suggestion-button {
+  margin-top: 0;
+}
+.map-layers-popover .basemap-option {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.map-layers-popover .source-context {
+  margin-top: 10px;
+}
+.analysis-layers-heading {
+  margin-bottom: 7px;
+}
+@media (max-width: 760px) {
+  .platform,
+  .platform.is-sidebar-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .desktop-navigation {
+    display: none;
+  }
+  .platform-page-header {
+    padding: 0 12px;
+    gap: 9px;
+    min-height: 64px;
+    height: 64px;
+  }
+  .platform-page-header > .mobile-navigation {
+    margin: 0;
+    width: 32px;
+    min-width: 32px;
+  }
+  .header-identity {
+    gap: 5px;
+  }
+  .header-title-row h1 {
+    font-size: 13px;
+  }
+  .header-meta {
+    font-size: 12px;
+  }
+  .header-new-analysis {
+    padding: 8px 9px;
+    font-size: 12px;
+    min-height: 35px;
+    gap: 6px;
+  }
+  .header-new-analysis svg {
+    width: 14px;
+  }
+  .map-results-button {
+    top: 12px;
+    right: 12px;
+    min-height: 42px;
+    padding: 8px 9px;
+  }
+  .map-toolbar .tool-button[aria-label="Baixar arquivos"] > span {
+    display: none;
+  }
+  .map-toolbar .tool-button[aria-label="Baixar arquivos"] {
+    gap: 3px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+  .result-about-dialog {
+    padding: 22px;
+  }
+}

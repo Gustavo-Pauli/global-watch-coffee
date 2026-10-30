@@ -2,13 +2,13 @@
 
 ## Decisão de produto
 
-O usuário não precisa configurar uma fonte para começar. **Satélite** é o fundo padrão quando `NEXT_PUBLIC_MAPTILER_KEY` está configurada. **Ruas** ajuda a localizar municípios e acessos. **Sem mapa** permite focar na imagem e nos resultados, inclusive quando o provedor não estiver disponível. A escolha do fundo é uma preferência local do navegador.
+O usuário não precisa configurar uma fonte para começar. **Satélite** é o fundo padrão quando `NEXT_PUBLIC_MAPTILER_KEY` está configurada. **Ruas** ajuda a localizar municípios e acessos. **Sem fundo** permite focar na imagem e nos resultados, inclusive quando o provedor não estiver disponível. A escolha do fundo é uma preferência local do navegador.
 
-O menu **Mapa e camadas** reúne essas opções e os controles de visibilidade da imagem analisada e dos candidatos. Ele abre junto ao controle do mapa. O painel à direita tem duas abas estáveis, **Informações** e **Assistente**, sem trocar de lugar quando o usuário quer fazer uma pergunta. Pergunta em edição e mensagens são preservadas ao alternar abas ou recolher o painel. No desktop o painel começa aberto; abaixo de 900 px começa recolhido, deixando espaço para o mapa. Pode ser aberto pelo botão de detalhes.
+O menu **Camadas** reúne essas opções e os controles de visibilidade da imagem analisada e dos candidatos. As escolhas ficam sob **Mapa de fundo** e os switches sob **Resultado**, sem descrições repetidas. O painel à direita tem duas abas estáveis, **Informações** e **Assistente**. Pergunta em edição e mensagens são preservadas ao alternar abas ou recolher o painel. No desktop o painel começa aberto; abaixo de 900 px começa recolhido, deixando espaço para o mapa. **Resultados**, junto ao mapa, permite reabri-lo quando fechado. A navegação e a criação continuam no cabeçalho e sidebar compartilhados da plataforma.
 
 ## O que cada data significa
 
-- **Imagem analisada:** a aquisição efetivamente informada/produzida pelo processamento. Essa data identifica os resultados, não a imagem de fundo. Se não foi fornecida, a UI informa que a data é desconhecida.
+- **Imagem analisada:** a aquisição efetivamente informada/produzida pelo processamento. Aparece uma vez no cabeçalho, em formato numérico completo inclusive no celular. O rótulo acessível e o tooltip identificam a aquisição. Essa data identifica os resultados, não a imagem de fundo. Se não foi fornecida, a UI mostra **Sem data**.
 - **Satélite MapTiler:** mosaico de fontes e datas diferentes. A UI não o apresenta como uma cena da data da análise. O [catálogo oficial](https://docs.maptiler.com/schema-raster/satellite/) descreve o conjunto `satellite-v2` como composição de imagens de satélite e aéreas.
 - **Ruas:** cartografia para localização; não representa uma aquisição orbital.
 
@@ -20,7 +20,7 @@ Mudar o fundo não recalcula classificação, área, NDVI ou geometrias. A camad
 |---|---|---|
 | Satélite | MapTiler Tiles `satellite-v2`, JPG | Padrão; cores naturais, sem o filtro usado no antigo mapa base |
 | Ruas | MapTiler Maps `streets-v4/256`, PNG | Tiles de 256 px, alinhados à grade Leaflet padrão |
-| Sem mapa | Sem requisições de tiles | Conserva imagem, polígonos, escala e ferramentas |
+| Sem fundo | Sem requisições de tiles | Conserva imagem, polígonos, escala e ferramentas |
 
 URLs, descrições, provedor, natureza temporal e limites ficam em `components/map-sources.ts`; a apresentação está em `MapLayersPicker.tsx`. O Leaflet conserva posição/zoom ao trocar de fundo; somente a camada do provedor é substituída. A integração segue a [documentação Leaflet do MapTiler](https://docs.maptiler.com/leaflet/examples/how-to-use-leaflet/) e a [diferença entre grades de 256/512 px](https://docs.maptiler.com/guides/maps-apis/maps-platform/difference-between-256x256-512x512-and-hidpiretina-rasterized-tiles/).
 
@@ -40,13 +40,13 @@ O fluxo simples deve continuar com uma seleção automática adequada ao local/p
 
 Créditos MapTiler/OpenStreetMap e logo com link ficam visíveis, inclusive no celular, conforme a [atribuição oficial](https://docs.maptiler.com/guides/map-design/attribution/add-attribution/), que exige o logo para contas gratuitas. Não foi criado proxy nem alterado um plano do provedor. Os dois endpoints responderam HTTP 200 com a configuração local; isso não garante cotas ou acesso indefinidos. A disponibilidade depende da conta e do serviço.
 
-As requisições dos tiles usam `strict-origin`: enviam a origem da aplicação, sem caminho da análise ou query. Erros do fundo não substituem a imagem processada nem removem os resultados. A contingência pode ser escolhida como **Sem mapa**.
+As requisições dos tiles usam `strict-origin`: enviam a origem da aplicação, sem caminho da análise ou query. Erros do fundo não substituem a imagem processada nem removem os resultados. A contingência pode ser escolhida como **Sem fundo**.
 
 ## Verificação
 
 Regressão em `tests/browser/platform.spec.ts`: dados reais previamente processados da cena pública, banco/Storage e sessões descartáveis, sem novos jobs Python nem chamadas Gemini. Confere respostas reais de tiles MapTiler, origem do Referer, alternância de fundos, ausência de mapa, camadas, abas por teclado, preservação da pergunta, foco e tamanhos móveis. Não intercepta requisições de tiles para desativar cache.
 
-Na execução final, **1 regressão integrada passou em 46,4 s**, cobrindo 1440, 768, 390 e 320 px, inclusive toque. Foram observadas **156 respostas de tiles, todas HTTP 200**, com Referer limitado a `http://localhost:3000/`, sem caminho/ID da análise. Satélite, Ruas e Sem mapa, abas por teclado, pergunta preservada, perfil e logout foram verificados. Nenhum job de processamento ou chamada Gemini foi iniciado; a cota global permaneceu em 10. Os fixtures foram removidos, preservando 1 usuário, 1 sessão e as 2 análises já existentes no ambiente.
+Na revisão vigente do shell, **2 testes de navegador passaram em 46,3 s**, com o fluxo live de processamento explicitamente desativado. Cobriram 1440, 768, 390 e 320 px, inclusive toque e data completa sem clipping. Foram observadas **174 respostas de tiles, todas HTTP 200**, com Referer limitado a `http://localhost:3000/`, sem caminho/ID da análise. Satélite, Ruas e Sem fundo, abas por teclado, pergunta preservada, perfil e logout foram verificados. Nenhum job de processamento ou chamada Gemini foi iniciado; a cota global permaneceu em 10. Os fixtures foram removidos, preservando os dados já existentes no ambiente. Decisões e evidências: [SHELL_E_HIERARQUIA.md](SHELL_E_HIERARQUIA.md).
 
 Build Next de produção e TypeScript passaram; 20 testes unitários web passaram, com integração SQL explicitamente ignorada por ausência de configuração de banco descartável. A revisão de navegador usou o dev server local que o usuário já mantinha aberto; não é evidência de deploy ou de execução pública. Não foi alterado o plano MapTiler, executada migração ou feito commit.
 

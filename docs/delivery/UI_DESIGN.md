@@ -4,7 +4,7 @@
 
 A entrada autenticada é uma coleção de análises em `/analyses`: busca, filtro de status, ordenação por criação e ação **Nova análise**. Cada registro abre um workspace próprio em `/analyses/:id`. Refresh e histórico do navegador preservam a identidade da análise. A raiz `/` redireciona à coleção. O login Google é uma tela dedicada, sem mapa decorativo ou apresentação de marketing.
 
-O shell compartilhado separa navegação, conta e conteúdo. A navegação é uma sidebar na coleção e uma rail no workspace; no celular abre em um sheet. Apenas o módulo implementado é mostrado. A composição por rotas permite acrescentar módulos depois sem colocar navegação vazia hoje.
+O shell compartilhado separa navegação, conta e conteúdo. A mesma sidebar com rótulos aparece na coleção e no mapa; o usuário pode recolhê-la e sua preferência permanece entre rotas e recargas. No celular, os mesmos itens abrem em um sheet. **Nova análise** fica no mesmo lugar do cabeçalho em todas as rotas. Apenas o módulo implementado é mostrado. A composição por rotas permite acrescentar módulos depois sem colocar navegação vazia hoje.
 
 ## Sistema visual
 
@@ -19,9 +19,11 @@ O shell compartilhado separa navegação, conta e conteúdo. A navegação é um
 
 **Processamento:** a análise recebe rota própria e pode ser acompanhada depois pela coleção. Sair da tela interrompe somente a espera do navegador; não alega cancelar o job já aceito. Falhas e upload incompleto mostram ações de nova análise/retentativa.
 
-**Resultado:** mapa ocupa o workspace, com imagem RGB efetivamente produzida, polígonos interativos, enquadramento, zoom, escala e atribuição. Zoom fracionário enquadra a imagem sem perder uma faixa inteira de resolução de zoom. Legenda, hectares e data da imagem analisada ficam visíveis. O fundo padrão é Satélite MapTiler, com Ruas e Sem mapa no seletor. As imagens mantêm suas cores reais; não se aplica o filtro do antigo mapa base.
+**Resultado:** mapa ocupa o workspace, com imagem RGB efetivamente produzida, polígonos interativos, enquadramento, zoom, escala e atribuição. Zoom fracionário enquadra a imagem sem perder uma faixa inteira de resolução de zoom. Legenda, hectares e data da imagem analisada ficam visíveis. A aquisição aparece uma vez, no cabeçalho, em formato numérico que cabe no celular; o rótulo acessível e o tooltip identificam seu significado. O fundo padrão é Satélite MapTiler, com Ruas e Sem fundo no seletor. As imagens mantêm suas cores reais; não se aplica o filtro do antigo mapa base.
 
-**Ferramentas:** Informações e Assistente são abas no mesmo painel à direita. O painel começa aberto no desktop e pode ser recolhido; no celular começa fechado. Camadas e mapa de referência ficam em um popover junto ao controle do mapa, sem substituir as informações. Arquivos continua um menu para GeoJSON, PNG com polígonos, GeoTIFF classificado e RGB. O seletor distingue o fundo MapTiler da imagem analisada e seus polígonos; não inventa um raster NDVI ou um calendário de aquisições.
+**Ferramentas:** Informações e Assistente são abas no mesmo painel à direita. O painel começa aberto no desktop e pode ser recolhido; no celular começa fechado. Quando recolhido, **Resultados** aparece junto ao mapa para reabri-lo. **Camadas** reúne mapa de fundo e visibilidade do resultado. **Baixar** abre o menu para GeoJSON, PNG com polígonos, GeoTIFF classificado e RGB. O seletor distingue o fundo MapTiler da imagem analisada e seus polígonos; não inventa um raster NDVI ou um calendário de aquisições.
+
+**Explicação científica:** o painel mostra área candidata, contagem e NDVI. **Sobre o resultado** abre um dialog com método, limitações reais e significado do índice; dados técnicos ficam em disclosure. O popup mostra identificação e hectares. As ressalvas não se repetem a cada polígono, sem remover a distinção entre candidato e café confirmado.
 
 **Chat:** vinculado à análise da rota. Mostra a classificação real, perguntas e respostas; alternar abas ou recolher o painel preserva a pergunta e as mensagens. Sugestões colocam foco no campo de composição. Fallback `rules_fallback_not_ai` é identificado como resposta por regras/IA indisponível; não se apresenta como resposta generativa. Trocar a análise ou encerrar a sessão desmonta esse contexto e aborta requisições pendentes.
 
@@ -37,4 +39,4 @@ No celular os painéis têm largura limitada ao viewport, altura limitada e rola
 
 Não foram adicionados clima, alertas, séries, acurácia ou dados inventados. Áreas continuam candidatas, sem validação de campo. APIs, autorização por proprietário, processamento Python, armazenamento privado, cotas e retenção foram preservados. A coleção usa os até 30 registros recentes já retornados pela API; busca/filtro são locais nesse conjunto. Não se promete paginação ou busca global ainda não implementada. O nome original do upload não é persistido pelo schema atual; a identificação usa o ID real da análise.
 
-As referências enviadas, incluindo MapBiomas, orientam hierarquia e padrões de interação. Não são assets e não foram copiadas para o repositório. Decisões iniciais e revisão: [UI_REDESIGN.md](UI_REDESIGN.md). A evolução vigente de fontes/datas/painel está em [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md). Evidências técnicas e visuais não substituem a avaliação visual do usuário.
+As referências enviadas, incluindo MapBiomas, orientam hierarquia e padrões de interação. Não são assets e não foram copiadas para o repositório. Decisões iniciais: [UI_REDESIGN.md](UI_REDESIGN.md). A evolução vigente de fontes/datas/painel está em [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md), e a revisão do shell e da hierarquia em [SHELL_E_HIERARQUIA.md](SHELL_E_HIERARQUIA.md). Evidências técnicas e visuais não substituem a avaliação visual do usuário.

@@ -82,7 +82,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await expect(profile).not.toBeVisible();
     await expect(account).toBeFocused();
 
-    const create = page.getByRole('button', { name: 'Nova análise', exact: true }).first();
+    const create = page.getByTestId('page-header').getByRole('button', { name: 'Nova análise', exact: true });
     await create.click();
     const creation = page.getByRole('dialog', { name: 'Nova análise', exact: true });
     await expect(creation).toBeVisible();
@@ -121,7 +121,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await screenshot(page, 'desktop-results.png');
 
     // One tool at a time; opening and closing preserves the result map.
-    await page.getByRole('button', { name: 'Mapa e camadas', exact: true }).click();
+    await page.getByRole('button', { name: 'Camadas', exact: true }).click();
     const raster = page.getByRole('switch', { name: 'Imagem analisada', exact: true });
     await expect(raster).toBeChecked();
     await raster.click();
@@ -139,7 +139,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await page.getByRole('tab', { name: 'Informações', exact: true }).click();
     await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     await screenshot(page, 'desktop-information.png');
-    await page.getByRole('button', { name: 'Arquivos', exact: true }).click();
+    await page.getByRole('button', { name: 'Baixar arquivos', exact: true }).click();
     const downloaded = page.waitForEvent('download');
     await page.getByRole('menuitem', { name: /GeoJSON/ }).click();
     const file = await downloaded;
@@ -169,9 +169,11 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await expect(page).toHaveURL(new RegExp(`/analyses/${analysisId}$`));
     await expect(page.locator('.leaflet-image-layer')).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
+    const closeInspector = page.getByRole('button', { name: 'Fechar painel', exact: true });
+    if (await closeInspector.isVisible()) await closeInspector.click();
     await noHorizontalOverflow(page);
     await screenshot(page, 'mobile-results.png');
-    await page.getByRole('button', { name: 'Painel da análise', exact: true }).click();
+    await page.getByRole('button', { name: 'Mostrar resultados', exact: true }).click();
     await page.getByRole('tab', { name: 'Informações', exact: true }).click();
     await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
     await noHorizontalOverflow(page);
@@ -202,7 +204,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await page.goBack();
     await expect(page).toHaveURL(/\/analyses$/);
 
-    await page.getByRole('button', { name: 'Nova análise', exact: true }).first().click();
+    await create.click();
     await creation.getByLabel('Imagem multiespectral', { exact: true }).setInputFiles(path.resolve('../../data/sample/imagem_multiespectral.tif'));
     await creation.getByText('Opções da imagem', { exact: true }).click();
     await creation.getByLabel('Máscara SCL (opcional)', { exact: true }).setInputFiles(path.resolve('../../data/sample/qualidade_scl.tif'));

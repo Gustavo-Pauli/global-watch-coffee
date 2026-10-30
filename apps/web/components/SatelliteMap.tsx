@@ -92,12 +92,10 @@ function CandidateLayer({ geojson }: { geojson: FeatureCollection }) {
           area = Number(feature.properties?.area_ha ?? 0);
         const content = document.createElement("div"),
           title = document.createElement("strong"),
-          measure = document.createElement("span"),
-          note = document.createElement("small");
+          measure = document.createElement("span");
         title.textContent = `Candidato ${Number.isFinite(id) ? id : "—"}`;
         measure.textContent = `${Number.isFinite(area) ? area.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : "—"} ha`;
-        note.textContent = "Sem validação em campo";
-        content.append(title, measure, note);
+        content.append(title, measure);
         item.bindPopup(content);
       }}
     />

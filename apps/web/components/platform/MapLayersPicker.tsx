@@ -11,7 +11,6 @@ type Props = {
   basemap: BasemapId;
   onBasemap: (value: BasemapId) => void;
   hasKey: boolean;
-  date: string | null;
   hasImage: boolean;
   showRaster: boolean;
   onRaster: (value: boolean) => void;
@@ -26,10 +25,10 @@ export default function MapLayersPicker(props: Props) {
       <Popover.Trigger asChild>
         <button
           className="tool-button source-trigger"
-          aria-label="Mapa e camadas"
+          aria-label="Camadas"
         >
           <Layers size={17} />
-          <span>{source.title}</span>
+          <span>Camadas</span>
           <ChevronDown size={12} />
         </button>
       </Popover.Trigger>
@@ -39,21 +38,21 @@ export default function MapLayersPicker(props: Props) {
           sideOffset={9}
           align="start"
           collisionPadding={12}
-          aria-label="Mapa e camadas"
+          aria-label="Camadas"
         >
           <div className="picker-header">
-            <h2>Mapa e camadas</h2>
+            <h2>Camadas</h2>
             <Popover.Close asChild>
               <button className="icon-button" aria-label="Fechar camadas">
                 <X size={17} />
               </button>
             </Popover.Close>
           </div>
-          <h3 className="picker-section-label">Mapa de referência</h3>
+          <h3 className="picker-section-label">Mapa de fundo</h3>
           <RadioGroup.Root
             value={props.basemap}
             onValueChange={(value) => props.onBasemap(value as BasemapId)}
-            aria-label="Mapa de referência"
+            aria-label="Mapa de fundo"
             className="basemap-options"
           >
             {BASEMAPS.map((item) => (
@@ -78,18 +77,17 @@ export default function MapLayersPicker(props: Props) {
                 />
                 <span className="basemap-option-copy">
                   <strong>{item.title}</strong>
-                  <span>{item.description}</span>
                 </span>
               </label>
             ))}
           </RadioGroup.Root>
-          <p className="source-context">
-            {source.time.kind === "mosaic"
-          ? `${source.time.label}. Não corresponde à aquisição da análise.`
-              : source.time.kind === "reference"
+          {source.time.kind !== "reference" && (
+            <p className="source-context">
+              {source.time.kind === "mosaic"
                 ? source.time.label
                 : formatDate(source.time.date)}
-          </p>
+            </p>
+          )}
           {!props.hasKey && (
             <p className="form-error">
               Mapa de referência indisponível neste ambiente.
@@ -97,8 +95,7 @@ export default function MapLayersPicker(props: Props) {
           )}
           <div className="analysis-layers">
             <div className="analysis-layers-heading">
-              <h3>Dados da análise</h3>
-              <span>{formatDate(props.date)}</span>
+              <h3>Resultado</h3>
             </div>
             <div className="compact-layer-row">
               <label htmlFor="analysis-raster">

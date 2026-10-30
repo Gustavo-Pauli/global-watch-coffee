@@ -28,7 +28,7 @@ async function capture(page: Page, filename: string) {
 async function noOverflow(page: Page) {
   await settled(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  for (const button of await page.locator('.map-toolbar button').all()) {
+  for (const button of await page.locator('.map-toolbar button, .map-results-button').all()) {
     const rectangle = await button.boundingBox();
     if (!rectangle) continue;
     expect(rectangle.x).toBeGreaterThanOrEqual(0);
@@ -42,8 +42,17 @@ async function readyMap(page: Page) {
   await expect.poll(() => page.locator('.leaflet-image-layer').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   await expect(page.locator('.leaflet-interactive')).toHaveCount(24);
   await expect(page.locator('.map-legend')).toContainText('22,66');
-  await expect(page.locator('.workspace-date')).toContainText('2025');
+  const date = page.locator('.header-acquisition');
+  await expect(date).toHaveText('16/08/2025');
+  await expect(date).toHaveAttribute('datetime', '2025-08-16');
+  await expect(date).toHaveAttribute('aria-label', /Aquisição:.*2025/);
+  await expect(date).toHaveAttribute('title', /Aquisição:.*agosto.*2025/);
   await settled(page);
+  expect(await date.evaluate(element => {
+    const rectangle = element.getBoundingClientRect();
+    return element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight
+      && rectangle.left >= 0 && rectangle.right <= innerWidth;
+  }), `Acquisition date must remain completely visible at ${page.viewportSize()!.width}px`).toBe(true);
 }
 
 function inside(point: number[], ring: number[][]) {
@@ -102,6 +111,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
   const contexts: BrowserContext[] = [];
   const errors: string[] = [];
   const processingRequests: string[] = [];
+  const chatRequests: string[] = [];
   const tileRequests: { host: string; referer: string | undefined }[] = [];
   const tileResponses: number[] = [];
   const tileHeaderReads: Promise<void>[] = [];
@@ -133,6 +143,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     page.on('request', request => {
       const url = new URL(request.url());
       if (/\/api\/analysis\/(demo|start)$/.test(url.pathname)) processingRequests.push(request.url());
+      if (/\/api\/analyses\/[^/]+\/chat$/.test(url.pathname)) chatRequests.push(url.pathname);
       if (url.hostname === 'api.maptiler.com' && /^\/(tiles|maps)\//.test(url.pathname)) {
         // Passive inspection preserves normal browser caching. Routing or
         // fetching tiles separately would change the behavior under test.
@@ -149,13 +160,25 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const record = page.getByRole('link', { name: `Abrir análise ${id}`, exact: true });
     await expect(record).toBeVisible();
     await expect(page.locator('.analysis-table-wrap')).toHaveAttribute('aria-busy', 'false');
+    const header = page.getByTestId('page-header');
+    const sidebar = page.locator('.platform-sidebar');
+    const create = header.getByRole('button', { name: 'Nova análise', exact: true });
+    await expect(header.getByRole('heading', { level: 1, name: 'Análises', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Nova análise', exact: true })).toHaveCount(1);
+    await expect(sidebar.getByRole('link', { name: 'Análises', exact: true })).toBeVisible();
+    await expect(sidebar.getByRole('button', { name: 'Menu da conta', exact: true })).toBeVisible();
+    await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
+    await settled(page);
+    const collectionSidebarWidth = (await sidebar.boundingBox())!.width;
+    const collectionNavigation = await sidebar.getByRole('link').allTextContents();
+    const collectionCreate = (await create.boundingBox())!;
     await capture(page, 'desktop-analyses.png');
     await page.getByLabel('Buscar análises', { exact: true }).fill('imagem-inexistente');
     await expect(record).not.toBeVisible();
     await page.getByRole('button', { name: 'Limpar busca', exact: true }).click();
     await expect(record).toBeVisible();
 
-    const create = page.getByRole('button', { name: 'Nova análise', exact: true });
     await create.click();
     const creation = page.getByRole('dialog', { name: 'Nova análise', exact: true });
     await expect(creation.getByRole('tab', { name: 'Enviar imagem', exact: true })).toHaveAttribute('aria-selected', 'true');
@@ -174,8 +197,32 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(creation).not.toBeVisible();
     await expect(create).toBeFocused();
 
+    // Navigation density is a user preference, never an automatic route mode.
+    await header.getByRole('button', { name: 'Recolher navegação', exact: true }).click();
+    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    const collapsedSidebarWidth = (await sidebar.boundingBox())!.width;
+    expect(collapsedSidebarWidth).toBeLessThan(collectionSidebarWidth);
+    await page.reload();
+    await expect(record).toBeVisible();
+    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    await expect(header.getByRole('button', { name: 'Expandir navegação', exact: true })).toBeVisible();
     await record.click();
     await readyMap(page);
+    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    expect((await sidebar.boundingBox())!.width).toBe(collapsedSidebarWidth);
+    await header.getByRole('button', { name: 'Expandir navegação', exact: true }).click();
+    await settled(page);
+    expect((await sidebar.boundingBox())!.width).toBe(collectionSidebarWidth);
+    expect(await sidebar.getByRole('link').allTextContents()).toEqual(collectionNavigation);
+    await expect(header.getByRole('heading', { level: 1, name: `Análise ${id.slice(0, 8)}`, exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole('button', { name: 'Nova análise', exact: true })).toHaveCount(1);
+    expect((await create.boundingBox())!.x).toBe(collectionCreate.x);
+    expect((await create.boundingBox())!.width).toBe(collectionCreate.width);
+    await expect(header.getByRole('link', { name: 'Análises', exact: true })).toHaveCount(0);
+    await expect(header.getByRole('button', { name: /Detalhes|Painel da análise/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Mostrar resultados', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Baixar arquivos', exact: true })).toContainText('Baixar');
     const loadedTile = page.locator('img.leaflet-tile-loaded').first();
     await expect(loadedTile).toBeVisible();
     await expect.poll(() => loadedTile.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
@@ -204,26 +251,35 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
       rectangle.y + (mercator(north) - mercator(point[1])) / (mercator(north) - mercator(south)) * rectangle.height,
     );
     await expect(page.locator('.leaflet-popup-content')).toContainText(`Candidato ${polygonId}`);
-    await expect(page.locator('.leaflet-popup-content')).toContainText('Sem validação em campo');
+    await expect(page.locator('.leaflet-popup-content')).toContainText('ha');
+    await expect(page.locator('.leaflet-popup-content')).not.toContainText(/validação|método/i);
     await expect(page.locator('.leaflet-popup')).toHaveCSS('opacity', '1');
     await capture(page, 'desktop-popup.png');
     await page.locator('.leaflet-popup-close-button').click();
 
-    const layers = page.getByRole('button', { name: 'Mapa e camadas', exact: true });
+    const layers = page.getByRole('button', { name: 'Camadas', exact: true });
     await layers.click();
+    const layerPicker = page.getByRole('dialog', { name: 'Camadas', exact: true });
+    await expect(layerPicker.getByRole('radiogroup', { name: 'Mapa de fundo', exact: true })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'Satélite', exact: true })).toBeChecked();
-    await expect(page.getByText('Mosaico de diferentes datas. Não corresponde à aquisição da análise.', { exact: true })).toBeVisible();
+    await expect(layerPicker).toContainText('Mosaico de diferentes datas');
+    await expect(layerPicker.locator('time')).toHaveCount(0);
     await capture(page, 'desktop-layers.png');
     const raster = page.getByRole('switch', { name: 'Imagem analisada', exact: true });
     await raster.click();
     await expect(page.locator('.leaflet-image-layer')).toHaveCount(0);
     await raster.click();
     await readyMap(page);
+    const polygons = layerPicker.getByRole('switch', { name: 'Áreas candidatas', exact: true });
+    await polygons.click();
+    await expect(page.locator('.leaflet-interactive')).toHaveCount(0);
+    await polygons.click();
+    await expect(page.locator('.leaflet-interactive')).toHaveCount(24);
     await page.getByRole('radio', { name: 'Ruas', exact: true }).click();
     await expect(page.locator('.basemap-streets img.leaflet-tile-loaded').first()).toBeVisible();
     await readyMap(page);
     await capture(page, 'desktop-streets.png');
-    await page.getByRole('radio', { name: 'Sem mapa', exact: true }).click();
+    await page.getByRole('radio', { name: 'Sem fundo', exact: true }).click();
     await expect(page.locator('.basemap-tiles')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'MapTiler', exact: true })).toHaveCount(0);
     await readyMap(page);
@@ -231,11 +287,37 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(page.locator('.basemap-satellite img.leaflet-tile-loaded').first()).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(layers).toBeFocused();
+    await page.getByRole('button', { name: 'Baixar arquivos', exact: true }).click();
+    const downloaded = page.waitForEvent('download');
+    await page.getByRole('menuitem', { name: /GeoJSON/ }).click();
+    const file = await downloaded;
+    expect(file.suggestedFilename()).toMatch(/\.geojson$/);
+    expect(await file.failure()).toBeNull();
     const information = page.getByRole('tab', { name: 'Informações', exact: true });
-    const inspector = page.getByRole('button', { name: 'Painel da análise', exact: true });
+    const inspector = page.getByRole('button', { name: 'Mostrar resultados', exact: true });
     const info = page.getByRole('tabpanel', { name: 'Informações', exact: true });
     await expect(info).toContainText('24');
     await expect(info).toContainText('0,559');
+    await expect(info.locator('time, details')).toHaveCount(0);
+    await expect(info).not.toContainText('Áreas potenciais de café, sem validação em campo.');
+    await expect(page.locator('.header-acquisition')).toHaveCount(1);
+    const aboutTrigger = info.getByRole('button', { name: 'Sobre o resultado', exact: true });
+    await aboutTrigger.click();
+    const about = page.getByRole('dialog', { name: 'Sobre o resultado', exact: true });
+    await expect(about).toBeVisible();
+    await expect(about).toContainText(/Random Forest/);
+    await expect(about).toContainText(/MapBiomas/);
+    await expect(about).toContainText(/sem (verificação de|validação em) campo/i);
+    await expect(about).toContainText(result.limitations);
+    for (let index = 0; index < 5; index++) {
+      await page.keyboard.press('Tab');
+      expect(await about.evaluate(dialog => dialog.contains(document.activeElement))).toBe(true);
+    }
+    await capture(page, 'desktop-about-result.png');
+    await page.keyboard.press('Escape');
+    await expect(about).not.toBeVisible();
+    await expect(aboutTrigger).toBeFocused();
+    await expect(info).toBeVisible();
     await capture(page, 'desktop-information.png');
     await information.focus();
     await page.keyboard.press('ArrowRight');
@@ -257,11 +339,13 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await capture(page, 'desktop-chat-ready.png');
     await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
     await expect(inspector).toBeFocused();
+    await expect(inspector).toContainText('Resultados');
     await inspector.click();
+    await expect(inspector).toHaveCount(0);
     await expect(page.getByRole('tab', { name: 'Assistente', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
 
-    // Verify the compact rail's account menu is clickable with no dev chrome.
+    // Verify the same navigation account menu works while viewing a map.
     const account = page.getByRole('button', { name: 'Menu da conta', exact: true });
     await account.click();
     await page.getByRole('menuitem', { name: 'Meu perfil', exact: true }).click();
@@ -274,6 +358,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(account).toBeFocused();
     await page.reload();
     await readyMap(page);
+    await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
     await account.click();
     await page.getByRole('menuitem', { name: 'Meu perfil', exact: true }).click();
     await expect(profile.getByRole('textbox', { name: 'Nome', exact: true })).toHaveValue('Revisão visual');
@@ -284,6 +369,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
       await page.setViewportSize({ width, height: width === 768 ? 1024 : 740 });
       await page.reload();
       await readyMap(page);
+      await expect(header.getByRole('button', { name: 'Nova análise', exact: true })).toBeVisible();
       await noOverflow(page);
       await capture(page, filename);
       await inspector.click();
@@ -302,10 +388,12 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     mobile.on('pageerror', error => errors.push(error.message));
     mobile.on('request', request => {
       if (/\/api\/analysis\/(demo|start)$/.test(new URL(request.url()).pathname)) processingRequests.push(request.url());
+      if (/\/api\/analyses\/[^/]+\/chat$/.test(new URL(request.url()).pathname)) chatRequests.push(new URL(request.url()).pathname);
     });
     await mobile.emulateMedia({ reducedMotion: 'reduce' });
     await mobile.goto(`/analyses/${id}`);
     await readyMap(mobile);
+    await expect(mobile.getByTestId('page-header').getByRole('button', { name: 'Nova análise', exact: true })).toBeVisible();
     await noOverflow(mobile);
     await capture(mobile, 'mobile-results.png');
     await mobile.setViewportSize({ width: 320, height: 740 });
@@ -316,9 +404,15 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await mobile.setViewportSize({ width: 390, height: 844 });
     await mobile.reload();
     await readyMap(mobile);
-    await mobile.getByRole('button', { name: 'Painel da análise', exact: true }).click();
+    await mobile.getByRole('button', { name: 'Mostrar resultados', exact: true }).click();
     await mobile.getByRole('tab', { name: 'Informações', exact: true }).click();
     await expect(mobile.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
+    await mobile.getByRole('button', { name: 'Sobre o resultado', exact: true }).click();
+    const mobileAbout = mobile.getByRole('dialog', { name: 'Sobre o resultado', exact: true });
+    await expect(mobileAbout).toBeVisible();
+    await noOverflow(mobile);
+    await mobile.keyboard.press('Escape');
+    await expect(mobile.getByRole('button', { name: 'Sobre o resultado', exact: true })).toBeFocused();
     await capture(mobile, 'mobile-information.png');
     await mobile.getByRole('button', { name: 'Fechar painel', exact: true }).click();
     await mobile.getByRole('button', { name: 'Abrir navegação', exact: true }).click();
@@ -358,12 +452,15 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
 
     expect(errors).toEqual([]);
     expect(processingRequests).toEqual([]);
+    expect(chatRequests).toEqual([]);
     await Promise.all(tileHeaderReads);
     expect(tileRequests.every(tile => tile.host === 'api.maptiler.com' && tile.referer === tileOrigin)).toBe(true);
     expect(tileResponses.every(status => status === 200 || status === 304)).toBe(true);
     const quotaAfter = await prisma.rateLimit.findMany({ where: { key: { startsWith: 'global:analysis:' } }, orderBy: { key: 'asc' }, select: { key: true, count: true } });
     expect(quotaAfter).toEqual(quotaBefore);
-    console.log(JSON.stringify({ readyUI: true, profilePersisted: true, desktopRailLogout: true, mobileNestedProfileAndLogout: true,
+    console.log(JSON.stringify({ readyUI: true, consistentShell: true, sidebarPreferencePersisted: true, aboutResultAccessible: true,
+      profilePersisted: true, desktopSidebarLogout: true, mobileNestedProfileAndLogout: true,
+      acquisitionDate: '16/08/2025', dateUnclippedAtWidths: [320, 390, 768, 1440],
       processingJobsStarted: 0, geminiCalls: 0, globalQuotaCount: quotaAfter.reduce((sum, row) => sum + row.count, 0),
       artifacts: 'real precomputed public Sentinel-2 scene', oauthHandshakeTested: false,
       basemap: { host: 'api.maptiler.com', referrerPolicy: 'strict-origin', referer: tileOrigin,
