@@ -54,13 +54,22 @@ function MapTools({ bounds, inspectorRef, }: {
 function CandidateLayer({ geojson, selected, onSelect, onAsk, focusRequest }: {
     geojson: FeatureCollection;
     selected: number | null;
-    onSelect: (id: number) => void;
+    onSelect: (id: number | null) => void;
     onAsk: (id: number) => void;
     focusRequest: FocusRequest;
 }) {
     const map = useMap();
     const layer = useRef<LeafletGeoJSON | null>(null);
     const items = useRef(new Map<number, Path & { getBounds: () => LatLngBounds }>());
+    useEffect(() => {
+        const clearSelection = (event: import("leaflet").LeafletMouseEvent) => {
+            const target = event.originalEvent.target;
+            if (target instanceof Element && target.closest(".leaflet-interactive, .leaflet-control, .leaflet-popup, button, a, input, [role=button]")) return;
+            onSelect(null);
+        };
+        map.on("click", clearSelection);
+        return () => { map.off("click", clearSelection); };
+    }, [map, onSelect]);
     useEffect(() => {
         items.current.clear();
         layer.current?.clearLayers();
@@ -126,7 +135,7 @@ export default function SatelliteMap({ geojson, bounds, overlay, opacity, showRa
     basemap: BasemapId;
     inspectorRef: InspectorRef;
     selected: number | null;
-    onSelect: (id: number) => void;
+    onSelect: (id: number | null) => void;
     onAsk: (id: number) => void;
     focusRequest: FocusRequest;
 }) {

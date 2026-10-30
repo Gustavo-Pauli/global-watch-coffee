@@ -87,6 +87,18 @@ test('real multispectral artifacts, polygon inspection and private downloads', a
     await expect(page.locator('.leaflet-popup-content')).toContainText('ha');
     await expect(page.locator('.leaflet-popup-content')).toContainText('NDVI');
     await capture(page, 'inspection-polygon.png');
+    const highlighted = page.locator('.leaflet-interactive[stroke="#f4f5dc"]');
+    await expect(highlighted).toHaveCount(1);
+    await expect(first).toHaveAttribute('aria-pressed', 'true');
+    // Empty map background clears both the popup and the shared list selection.
+    await page.getByTestId('map-canvas').click({ position: { x: 5, y: 200 } });
+    await expect(page.locator('.leaflet-popup')).toHaveCount(0);
+    await expect(highlighted).toHaveCount(0);
+    await expect(first).toHaveAttribute('aria-pressed', 'false');
+    await first.click();
+    await expect(highlighted).toHaveCount(1);
+    await page.getByRole('button', { name: 'Aproximar mapa', exact: true }).click();
+    await expect(highlighted).toHaveCount(1);
     await page.getByRole('button', { name: 'Perguntar sobre este polígono', exact: true }).click();
     await expect(page.getByRole('tab', { name: 'Assistente', exact: true })).toHaveAttribute('data-state', 'active');
     await expect(page.getByRole('textbox', { name: 'Pergunta sobre a análise', exact: true })).toHaveValue(/polígono \d+/);
