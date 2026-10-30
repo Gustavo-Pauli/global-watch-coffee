@@ -10,7 +10,7 @@ from affine import Affine
 from rasterio.transform import from_origin
 from sklearn.exceptions import InconsistentVersionWarning
 
-from geo_worker import coffee_v2
+from geo_worker.pipeline import classification as coffee_v2
 from geo_worker.processing import _polygons
 from test_worker import MODEL
 
@@ -78,7 +78,7 @@ def test_classified_tiff_and_geojson_keep_the_same_minimum_area(tmp_path, monkey
             scores[rows, cols, 1] = 1
         return scores
 
-    monkeypatch.setattr(coffee_v2, '_predict_scores', fake_scores)
+    monkeypatch.setattr(coffee_v2, 'predict_scores', fake_scores)
     result = coffee_v2.classify(path, tmp_path / 'out', MODEL, coherence=False)
     collection = json.loads((tmp_path / 'out/candidatos.geojson').read_text(encoding='utf-8'))
     with rasterio.open(tmp_path / 'out/classificacao.tif') as src:

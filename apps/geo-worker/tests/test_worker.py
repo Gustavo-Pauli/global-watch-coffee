@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx
 from fastapi.testclient import TestClient
 
-from geo_worker.worker import OUTPUT_FILES, create_worker, storage_url_allowed
+from geo_worker.api.worker import OUTPUT_FILES, create_worker, storage_url_allowed
 
 ROOT = Path(__file__).resolve().parents[3]
 SECRET = 'unit-test-shared-secret-0123456789-0123456789'

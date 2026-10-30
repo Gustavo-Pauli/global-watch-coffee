@@ -1,7 +1,7 @@
 """Experimentos com limiares. Referência serve apenas a diagnóstico, NÃO truth."""
 from pathlib import Path
 import json
-from geo_worker.coffee_v2 import classify
+from geo_worker.pipeline.classification import classify
 from geo_worker.evaluate_reference import evaluate
 
 root=Path(__file__).resolve().parents[1]

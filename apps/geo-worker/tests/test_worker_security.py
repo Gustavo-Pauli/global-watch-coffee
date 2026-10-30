@@ -10,7 +10,7 @@ import rasterio
 from fastapi.testclient import TestClient
 from rasterio.transform import from_origin
 
-from geo_worker import worker
+from geo_worker.api import worker
 from test_worker import CALLBACK, MODEL, SECRET, STORAGE, job, signed
 
 
