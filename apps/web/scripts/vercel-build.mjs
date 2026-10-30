@@ -23,8 +23,8 @@ if (process.env.VERCEL_ENV === 'production') {
     throw new Error('DATABASE_URL must point to the remote PostgreSQL database.');
   }
   process.env.DIRECT_URL = connection;
-  run('prisma', ['migrate', 'deploy']);
+  run('prisma/build/index.js', ['migrate', 'deploy']);
 }
 
-run('prisma', ['generate']);
+run('prisma/build/index.js', ['generate']);
 run('next/dist/bin/next', ['build']);
