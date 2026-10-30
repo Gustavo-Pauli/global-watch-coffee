@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as Avatar from "radix-ui/avatar";
 import * as Dialog from "radix-ui/dialog";
 import * as DropdownMenu from "radix-ui/dropdown-menu";
+import * as Tooltip from "radix-ui/tooltip";
 import {
   ChevronsUpDown,
   LoaderCircle,
@@ -51,6 +52,7 @@ export default function AccountMenu({
   const { data: session, refetch } = authClient.useSession();
   const currentUser = session?.user.id === user.id ? session.user : user;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [name, setName] = useState(user.name);
   const [saving, setSaving] = useState(false);
@@ -130,27 +132,43 @@ export default function AccountMenu({
   return (
     <>
       <DropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <DropdownMenu.Trigger asChild>
-          <button
-            ref={triggerRef}
-            type="button"
-            className={`account-trigger${compact ? " is-compact" : ""}`}
-            aria-label="Menu da conta"
-            data-testid="account-menu-trigger"
-            title={compact ? currentUser.name || currentUser.email : undefined}
-          >
-            <UserAvatar user={currentUser} />
-            {!compact && (
-              <>
-                <span className="account-copy">
+        <Tooltip.Root
+          open={compact && !menuOpen && hintOpen}
+          onOpenChange={setHintOpen}
+        >
+          <Tooltip.Trigger asChild>
+            <DropdownMenu.Trigger asChild>
+              <button
+                ref={triggerRef}
+                type="button"
+                className={`account-trigger${compact ? " is-compact" : ""}`}
+                aria-label="Menu da conta"
+                data-testid="account-menu-trigger"
+              >
+                <UserAvatar user={currentUser} />
+                <span className="account-copy" aria-hidden={compact || undefined}>
                   <strong>{currentUser.name || currentUser.email}</strong>
                   <span>{currentUser.email}</span>
                 </span>
-                <ChevronsUpDown size={15} aria-hidden="true" />
-              </>
-            )}
-          </button>
-        </DropdownMenu.Trigger>
+                <ChevronsUpDown
+                  className="account-chevron"
+                  size={15}
+                  aria-hidden="true"
+                />
+              </button>
+            </DropdownMenu.Trigger>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content
+              className="navigation-tooltip"
+              side="right"
+              sideOffset={10}
+              collisionPadding={10}
+            >
+              Menu da conta
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
             className="menu-content"

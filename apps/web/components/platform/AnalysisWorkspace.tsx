@@ -10,10 +10,8 @@ import {
   Download,
   FileImage,
   FileJson,
-  Info,
   PanelRight,
   LoaderCircle,
-  MessageSquare,
   RotateCcw,
   X,
 } from "lucide-react";
@@ -364,6 +362,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   showRaster={showRaster}
                   showPolygons={showPolygons}
                   basemap={basemap}
+                  inspectorRef={panel}
                 />
               </div>
               <div
@@ -505,11 +504,9 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                         value="information"
                         className="inspector-tab"
                       >
-                        <Info size={15} />
                         Informações
                       </Tabs.Trigger>
                       <Tabs.Trigger value="chat" className="inspector-tab">
-                        <MessageSquare size={15} />
                         Assistente
                       </Tabs.Trigger>
                     </Tabs.List>

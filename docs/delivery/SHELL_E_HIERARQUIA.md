@@ -1,21 +1,34 @@
 # Shell, hierarquia e leitura dos resultados
 
-## Decisão antes da implementação
+## Navegação compartilhada
 
-A revisão anterior ainda mudava regras ao entrar no mapa: sidebar completa virava rail automaticamente, a criação mudava de lugar, havia retorno à coleção junto à navegação lateral e “Detalhes” controlava uma área distante. A revisão atual unifica essas regras de navegação.
-
-Foram comparadas duas alternativas: rail fixa de ícones em todas as páginas; ou sidebar com rótulos, recolhida por escolha do usuário. Escolhida a segunda para reduzir a necessidade de memorizar ícones. A preferência de recolhimento é mantida entre rotas. Em telas móveis, os mesmos itens aparecem no menu de navegação.
-
-```text
-Navegação global                   Cabeçalho comum
-marca                             [recolher/abrir navegação] título + aquisição   [Nova análise]
-Análises
-conta                             Contexto do mapa
-                                  [Camadas] [Baixar]         [Informações | Assistente]
-                                  mapa + imagem + candidatos
-```
+A coleção e o mapa usam as mesmas regras de navegação. A sidebar mantém rótulos ou rail conforme a escolha do usuário, com preferência preservada entre rotas e recargas. A conta e os destinos não mudam de lugar quando uma análise é aberta.
 
 Nova análise tem um único lugar global no cabeçalho, inclusive no celular. A coleção não repete título/subtítulo/ação logo abaixo. O mapa não troca o shell nem acrescenta uma criação exclusiva à sidebar. Voltar à coleção usa a navegação Análises. Controles de mapa ficam no mapa; o painel mostra seu controle de reabertura somente quando está recolhido.
+
+## Revisão de composição: painel flutuante e navegação
+
+A revisão seguinte responde à moldura ainda rígida: o cabeçalho de 64 px e a coluna direita inteira reservavam espaço além do conteúdo. Foram comparadas três alternativas:
+
+| Alternativa | Ganho | Custo |
+|---|---|---|
+| Painel flutuante, com altura conforme a aba | O mapa continua abaixo das informações e mantém toda a largura | O enquadramento precisa considerar a área encoberta; controles não podem se sobrepor |
+| Coluna direita até o topo, com cabeçalho só sobre o mapa | Alinha a junção superior e oferece espaço estável para conversa | Continua reservando toda a altura para poucas informações |
+| Painel fechado inicialmente | Libera o mapa inteiro | Esconde os resultados essenciais na primeira leitura |
+
+Foi escolhido o painel flutuante. Informações usa altura natural; Assistente mantém a posição/largura, ganha altura limitada e separa histórico rolável do campo de pergunta. A troca de abas e o fechamento não redimensionam nem reenquadram o mapa. Enquadrar imagem considera o painel aberto em telas largas. No celular, o painel começa abaixo das ferramentas; em pouca altura, prioriza a conversa e oculta controles concorrentes até fechar, conservando escala e créditos.
+
+```text
+marca       recolher │ Análise · aquisição                  Nova análise  (48 px)
+Análises             ├──────────────────────────────────────────────────────────
+                     │ Camadas · Baixar                  ┌ Informações | Assistente × ┐
+                     │                                  │ conteúdo da aba            │
+                     │                MAPA              └────────────────────────────┘
+                     │                     mapa continua abaixo das informações
+conta                │ legenda                                             zoom
+```
+
+O cabeçalho comum tem 48 px e mantém título e aquisição na mesma linha no desktop. O controle de recolher pertence à sidebar, ao lado da marca. Na rail, expandir ocupa esse mesmo topo, sem marca duplicada. Largura e rótulos têm transição curta; destinos e conta permanecem no DOM para conservar foco. A preferência é restaurada antes do paint, com animações habilitadas depois. Tooltips identificam os ícones da rail; a composição de triggers segue o [padrão oficial Radix `asChild`](https://www.radix-ui.com/primitives/docs/guides/composition). O modo de movimento reduzido desliga essas transições. Cores e identidade visual foram mantidas.
 
 ## Informação e texto
 
@@ -31,11 +44,16 @@ O método de revisão usa consistência, reconhecimento e foco no essencial, con
 ## Verificação executada
 
 - Build de produção Next e TypeScript passaram. Testes web: **20 passaram**, com integração SQL explicitamente ignorada sem banco descartável configurado.
-- Playwright com Chrome instalado, servidor local já mantido pelo usuário e fixtures descartáveis de banco/Storage: **2 testes passaram em 46,3 s**; o fluxo live que consome processamento ficou desativado. A cena pública já processada fornece os seis artefatos reais usados na revisão da interface.
+- Playwright com Chrome instalado, servidor local já mantido pelo usuário e fixtures descartáveis de banco/Storage: **2 testes passaram em 56,2 s**; o fluxo live que consome processamento ficou desativado. A cena pública já processada fornece os seis artefatos reais usados na revisão da interface.
+- A repetição somente da UI para registrar a thumbnail já carregada em 320 px passou em **55,6 s**, sem repetir o teste de login. A captura agora exige imagem completa com dimensões naturais válidas.
 - Navegação coleção → análise → coleção conserva largura, rótulos e preferência da sidebar; recarga conserva o recolhimento. Nova análise permanece no mesmo lugar do cabeçalho. Menu móvel, perfil e logout também foram verificados. Não foi repetido o handshake OAuth Google nesta alteração.
 - Abas por teclado, pergunta preservada, visibilidade das camadas, download, popup curto e foco ao fechar/reabrir os resultados passaram. Sobre o resultado mantém método e limitações, contém foco no dialog, fecha com Escape e devolve o foco.
-- Capturas revisadas em **320, 390, 768 e 1440 px**. Uma regra antiga recuava e cortava a data no celular; o novo cabeçalho passou a ter uma classe própria. As verificações agora exigem texto numérico completo, sem clipping, além de `datetime`, nome acessível e tooltip.
-- **174 respostas de tiles MapTiler, todas HTTP 200**, com Referer limitado à origem local. Zero chamadas aos endpoints de processamento/chat e zero erros de página. A cota global permaneceu em **10**.
+- Cabeçalho de **48 px**, controle dentro da sidebar, tooltip por ponteiro/teclado e transição de **200 ms** foram verificados. Movimento reduzido desativa a animação. Restaurar a preferência não anima o primeiro layout. O centro geográfico é conservado ao recolher a sidebar, e abrir/fechar o painel ou trocar abas não altera tamanho/enquadramento do mapa.
+- Capturas revisadas em **320, 390, 768 e 1440 px**, além de **390 × 500 px** para pouca altura. Info cresce pelo conteúdo e Chat mantém o composer visível com histórico rolável, inclusive sob carga de texto de teste. Zoom, legenda, escala, créditos e painel não competem por espaço nos estados normais. A data numérica permanece completa, com `datetime`, nome acessível e tooltip.
+- A primeira checagem de tooltip falhou ao saltar o ponteiro em um único evento entre triggers. Movimento contínuo via área neutra e foco por teclado passaram, preservando a área hoverable do Radix; isso foi corrigido na automação, sem mudar o componente para contornar o teste.
+- **90 respostas de tiles MapTiler na última execução, todas HTTP 200** (86 na execução completa anterior), com Referer limitado à origem local. Zero chamadas aos endpoints de processamento/chat e zero erros de página. A cota global permaneceu em **10**.
 - Fixtures removidos, dados e servidores do usuário preservados. Nenhuma alteração em `.env`, `.env.local` ou `.venv`, nenhuma migração e nenhum commit. Esta revisão local não é evidência de deploy nem teste de usabilidade com usuários.
 
-Capturas atuais: [coleção](screenshots/desktop-analyses.png), [mapa e informações](screenshots/desktop-information.png), [camadas](screenshots/desktop-layers.png), [explicação científica](screenshots/desktop-about-result.png), [mapa em 320 px](screenshots/mobile-narrow-results.png) e [informações no celular](screenshots/mobile-information.png).
+Capturas atuais: [coleção](screenshots/desktop-analyses.png), [rail](screenshots/desktop-sidebar-collapsed.png), [mapa e informações](screenshots/desktop-information.png), [assistente](screenshots/desktop-chat-ready.png), [camadas](screenshots/desktop-layers.png), [explicação científica](screenshots/desktop-about-result.png), [mapa em 320 px](screenshots/mobile-narrow-results.png) e [chat com pouca altura](screenshots/mobile-short-chat.png).
+
+Comparação de composição: [inset flutuante escolhido](screenshots/shell-floating-information.png) e [coluna até o topo](screenshots/shell-docked-comparison.png). Usam a mesma cena processada, sem fundo externo; o dock é apenas uma simulação temporária de CSS durante a revisão, removida em seguida. Não existe seletor de layouts no produto.

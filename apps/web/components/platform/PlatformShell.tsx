@@ -3,13 +3,14 @@
 import {
   createContext,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useState,
   type ReactNode,
 } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "radix-ui/dialog";
+import * as Tooltip from "radix-ui/tooltip";
 import {
   ChevronRight,
   FolderClosed,
@@ -36,31 +37,42 @@ export function usePlatform() {
 }
 
 export function NavigationToggle() {
-  const { openNavigation, sidebarCollapsed, toggleSidebar } = usePlatform();
+  const { openNavigation } = usePlatform();
   return (
-    <>
-      <button
-        className="icon-button desktop-navigation"
-        aria-label={
-          sidebarCollapsed ? "Expandir navegação" : "Recolher navegação"
-        }
-        title={sidebarCollapsed ? "Expandir navegação" : "Recolher navegação"}
-        onClick={toggleSidebar}
-      >
-        {sidebarCollapsed ? (
-          <PanelLeftOpen size={19} />
-        ) : (
-          <PanelLeftClose size={19} />
-        )}
-      </button>
-      <button
-        className="icon-button mobile-navigation"
-        aria-label="Abrir navegação"
-        onClick={openNavigation}
-      >
-        <Menu size={19} />
-      </button>
-    </>
+    <button
+      className="icon-button mobile-navigation"
+      aria-label="Abrir navegação"
+      onClick={openNavigation}
+    >
+      <Menu size={19} />
+    </button>
+  );
+}
+
+function NavigationHint({
+  enabled = true,
+  label,
+  children,
+}: {
+  enabled?: boolean;
+  label: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Tooltip.Root open={enabled && open} onOpenChange={setOpen}>
+      <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          className="navigation-tooltip"
+          side="right"
+          sideOffset={10}
+          collisionPadding={10}
+        >
+          {label}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 }
 
@@ -168,7 +180,8 @@ function AuthenticatedPlatform({
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  useEffect(() => {
+  const [sidebarReady, setSidebarReady] = useState(false);
+  useLayoutEffect(() => {
     try {
       setSidebarCollapsed(
         localStorage.getItem("global-watch:sidebar:v1") === "collapsed",
@@ -176,6 +189,15 @@ function AuthenticatedPlatform({
     } catch {
       /* Optional browser preference. */
     }
+    // Restore the layout before paint; animate subsequent user gestures only.
+    let motionFrame = 0;
+    const restoreFrame = requestAnimationFrame(() => {
+      motionFrame = requestAnimationFrame(() => setSidebarReady(true));
+    });
+    return () => {
+      cancelAnimationFrame(restoreFrame);
+      cancelAnimationFrame(motionFrame);
+    };
   }, []);
   function toggleSidebar() {
     setSidebarCollapsed((current) => {
@@ -193,31 +215,60 @@ function AuthenticatedPlatform({
   }
 
   function navigation(compact: boolean, mobile = false) {
+    const toggleLabel = compact ? "Expandir navegação" : "Recolher navegação";
     return (
       <>
-        <Link
-          className="brand-link"
-          href="/analyses"
-          aria-label="Global Watch Coffee — Análises"
-          onClick={() => setNavigationOpen(false)}
-        >
-          <Brand compact={compact} />
-        </Link>
+        <div className="sidebar-heading">
+          <Link
+            className="brand-link"
+            href="/analyses"
+            aria-label="Global Watch Coffee — Análises"
+            aria-hidden={compact || undefined}
+            tabIndex={compact ? -1 : undefined}
+            onClick={() => setNavigationOpen(false)}
+          >
+            <Brand />
+          </Link>
+          {!mobile && (
+            <NavigationHint label={toggleLabel}>
+              <button
+                className="icon-button sidebar-toggle"
+                aria-label={toggleLabel}
+                aria-expanded={!compact}
+                aria-controls="platform-navigation"
+                onClick={toggleSidebar}
+              >
+                {compact ? (
+                  <PanelLeftOpen size={18} aria-hidden="true" />
+                ) : (
+                  <PanelLeftClose size={18} aria-hidden="true" />
+                )}
+              </button>
+            </NavigationHint>
+          )}
+        </div>
         <nav
           className="primary-navigation"
+          id={mobile ? undefined : "platform-navigation"}
           aria-label={mobile ? "Navegação móvel" : "Navegação principal"}
         >
-          <Link
-            className="navigation-link is-active"
-            aria-label="Análises"
-            aria-current={workspace ? undefined : "page"}
-            href="/analyses"
-            onClick={() => setNavigationOpen(false)}
-            title={compact ? "Análises" : undefined}
-          >
-            <FolderClosed size={18} />
-            {!compact && <span>Análises</span>}
-          </Link>
+          <NavigationHint enabled={compact} label="Análises">
+            <Link
+              className="navigation-link is-active"
+              aria-label="Análises"
+              aria-current={workspace ? undefined : "page"}
+              href="/analyses"
+              onClick={() => setNavigationOpen(false)}
+            >
+              <FolderClosed size={18} aria-hidden="true" />
+              <span
+                className="navigation-label"
+                aria-hidden={compact || undefined}
+              >
+                Análises
+              </span>
+            </Link>
+          </NavigationHint>
         </nav>
         <div className="navigation-account">
           <AccountMenu user={user} compact={compact} />
@@ -235,46 +286,49 @@ function AuthenticatedPlatform({
         toggleSidebar,
       }}
     >
-      <div
-        className={`platform${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
-      >
-        <a className="skip-link" href="#main-content">
-          Ir para o conteúdo
-        </a>
-        <aside
-          className={`platform-sidebar${sidebarCollapsed ? " is-rail" : ""}`}
+      <Tooltip.Provider delayDuration={300} skipDelayDuration={120}>
+        <div
+          className={`platform${sidebarCollapsed ? " is-sidebar-collapsed" : ""}`}
+          data-sidebar-ready={sidebarReady || undefined}
         >
-          {navigation(sidebarCollapsed)}
-        </aside>
-        <div className="platform-content">{children}</div>
-        <Dialog.Root open={navigationOpen} onOpenChange={setNavigationOpen}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="dialog-overlay" />
-            <Dialog.Content
-              className="navigation-sheet"
-              aria-describedby={undefined}
-              onCloseAutoFocus={(event) => {
-                event.preventDefault();
-                document
-                  .querySelector<HTMLButtonElement>(".mobile-navigation")
-                  ?.focus();
-              }}
-            >
-              <Dialog.Title className="sr-only">Navegação</Dialog.Title>
-              <Dialog.Close asChild>
-                <button
-                  className="icon-button navigation-close"
-                  aria-label="Fechar navegação"
-                >
-                  <X size={18} />
-                </button>
-              </Dialog.Close>
-              {navigation(false, true)}
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-        <NewAnalysisDialog open={newOpen} onOpenChange={setNewOpen} />
-      </div>
+          <a className="skip-link" href="#main-content">
+            Ir para o conteúdo
+          </a>
+          <aside
+            className={`platform-sidebar${sidebarCollapsed ? " is-rail" : ""}`}
+          >
+            {navigation(sidebarCollapsed)}
+          </aside>
+          <div className="platform-content">{children}</div>
+          <Dialog.Root open={navigationOpen} onOpenChange={setNavigationOpen}>
+            <Dialog.Portal>
+              <Dialog.Overlay className="dialog-overlay" />
+              <Dialog.Content
+                className="navigation-sheet"
+                aria-describedby={undefined}
+                onCloseAutoFocus={(event) => {
+                  event.preventDefault();
+                  document
+                    .querySelector<HTMLButtonElement>(".mobile-navigation")
+                    ?.focus();
+                }}
+              >
+                <Dialog.Title className="sr-only">Navegação</Dialog.Title>
+                <Dialog.Close asChild>
+                  <button
+                    className="icon-button navigation-close"
+                    aria-label="Fechar navegação"
+                  >
+                    <X size={18} />
+                  </button>
+                </Dialog.Close>
+                {navigation(false, true)}
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+          <NewAnalysisDialog open={newOpen} onOpenChange={setNewOpen} />
+        </div>
+      </Tooltip.Provider>
     </PlatformContext.Provider>
   );
 }

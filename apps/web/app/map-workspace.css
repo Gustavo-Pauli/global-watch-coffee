@@ -1,30 +1,53 @@
-/* Map canvas and inspector share space; the inspector never changes the data. */
+/* The canvas stays full width. The inspector is a tool inset over the map. */
 .analysis-workspace {
-  display: flex;
+  display: block;
+  --inspector-top: 14px;
+  --inspector-clearance: 174px;
 }
 .analysis-state {
   width: 100%;
 }
 .map-stage {
-  position: relative;
-  flex: 1;
+  position: absolute;
+  inset: 0;
   min-width: 0;
   height: 100%;
   overflow: hidden;
 }
 .analysis-inspector {
-  width: 340px;
-  min-width: 340px;
+  position: absolute;
+  top: var(--inspector-top);
+  right: 14px;
+  width: min(320px, calc(100% - 28px));
+  min-width: 0;
   min-height: 0;
+  max-height: calc(100% - var(--inspector-top) - var(--inspector-clearance));
+  display: flex;
+  flex-direction: column;
   background: #1d1d20;
-  border-left: 1px solid #37373c;
+  border: 1px solid #404045;
+  border-radius: 8px;
+  box-shadow: 0 4px 18px #0004;
+  overflow: hidden;
   z-index: 1000;
+  animation: inspector-enter 160ms ease-out;
+}
+.analysis-inspector.is-chat {
+  height: min(640px, calc(100% - var(--inspector-top) - var(--inspector-clearance)));
+}
+.analysis-inspector.is-information .inspector-tabs {
+  height: auto;
+  max-height: calc(100dvh - 48px - var(--inspector-top) - var(--inspector-clearance));
+}
+.analysis-inspector.is-information .info-content {
+  overflow-y: auto;
 }
 .inspector-tabs {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  width: 100%;
 }
 .inspector-header {
   display: flex;
@@ -32,7 +55,7 @@
   justify-content: space-between;
   padding: 0 9px 0 15px;
   border-bottom: 1px solid var(--line);
-  min-height: 55px;
+  min-height: 46px;
   gap: 8px;
 }
 .inspector-tab-list {
@@ -65,30 +88,9 @@
 .info-content {
   overflow-y: auto;
 }
-.image-acquisition {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 15px 0 7px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.image-acquisition time {
-  color: var(--text);
-}
 .chat-content {
   display: flex;
   flex-direction: column;
-}
-.inspector-toggle {
-  min-height: 32px;
-  padding: 6px 10px;
-  font-size: 12px;
-}
-.inspector-toggle[aria-expanded="true"] {
-  background: #303035;
-  border-color: #5c5c65;
 }
 .map-layers-popover {
   z-index: 2500;
@@ -271,6 +273,10 @@
 .map-legend {
   bottom: 68px;
 }
+.map-toolbar {
+  top: 14px;
+  left: 14px;
+}
 .maptiler-logo {
   position: absolute;
   bottom: 6px;
@@ -298,54 +304,23 @@
 .map-layers-popover .switch {
   margin-right: 2px;
 }
-@media (max-width: 1100px) {
-  .analysis-inspector {
-    width: 320px;
-    min-width: 320px;
-  }
-  .inspector-header {
-    padding-left: 13px;
-  }
-  .inspector-tab-list {
-    gap: 16px;
-  }
+@keyframes inspector-enter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 899px) {
-  .analysis-inspector.is-information {
-    bottom: auto;
-    max-height: calc(100% - 140px);
-  }
-  .analysis-inspector.is-information .inspector-tabs {
-    height: auto;
-  }
-  .analysis-inspector.is-information .info-content {
-    max-height: calc(100dvh - 270px);
+  .analysis-workspace {
+    --inspector-top: 64px;
   }
   .analysis-inspector {
-    position: absolute;
     right: 12px;
-    top: 12px;
-    bottom: 12px;
     width: min(350px, calc(100% - 24px));
-    min-width: 0;
-    border: 1px solid #45454d;
-    border-radius: 8px;
-    box-shadow: 0 8px 35px #0006;
-    overflow: hidden;
   }
 }
 @media (max-width: 760px) {
-  .inspector-toggle {
-    width: 35px;
-    padding: 7px;
-    border-color: transparent;
-  }
-  .inspector-toggle > span {
-    display: none;
-  }
-  .analysis-inspector {
+  .map-toolbar {
     top: 12px;
-    bottom: 105px;
+    left: 12px;
   }
   .map-layers-popover {
     max-height: calc(100dvh - 160px);
@@ -358,6 +333,23 @@
   }
   .leaflet-control-attribution {
     max-width: calc(100vw - 108px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .analysis-inspector {
+    animation: none;
+  }
+}
+@media (max-height: 560px) {
+  .analysis-workspace {
+    --inspector-top: 12px;
+    --inspector-clearance: 68px;
+  }
+  /* Give the conversation room when a mobile keyboard reduces the viewport. */
+  .analysis-workspace:has(.analysis-inspector) .map-toolbar,
+  .analysis-workspace:has(.analysis-inspector) .map-navigation,
+  .analysis-workspace:has(.analysis-inspector) .map-legend {
+    visibility: hidden;
   }
 }
 @media (pointer: coarse) {

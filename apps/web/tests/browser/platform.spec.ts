@@ -17,6 +17,10 @@ async function settled(page: Page) {
   await page.evaluate(async () => {
     await document.fonts.ready;
     await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    await Promise.all(document.getAnimations()
+      .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
+      .map(animation => animation.finished.catch(() => {})));
+    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
   });
 }
 
@@ -34,6 +38,92 @@ async function noOverflow(page: Page) {
     expect(rectangle.x).toBeGreaterThanOrEqual(0);
     expect(rectangle.x + rectangle.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   }
+  if (await page.getByRole('dialog').count()) return;
+  const groups = await page.locator('.map-toolbar, .map-results-button, .map-navigation, .map-legend, .leaflet-control-scale, .leaflet-control-attribution, .maptiler-logo, .analysis-inspector').evaluateAll(elements => elements.flatMap(element => {
+    const style = getComputedStyle(element);
+    const rectangle = element.getBoundingClientRect();
+    if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0 || !rectangle.width || !rectangle.height) return [];
+    return [{ name: element.className, x: rectangle.x, y: rectangle.y, right: rectangle.right, bottom: rectangle.bottom }];
+  }));
+  for (let first = 0; first < groups.length; first++) {
+    for (let second = first + 1; second < groups.length; second++) {
+      const a = groups[first], b = groups[second];
+      const overlap = Math.min(a.right, b.right) - Math.max(a.x, b.x) > 1
+        && Math.min(a.bottom, b.bottom) - Math.max(a.y, b.y) > 1;
+      expect(overlap, `${a.name} must not overlap ${b.name} at ${page.viewportSize()!.width}px`).toBe(false);
+    }
+  }
+}
+
+async function mapFrame(page: Page) {
+  await settled(page);
+  const canvas = (await page.locator('.map-canvas').boundingBox())!;
+  const overlay = (await page.locator('.leaflet-image-layer').boundingBox())!;
+  return {
+    canvas,
+    centerX: (canvas.x + canvas.width / 2 - overlay.x) / overlay.width,
+    centerY: (canvas.y + canvas.height / 2 - overlay.y) / overlay.height,
+  };
+}
+
+function sameMapFrame(before: Awaited<ReturnType<typeof mapFrame>>, after: Awaited<ReturnType<typeof mapFrame>>) {
+  for (const coordinate of ['x', 'y', 'width', 'height'] as const) {
+    expect(after.canvas[coordinate]).toBeCloseTo(before.canvas[coordinate], 0);
+  }
+  expect(after.centerX).toBeCloseTo(before.centerX, 3);
+  expect(after.centerY).toBeCloseTo(before.centerY, 3);
+}
+
+async function floatingInspector(page: Page) {
+  await settled(page);
+  const canvas = (await page.locator('.map-canvas').boundingBox())!;
+  const workspace = (await page.locator('.analysis-workspace').boundingBox())!;
+  const inspector = (await page.locator('.analysis-inspector').boundingBox())!;
+  expect(canvas.x).toBeCloseTo(workspace.x, 0);
+  expect(canvas.width).toBeCloseTo(workspace.width, 0);
+  expect(inspector.x).toBeGreaterThan(canvas.x);
+  expect(inspector.x + inspector.width).toBeLessThan(canvas.x + canvas.width);
+  expect(inspector.y).toBeGreaterThan(canvas.y);
+  expect(inspector.y + inspector.height).toBeLessThan(canvas.y + canvas.height);
+  return { canvas, inspector };
+}
+
+async function compactHeader(page: Page) {
+  await settled(page);
+  const header = (await page.getByTestId('page-header').boundingBox())!;
+  expect(header.height).toBeGreaterThanOrEqual(44);
+  expect(header.height).toBeLessThanOrEqual(48);
+  if (page.viewportSize()!.width > 760) expect(header.height).toBe(48);
+  await expect(page.getByTestId('page-header').getByRole('button', { name: /Recolher navegação|Expandir navegação/ })).toHaveCount(0);
+  const acquisition = page.locator('.header-acquisition');
+  if (await acquisition.count()) {
+    const date = (await acquisition.boundingBox())!;
+    const title = (await page.getByTestId('page-header').getByRole('heading', { level: 1 }).boundingBox())!;
+    if (page.viewportSize()!.width > 760) {
+      expect(date.x).toBeGreaterThan(title.x + title.width);
+      expect(Math.abs(date.y + date.height / 2 - title.y - title.height / 2)).toBeLessThan(3);
+    } else expect(date.y).toBeGreaterThan(title.y);
+  }
+}
+
+async function compareInspectorLayouts(page: Page) {
+  // Compare the same real result and viewport, without adding a product mode
+  // or requesting another basemap. The test already selected "Sem fundo".
+  const before = await mapFrame(page);
+  await capture(page, 'shell-floating-information.png');
+  const dock = await page.addStyleTag({ content: `
+    .analysis-workspace { overflow: visible !important; }
+    .analysis-workspace .map-stage { right: 340px !important; }
+    .analysis-workspace .analysis-inspector { position: absolute !important; top: -48px !important; right: 0 !important; bottom: 0 !important; width: 340px !important; height: calc(100% + 48px) !important; max-height: none !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+    .platform-page-header { width: calc(100% - 340px) !important; }
+  ` });
+  try {
+    await capture(page, 'shell-docked-comparison.png');
+  } finally {
+    await dock.evaluate(element => element.parentNode?.removeChild(element));
+  }
+  const after = await mapFrame(page);
+  sameMapFrame(before, after);
 }
 
 async function readyMap(page: Page) {
@@ -53,6 +143,7 @@ async function readyMap(page: Page) {
     return element.scrollWidth <= element.clientWidth && element.scrollHeight <= element.clientHeight
       && rectangle.left >= 0 && rectangle.right <= innerWidth;
   }), `Acquisition date must remain completely visible at ${page.viewportSize()!.width}px`).toBe(true);
+  await compactHeader(page);
 }
 
 function inside(point: number[], ring: number[][]) {
@@ -169,7 +260,10 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(sidebar.getByRole('link', { name: 'Análises', exact: true })).toBeVisible();
     await expect(sidebar.getByRole('button', { name: 'Menu da conta', exact: true })).toBeVisible();
     await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
+    await expect(page.locator('.platform')).toHaveAttribute('data-sidebar-ready', 'true');
     await settled(page);
+    await compactHeader(page);
+    await expect(sidebar.getByRole('button', { name: 'Recolher navegação', exact: true })).toBeVisible();
     const collectionSidebarWidth = (await sidebar.boundingBox())!.width;
     const collectionNavigation = await sidebar.getByRole('link').allTextContents();
     const collectionCreate = (await create.boundingBox())!;
@@ -198,20 +292,48 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(create).toBeFocused();
 
     // Navigation density is a user preference, never an automatic route mode.
-    await header.getByRole('button', { name: 'Recolher navegação', exact: true }).click();
+    await sidebar.getByRole('button', { name: 'Recolher navegação', exact: true }).click();
     await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    await settled(page);
     const collapsedSidebarWidth = (await sidebar.boundingBox())!.width;
     expect(collapsedSidebarWidth).toBeLessThan(collectionSidebarWidth);
+    const normalTransition = await page.locator('.platform').evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(',').map(value => Number.parseFloat(value))));
+    expect(normalTransition).toBeGreaterThan(0);
+    expect(normalTransition).toBeLessThanOrEqual(0.3);
+    await sidebar.getByRole('link', { name: 'Análises', exact: true }).hover();
+    await expect(page.getByRole('tooltip', { name: 'Análises', exact: true })).toBeVisible();
+    await capture(page, 'desktop-sidebar-collapsed.png');
+    // Leave Radix's pointer-grace region before testing another trigger. A
+    // single synthetic jump between triggers does not model a moving pointer.
+    await page.mouse.move(700, 400, { steps: 12 });
+    await expect(page.getByRole('tooltip', { name: 'Análises', exact: true })).not.toBeVisible();
+    await sidebar.getByRole('button', { name: 'Menu da conta', exact: true }).hover();
+    await expect(page.getByRole('tooltip', { name: 'Menu da conta', exact: true })).toBeVisible();
+    await page.mouse.move(700, 400, { steps: 12 });
+    await expect(page.getByRole('tooltip', { name: 'Menu da conta', exact: true })).not.toBeVisible();
+    await sidebar.getByRole('button', { name: 'Menu da conta', exact: true }).focus();
+    await expect(page.getByRole('tooltip', { name: 'Menu da conta', exact: true })).toBeVisible();
     await page.reload();
     await expect(record).toBeVisible();
     await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
-    await expect(header.getByRole('button', { name: 'Expandir navegação', exact: true })).toBeVisible();
+    await expect(page.locator('.platform')).toHaveAttribute('data-sidebar-ready', 'true');
+    await expect(sidebar.getByRole('button', { name: 'Expandir navegação', exact: true })).toBeVisible();
     await record.click();
     await readyMap(page);
     await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
     expect((await sidebar.boundingBox())!.width).toBe(collapsedSidebarWidth);
-    await header.getByRole('button', { name: 'Expandir navegação', exact: true }).click();
+    const collapsedFrame = await mapFrame(page);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    const reducedTransition = await page.locator('.platform').evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(',').map(value => Number.parseFloat(value))));
+    expect(reducedTransition).toBeLessThanOrEqual(0.01);
+    await sidebar.getByRole('button', { name: 'Expandir navegação', exact: true }).click();
     await settled(page);
+    await expect(sidebar.getByRole('button', { name: 'Recolher navegação', exact: true })).toBeFocused();
+    const expandedFrame = await mapFrame(page);
+    expect(Math.abs(expandedFrame.centerX - collapsedFrame.centerX)).toBeLessThan(0.005);
+    expect(Math.abs(expandedFrame.centerY - collapsedFrame.centerY)).toBeLessThan(0.005);
+    expect(expandedFrame.canvas.width).toBeCloseTo(collapsedFrame.canvas.width - collectionSidebarWidth + collapsedSidebarWidth, 0);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     expect((await sidebar.boundingBox())!.width).toBe(collectionSidebarWidth);
     expect(await sidebar.getByRole('link').allTextContents()).toEqual(collectionNavigation);
     await expect(header.getByRole('heading', { level: 1, name: `Análise ${id.slice(0, 8)}`, exact: true })).toBeVisible();
@@ -283,6 +405,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(page.locator('.basemap-tiles')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'MapTiler', exact: true })).toHaveCount(0);
     await readyMap(page);
+    await page.keyboard.press('Escape');
+    await compareInspectorLayouts(page);
+    await layers.click();
     await page.getByRole('radio', { name: 'Satélite', exact: true }).click();
     await expect(page.locator('.basemap-satellite img.leaflet-tile-loaded').first()).toBeVisible();
     await page.keyboard.press('Escape');
@@ -296,6 +421,11 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const information = page.getByRole('tab', { name: 'Informações', exact: true });
     const inspector = page.getByRole('button', { name: 'Mostrar resultados', exact: true });
     const info = page.getByRole('tabpanel', { name: 'Informações', exact: true });
+    const resultFrame = await mapFrame(page);
+    const informationLayout = await floatingInspector(page);
+    expect(informationLayout.inspector.width).toBeGreaterThanOrEqual(320);
+    expect(informationLayout.inspector.width).toBeLessThanOrEqual(340);
+    expect(informationLayout.inspector.height).toBeLessThan(informationLayout.canvas.height * 0.7);
     await expect(info).toContainText('24');
     await expect(info).toContainText('0,559');
     await expect(info.locator('time, details')).toHaveCount(0);
@@ -323,6 +453,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await page.keyboard.press('ArrowRight');
     const assistant = page.getByRole('tabpanel', { name: 'Assistente', exact: true });
     await expect(assistant).toBeVisible();
+    sameMapFrame(resultFrame, await mapFrame(page));
+    const chatLayout = await floatingInspector(page);
+    expect(chatLayout.inspector.height).toBeGreaterThan(informationLayout.inspector.height + 100);
     const classifiedPreview = assistant.getByRole('img', { name: 'Imagem processada com os polígonos candidatos a café', exact: true });
     await expect(classifiedPreview).toBeVisible();
     await expect.poll(() => classifiedPreview.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
@@ -332,18 +465,38 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
     await expect(composer).toBeFocused();
     await expect(assistant.getByRole('button', { name: 'Enviar pergunta', exact: true })).toBeEnabled();
+    const composerBefore = (await assistant.locator('.chat-composer').boundingBox())!;
+    const scroll = assistant.locator('.chat-scroll');
+    await expect(scroll).toHaveCSS('overflow-y', 'auto');
+    const tallContent = await page.addStyleTag({ content: '.chat-introduction { min-height: 1200px !important; }' });
+    try {
+      await scroll.evaluate(element => { element.scrollTop = element.scrollHeight; });
+      await settled(page);
+      expect(await scroll.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+      const composerAfter = (await assistant.locator('.chat-composer').boundingBox())!;
+      expect(composerAfter.y).toBeCloseTo(composerBefore.y, 0);
+      expect(composerAfter.height).toBeCloseTo(composerBefore.height, 0);
+      expect(composerAfter.y + composerAfter.height).toBeLessThanOrEqual(chatLayout.inspector.y + chatLayout.inspector.height);
+    } finally {
+      await tallContent.evaluate(element => element.parentNode?.removeChild(element));
+      await scroll.evaluate(element => { element.scrollTop = 0; });
+    }
     await information.click();
     await expect(info).toBeVisible();
+    sameMapFrame(resultFrame, await mapFrame(page));
     await page.getByRole('tab', { name: 'Assistente', exact: true }).click();
     await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
+    await noOverflow(page);
     await capture(page, 'desktop-chat-ready.png');
     await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
     await expect(inspector).toBeFocused();
+    sameMapFrame(resultFrame, await mapFrame(page));
     await expect(inspector).toContainText('Resultados');
     await inspector.click();
     await expect(inspector).toHaveCount(0);
     await expect(page.getByRole('tab', { name: 'Assistente', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
+    sameMapFrame(resultFrame, await mapFrame(page));
 
     // Verify the same navigation account menu works while viewing a map.
     const account = page.getByRole('button', { name: 'Menu da conta', exact: true });
@@ -372,11 +525,15 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
       await expect(header.getByRole('button', { name: 'Nova análise', exact: true })).toBeVisible();
       await noOverflow(page);
       await capture(page, filename);
+      const closedFrame = await mapFrame(page);
       await inspector.click();
       await information.click();
       await expect(info).toBeVisible();
+      await floatingInspector(page);
+      sameMapFrame(closedFrame, await mapFrame(page));
       await noOverflow(page);
       await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
+      sameMapFrame(closedFrame, await mapFrame(page));
     }
     await page.setViewportSize({ width: 1440, height: 1000 });
     await account.click();
@@ -401,6 +558,19 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await readyMap(mobile);
     await noOverflow(mobile);
     await capture(mobile, 'mobile-narrow-results.png');
+    const narrowFrame = await mapFrame(mobile);
+    await mobile.getByRole('button', { name: 'Mostrar resultados', exact: true }).click();
+    await mobile.getByRole('tab', { name: 'Assistente', exact: true }).click();
+    const narrowPreview = mobile.getByRole('tabpanel', { name: 'Assistente', exact: true })
+      .getByRole('img', { name: 'Imagem processada com os polígonos candidatos a café', exact: true });
+    await expect(narrowPreview).toBeVisible();
+    await expect.poll(() => narrowPreview.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await floatingInspector(mobile);
+    sameMapFrame(narrowFrame, await mapFrame(mobile));
+    await noOverflow(mobile);
+    await capture(mobile, 'mobile-narrow-chat.png');
+    await mobile.getByRole('button', { name: 'Fechar painel', exact: true }).click();
+    sameMapFrame(narrowFrame, await mapFrame(mobile));
     await mobile.setViewportSize({ width: 390, height: 844 });
     await mobile.reload();
     await readyMap(mobile);
@@ -413,8 +583,30 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await noOverflow(mobile);
     await mobile.keyboard.press('Escape');
     await expect(mobile.getByRole('button', { name: 'Sobre o resultado', exact: true })).toBeFocused();
+    await noOverflow(mobile);
     await capture(mobile, 'mobile-information.png');
+    const mobileFrame = await mapFrame(mobile);
+    await mobile.getByRole('tab', { name: 'Assistente', exact: true }).click();
+    const mobileComposer = mobile.getByRole('textbox', { name: 'Pergunta sobre a análise', exact: true });
+    await mobileComposer.fill('Como interpretar as áreas candidatas?');
+    await floatingInspector(mobile);
+    sameMapFrame(mobileFrame, await mapFrame(mobile));
+    await noOverflow(mobile);
+    await capture(mobile, 'mobile-chat-ready.png');
+    await mobile.setViewportSize({ width: 390, height: 500 });
+    await readyMap(mobile);
+    const shortLayout = await floatingInspector(mobile);
+    const shortComposer = (await mobile.locator('.chat-composer').boundingBox())!;
+    expect(shortComposer.y).toBeGreaterThan(shortLayout.inspector.y);
+    expect(shortComposer.y + shortComposer.height).toBeLessThanOrEqual(shortLayout.inspector.y + shortLayout.inspector.height);
+    await expect(mobileComposer).toHaveValue('Como interpretar as áreas candidatas?');
+    await expect(mobile.getByRole('button', { name: 'Fechar painel', exact: true })).toBeVisible();
+    await expect(mobile.locator('.chat-scroll')).toHaveCSS('overflow-y', 'auto');
+    await noOverflow(mobile);
+    await capture(mobile, 'mobile-short-chat.png');
     await mobile.getByRole('button', { name: 'Fechar painel', exact: true }).click();
+    await expect(mobile.getByRole('button', { name: 'Mostrar resultados', exact: true })).toBeFocused();
+    await mobile.setViewportSize({ width: 390, height: 844 });
     await mobile.getByRole('button', { name: 'Abrir navegação', exact: true }).click();
     const navigation = mobile.getByRole('dialog', { name: 'Navegação', exact: true });
     await expect(navigation).toBeVisible();
@@ -460,6 +652,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     expect(quotaAfter).toEqual(quotaBefore);
     console.log(JSON.stringify({ readyUI: true, consistentShell: true, sidebarPreferencePersisted: true, aboutResultAccessible: true,
       profilePersisted: true, desktopSidebarLogout: true, mobileNestedProfileAndLogout: true,
+      floatingInspector: true, mapFramingPreserved: true, compactHeader: true, reducedMotion: true, shortChatViewport: '390x500',
       acquisitionDate: '16/08/2025', dateUnclippedAtWidths: [320, 390, 768, 1440],
       processingJobsStarted: 0, geminiCalls: 0, globalQuotaCount: quotaAfter.reduce((sum, row) => sum + row.count, 0),
       artifacts: 'real precomputed public Sentinel-2 scene', oauthHandshakeTested: false,

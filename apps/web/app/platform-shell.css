@@ -1,26 +1,15 @@
-/* Shared shell: route changes never change navigation mode. */
-.platform.is-sidebar-collapsed {
-  grid-template-columns: 64px minmax(0, 1fr);
-}
-.brand-link {
-  min-height: 64px;
-  border-bottom: 1px solid var(--line-soft);
-}
-.primary-navigation {
-  padding-top: 18px;
-}
+/* Compact context bar, shared by the collection and the map. */
 .platform-page-header {
-  min-height: 64px;
-  height: 64px;
-  padding: 0 20px;
-  gap: 13px;
+  min-height: 48px;
+  height: 48px;
+  padding: 0 16px;
+  gap: 12px;
   background: #18181a;
 }
 .header-identity {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
+  align-items: center;
+  gap: 14px;
   min-width: 0;
 }
 .header-title-row {
@@ -30,7 +19,7 @@
   min-width: 0;
 }
 .header-title-row h1 {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.3px;
   color: var(--text);
@@ -41,6 +30,7 @@
 .header-meta {
   font-size: 12px;
   color: var(--muted);
+  flex-shrink: 0;
 }
 .header-acquisition {
   font-size: 12px;
@@ -53,16 +43,17 @@
 .header-new-analysis {
   margin-left: auto;
   flex-shrink: 0;
-}
-.desktop-navigation {
-  display: inline-flex;
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
+  gap: 6px;
 }
 .map-results-button {
   position: absolute;
-  top: 17px;
-  right: 17px;
+  top: 14px;
+  right: 14px;
   z-index: 650;
-  min-height: 40px;
+  min-height: 36px;
   background: #202023;
   border-color: #424246;
   box-shadow: 0 3px 12px #0003;
@@ -135,18 +126,11 @@
   margin-bottom: 7px;
 }
 @media (max-width: 760px) {
-  .platform,
-  .platform.is-sidebar-collapsed {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .desktop-navigation {
-    display: none;
-  }
   .platform-page-header {
     padding: 0 12px;
     gap: 9px;
-    min-height: 64px;
-    height: 64px;
+    min-height: 48px;
+    height: 48px;
   }
   .platform-page-header > .mobile-navigation {
     margin: 0;
@@ -154,7 +138,10 @@
     min-width: 32px;
   }
   .header-identity {
-    gap: 5px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
   }
   .header-title-row h1 {
     font-size: 13px;
@@ -163,9 +150,9 @@
     font-size: 12px;
   }
   .header-new-analysis {
-    padding: 8px 9px;
+    padding: 6px 9px;
     font-size: 12px;
-    min-height: 35px;
+    min-height: 32px;
     gap: 6px;
   }
   .header-new-analysis svg {

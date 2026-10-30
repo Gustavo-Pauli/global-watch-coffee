@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import {
   GeoJSON,
@@ -22,15 +22,30 @@ import {
   type BasemapId,
 } from "./map-sources";
 
-function MapTools({ bounds }: { bounds: Bounds }) {
+type InspectorRef = RefObject<HTMLElement | null>;
+
+function MapTools({
+  bounds,
+  inspectorRef,
+}: {
+  bounds: Bounds;
+  inspectorRef: InspectorRef;
+}) {
   const map = useMap();
   const fitImage = useCallback(() => {
+    const canvas = map.getContainer().getBoundingClientRect();
+    const inspector = inspectorRef.current?.getBoundingClientRect();
+    // Framing respects the floating panel, without moving the map on tab changes.
+    const rightInset = inspector && canvas.width >= 700
+      ? Math.max(36, canvas.right - inspector.left + 16)
+      : 14;
     map.fitBounds(bounds as LatLngBoundsExpression, {
-      padding: map.getSize().x < 600 ? [14, 58] : [36, 36],
+      paddingTopLeft: [canvas.width < 600 ? 14 : 36, 68],
+      paddingBottomRight: [rightInset, 64],
       maxZoom: 16,
       animate: false,
     });
-  }, [map, bounds]);
+  }, [map, bounds, inspectorRef]);
   useEffect(() => {
     fitImage();
   }, [fitImage]);
@@ -109,6 +124,7 @@ export default function SatelliteMap({
   showRaster,
   showPolygons,
   basemap,
+  inspectorRef,
 }: {
   geojson: FeatureCollection;
   bounds: Bounds;
@@ -116,6 +132,7 @@ export default function SatelliteMap({
   showRaster: boolean;
   showPolygons: boolean;
   basemap: BasemapId;
+  inspectorRef: InspectorRef;
 }) {
   const [tileError, setTileError] = useState(false);
   const [tileRevision, setTileRevision] = useState(0);
@@ -170,7 +187,7 @@ export default function SatelliteMap({
           </button>
         </div>
       )}
-      <MapTools bounds={bounds} />
+      <MapTools bounds={bounds} inspectorRef={inspectorRef} />
       <ScaleControl position="bottomleft" imperial={false} />
       {tileUrl && (
         <a
