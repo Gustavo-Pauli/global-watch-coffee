@@ -22,7 +22,9 @@ O runtime usa Prisma com adapter PostgreSQL e pool de duas conexões por instân
 4. Banco existente: siga a comparação/baseline em [PRISMA_MIGRATION.md](PRISMA_MIGRATION.md). Somente após provar equivalência, marque `0_existing_schema` como aplicada; não execute esse CREATE TABLE sobre tabelas existentes.
 5. `pnpm db:status`; confira dados e sessões após subir o app.
 
-Não rode `migrate reset`, `db push`, `auth@latest migrate` ou o SQL histórico por tentativa. O build gera o Prisma Client; **não aplica migrations em produção automaticamente**.
+Não rode `migrate reset`, `db push`, `auth@latest migrate` ou o SQL histórico por tentativa. O build local continua sem migrações automáticas. Na Vercel, `apps/web/vercel.json` executa `scripts/vercel-build.mjs`: somente quando `VERCEL_ENV=production`, usa `DATABASE_URL` e aplica `prisma migrate deploy` antes de gerar o client e compilar o Next. Falha de migração interrompe o deploy; não há reset ou baseline automático. Previews não aplicam migrations.
+
+Cadastre `DATABASE_URL` nas variáveis **Production** da Vercel. Variáveis em um `.env` local não são enviadas à Vercel. `PROD_DIRECT_DATABASE_URL` local não participa desse fluxo. Banco remoto existente continua exigindo o baseline manual descrito acima; banco vazio recebe as migrations versionadas no primeiro deploy.
 
 ## 3. Worker no Render Free
 
