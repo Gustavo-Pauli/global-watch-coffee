@@ -12,7 +12,6 @@ export default defineConfig({
   datasource: {
     // Migrations use Supabase's direct/session connection, runtime uses its pooler.
     // Generation does not connect, so a non-secret placeholder permits offline builds.
-    url: (process.env.VERCEL_ENV === 'production' ? process.env.DATABASE_URL : undefined)
-      || process.env.DIRECT_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/build_only',
+    url: process.env.DIRECT_URL || process.env.DATABASE_URL || 'postgresql://localhost:5432/build_only',
   },
 });

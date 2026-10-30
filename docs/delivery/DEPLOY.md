@@ -26,6 +26,8 @@ Não rode `migrate reset`, `db push`, `auth@latest migrate` ou o SQL histórico 
 
 Cadastre `DATABASE_URL` nas variáveis **Production** da Vercel. Variáveis em um `.env` local não são enviadas à Vercel. `PROD_DIRECT_DATABASE_URL` local não participa desse fluxo. Banco remoto existente continua exigindo o baseline manual descrito acima; banco vazio recebe as migrations versionadas no primeiro deploy.
 
+Se `DATABASE_URL` usar o pooler compartilhado Supabase na porta 6543, o script deriva a conexão de sessão na porta 5432, mantendo host e credenciais, somente para o Prisma CLI. O runtime preserva a URL original; nenhuma variável adicional precisa ser cadastrada. A migração tem limite de três minutos para não bloquear o build indefinidamente.
+
 ## 3. Worker no Render Free
 
 | Campo | Valor |
