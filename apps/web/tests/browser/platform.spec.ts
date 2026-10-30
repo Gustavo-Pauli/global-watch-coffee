@@ -147,8 +147,12 @@ async function collectionAlignment(page: Page) {
   const table = (await content.getByTestId('analysis-table-wrap').boundingBox())!;
   const create = (await header.getByRole('button', { name: 'Nova análise', exact: true }).boundingBox())!;
   if (page.viewportSize()!.width > 760) expect(heading.x).toBeCloseTo(toolbar.x, 0);
-  expect(toolbar.x).toBeCloseTo(table.x, 0);
-  expect(create.x + create.width).toBeCloseTo(table.x + table.width, 0);
+  expect(table.x).toBeCloseTo(contentBox.x, 0);
+  expect(table.width).toBeCloseTo(contentBox.width, 0);
+  const firstCell = content.getByRole('columnheader').first();
+  await expect(firstCell).toHaveCSS('padding-left', padding);
+  expect(toolbar.x).toBeCloseTo(table.x + Number.parseInt(padding), 0);
+  expect(create.x + create.width).toBeCloseTo(table.x + table.width - Number.parseInt(padding), 0);
   if (page.viewportSize()!.width === 1920) {
     const surface = (await page.getByTestId('app-main').boundingBox())!;
     expect(headerBox.x).toBeCloseTo(surface.x, 0);
@@ -533,7 +537,22 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await prisma.analysis.update({ where: { id }, data: { status: 'ready', errorCode: null } });
     await page.reload();
     await expect(record).toBeVisible();
-    await record.click();
+    const clickableRow = page.getByTestId('analysis-row').first();
+    const statusBounds = (await clickableRow.getByRole('cell').nth(2).boundingBox())!;
+    const rowTarget = { x: statusBounds.x + statusBounds.width / 2, y: statusBounds.y + statusBounds.height / 2 };
+    await page.mouse.move(rowTarget.x, rowTarget.y);
+    await expect(clickableRow).toHaveCSS('background-color', 'rgb(38, 38, 40)');
+    await expect(clickableRow).toHaveCSS('cursor', 'pointer');
+    // A click outside the title uses the same native link, including new-tab gestures.
+    const opened = page.context().waitForEvent('page');
+    await page.keyboard.down('Control');
+    await page.mouse.click(rowTarget.x, rowTarget.y);
+    await page.keyboard.up('Control');
+    const linkedPage = await opened;
+    await expect(linkedPage).toHaveURL(new RegExp(`/analyses/${id}$`));
+    await linkedPage.close();
+    await page.mouse.click(rowTarget.x, rowTarget.y);
+    await expect(page).toHaveURL(new RegExp(`/analyses/${id}$`));
     await readyMap(page);
     await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true');
     expect((await sidebar.boundingBox())!.width).toBe(collapsedSidebarWidth);
@@ -898,7 +917,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const mobileSearch = (await mobile.getByTestId('collection-search').boundingBox())!;
     const mobileStatus = (await mobile.getByRole('combobox', { name: 'Filtrar por status', exact: true }).boundingBox())!;
     const mobileTable = (await mobile.getByTestId('analysis-table-wrap').boundingBox())!;
-    expect(mobileSearch.width).toBeCloseTo(mobileTable.width, 0);
+    expect(mobileSearch.width).toBeCloseTo(mobileTable.width - 32, 0);
     expect(mobileStatus.y).toBeGreaterThan(mobileSearch.y + mobileSearch.height);
     await capture(mobile, 'mobile-analyses.png');
     await mobile.getByRole('button', { name: 'Nova análise', exact: true }).click();

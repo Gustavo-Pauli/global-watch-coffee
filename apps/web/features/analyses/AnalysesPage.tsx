@@ -114,8 +114,8 @@ export default function AnalysesPage() {
               Tentar novamente
             </Button>
           </div>)}
-        <div className={"border-t border-solid border-border"} aria-busy={loading} data-testid="analysis-table-wrap">
-          <Table className={"w-full table-auto border-collapse text-left"} data-testid="analysis-table">
+        <div className="-mx-[24px] border-t border-solid border-border max-[760px]:-mx-[16px]" aria-busy={loading} data-testid="analysis-table-wrap">
+          <Table className="w-full table-auto border-collapse text-left [&_th:first-child]:pl-[24px] [&_td:first-child]:pl-[24px] [&_th:last-child]:pr-[24px] [&_td:last-child]:pr-[24px] max-[760px]:[&_th:first-child]:pl-[16px] max-[760px]:[&_td:first-child]:pl-[16px] max-[760px]:[&_th:last-child]:pr-[16px] max-[760px]:[&_td:last-child]:pr-[16px]" data-testid="analysis-table">
             <TableHeader>
               <TableRow>
                 <TableHead scope="col">Imagem</TableHead>
@@ -131,12 +131,13 @@ export default function AnalysesPage() {
                     <ArrowDown size={13} />
                   </Button>
                 </TableHead>
+                <TableHead scope="col" className="w-[28px] px-0"><span className="sr-only">Abrir análise</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((item) => (<TableRow key={item.id} data-testid="analysis-row">
+              {filtered.map((item) => (<TableRow key={item.id} className="group relative cursor-pointer hover:bg-[#262628] focus-within:bg-[#262628]" data-testid="analysis-row">
                   <TableCell>
-                    <Link className={"flex w-fit min-w-0 items-center gap-0"} data-testid="analysis-link" href={`/analyses/${item.id}`} aria-label={`Abrir análise ${item.id}`}>
+                    <Link className="flex w-fit min-w-0 items-center gap-0 outline-none after:absolute after:inset-0 after:rounded-[4px] after:content-[''] focus-visible:after:outline-2 focus-visible:after:outline-[var(--accent)] focus-visible:after:outline-offset-[-2px]" data-testid="analysis-link" href={`/analyses/${item.id}`} aria-label={`Abrir análise ${item.id}`}>
                       <span className={"flex flex-col gap-[4px]"}>
                         <strong className={"text-[13px] font-medium text-foreground max-[760px]:text-[12px]"}>{analysisTitle(item.id)}</strong>
                         <span className={"text-[12px] text-[var(--subtle)]"}>
@@ -153,8 +154,11 @@ export default function AnalysesPage() {
                   <TableCell>
                     <AnalysisStatusLabel status={item.status}/>
                   </TableCell>
-                  <TableCell className={"max-[1100px]:hidden"}>
+                  <TableCell className="text-right max-[1100px]:hidden">
                     {createdDate(item.created)}
+                  </TableCell>
+                  <TableCell className="w-[28px] px-0 text-right">
+                    <ChevronRight size={16} aria-hidden="true" className="ml-auto text-muted-foreground transition-colors group-hover:text-foreground group-focus-within:text-foreground" />
                   </TableCell>
                 </TableRow>))}
             </TableBody>
