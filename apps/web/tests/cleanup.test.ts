@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { randomUUID } from 'node:crypto';
 import { cleanupExpired, cronAuthorized, type CleanupRepository, type CleanupRow } from '../lib/cleanup';
-import { outputPath, OUTPUTS, storageAdmin } from '../lib/storage';
+import { outputPath, ALL_OUTPUTS, storageAdmin } from '../lib/storage';
 
 type StoredRow = CleanupRow & { expiresAt: number };
 function row(expiresAt: number, input = false): StoredRow {
@@ -43,7 +43,7 @@ test('cleanup authorization requires the exact configured bearer token, not a se
   assert.equal(cronAuthorized(request('Bearer cron-secret'), 'cron-secret'), true);
 });
 
-test('cleanup removes expired inputs and six outputs before metadata while active rows and limits survive', async () => {
+test('cleanup removes expired inputs and all core/optional outputs before metadata while active rows and limits survive', async () => {
   const expired = row(99, true), active = row(101), boundary = row(100);
   const state = memory([expired, active, boundary], [99, 100, 101]);
   const pathsSeen: string[][] = [];
@@ -53,7 +53,7 @@ test('cleanup removes expired inputs and six outputs before metadata while activ
   assert.deepEqual(result, { cleaned: 1, failed: 0, remaining: 0 });
   assert.deepEqual(state.events, ['storage', `delete:${expired.id}`]);
   assert.deepEqual(pathsSeen[0], [expired.imagePath, expired.sclPath,
-    ...Object.keys(OUTPUTS).map(kind => outputPath(expired.ownerId, expired.id, kind as keyof typeof OUTPUTS))]);
+    ...Object.keys(ALL_OUTPUTS).map(kind => outputPath(expired.ownerId, expired.id, kind as keyof typeof ALL_OUTPUTS))]);
   assert.deepEqual([...state.records.keys()], [active.id, boundary.id]);
   assert.deepEqual(state.limits, [100, 101]);
 });

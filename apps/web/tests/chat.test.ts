@@ -110,6 +110,8 @@ test('trusted method and written acquisition dates do not cause false fallbacks'
   assert.ok(methodContext(known).includes('EVI2'));
   assert.ok(!methodContext(known).includes('SAVI'));
   assert.ok(numericsSupported('A imagem de 16 de agosto de 2025 usa EVI2.', known));
+  assert.ok(numericsSupported('As áreas foram calculadas no elipsoide WGS84.', known));
+  assert.equal(numericsSupported('As áreas foram calculadas no elipsoide WGS83.', known), false);
   assert.equal(numericsSupported('A imagem é de 17 de agosto de 2025.', known), false);
   assert.equal(numericsSupported('Foram medidos 2 hectares.', known), false);
   assert.ok(numericsSupported('O maior polígono é o de número 300, com 0,46 hectares.', known));

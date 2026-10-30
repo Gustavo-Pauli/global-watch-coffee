@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Prisma, type Analysis } from '@prisma/client';
 import { prisma } from './db';
 import { consumeLimit } from './rate-limit';
-import { exists, inputPath, outputPath, OUTPUTS, signedRead, signedUpload } from './storage';
+import { exists, inputPath, outputPath, ALL_OUTPUTS, signedRead, signedUpload } from './storage';
 import { workerFetch } from './worker';
 
 export const VALID_SCENES = ['august', 'july', 'october'] as const;
@@ -93,7 +93,7 @@ export async function startAnalysis(user: string, id: string) {
   const uploads: Record<string,string> = {};
   let imageUrl: string | null, sclUrl: string | null;
   try {
-    for (const kind of Object.keys(OUTPUTS) as (keyof typeof OUTPUTS)[])
+    for (const kind of Object.keys(ALL_OUTPUTS) as (keyof typeof ALL_OUTPUTS)[])
       uploads[kind] = (await signedUpload(outputPath(user,id,kind))).signedUrl;
     imageUrl = record.image_path ? await signedRead(record.image_path, 1200) : null;
     sclUrl = record.scl_path ? await signedRead(record.scl_path, 1200) : null;

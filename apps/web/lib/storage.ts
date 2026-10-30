@@ -1,13 +1,10 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { CORE_OUTPUTS, ALL_OUTPUTS, type OutputKind } from './analysis-artifacts';
 
-export const OUTPUTS = {
-  geojson: 'candidatos.geojson', classified: 'imagem_classificada.png',
-  map: 'imagem_mapa.png', rgb: 'imagem_rgb.png',
-  tif: 'classificacao.tif', result: 'resultado.json',
-} as const;
-export type OutputKind = keyof typeof OUTPUTS;
+export const OUTPUTS = CORE_OUTPUTS;
+export { ALL_OUTPUTS, type OutputKind };
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 export const MAX_SCL_BYTES = 4 * 1024 * 1024;
 
@@ -34,7 +31,7 @@ export function jobPrefix(userId: string, id: string) {
   return `users/${opaqueUser}/analyses/${id}`;
 }
 export function outputPath(userId: string, id: string, kind: OutputKind) {
-  return `${jobPrefix(userId, id)}/out/${OUTPUTS[kind]}`;
+  return `${jobPrefix(userId, id)}/out/${ALL_OUTPUTS[kind]}`;
 }
 export function inputPath(userId: string, id: string, kind: 'image' | 'scl') {
   return `${jobPrefix(userId, id)}/input/${kind}.tif`;

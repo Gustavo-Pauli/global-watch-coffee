@@ -37,6 +37,11 @@ OUTPUT_FILES = {
     'tif': ('classificacao.tif', 'image/tiff'),
     'result': ('resultado.json', 'application/json'),
 }
+OPTIONAL_OUTPUT_FILES = {
+    'false_color': ('mapa_falsa_cor.png', 'image/png'),
+    'ndvi': ('mapa_ndvi.png', 'image/png'),
+}
+ALL_OUTPUT_FILES = {**OUTPUT_FILES, **OPTIONAL_OUTPUT_FILES}
 MAX_IMAGE = 12 * 1024 * 1024
 MAX_SCL = 4 * 1024 * 1024
 MAX_JOB_BYTES = 32 * 1024
@@ -177,12 +182,14 @@ def validate_rasters(image: Path, scl: Path | None) -> None:
                 raise ValueError('Máscara SCL precisa conter classes uint8')
 
 
-def classify_job(image: Path, output: Path, model: Path, scl: Path | None, date: str | None):
+def classify_job(image: Path, output: Path, model: Path, scl: Path | None, date: str | None,
+                 *, render_visualizations: bool = False, date_source: str = 'unknown'):
     # GDAL's default cache scales with host memory, not necessarily a free-tier
     # container's quota. Bound its cache and threads for each processing thread.
     with rasterio.Env(GDAL_CACHEMAX=16 * 1024 * 1024, GDAL_NUM_THREADS='1'):
         validate_rasters(image, scl)
-        return classify(image, output, model, scl, acquisition_date=date)
+        return classify(image, output, model, scl, acquisition_date=date,
+                        render_visualizations=render_visualizations, date_source=date_source)
 
 
 def create_worker(*, secret: str | None = None, model: Path | None = None,
@@ -229,8 +236,11 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
                         await download_tiff(client, job.image_url, image, MAX_IMAGE)
                         if job.scl_url and scl is not None:
                             await download_tiff(client, job.scl_url, scl, MAX_SCL)
-                    await asyncio.to_thread(classify_job, image, workspace / 'out', model, scl, date)
-                    for kind, (name, content_type) in OUTPUT_FILES.items():
+                    await asyncio.to_thread(classify_job, image, workspace / 'out', model, scl, date,
+                        render_visualizations=set(job.uploads) == set(ALL_OUTPUT_FILES),
+                        date_source='sample_metadata' if job.scene else 'user_supplied' if date else 'unknown')
+                    for kind in job.uploads:
+                        name, content_type = ALL_OUTPUT_FILES[kind]
                         file = workspace / 'out' / name
                         if not file.is_file():
                             raise ValueError(f'Arquivo de saída ausente: {kind}')
@@ -258,7 +268,8 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
 
     @app.get('/health')
     def health():
-        return {'status': 'ok', 'model_available': model.is_file(), 'internal_worker': True}
+        return {'status': 'ok', 'model_available': model.is_file(), 'internal_worker': True,
+                'output_schema_versions': [1, 2]}
 
     @app.post('/internal/process', status_code=202)
     async def start(job: JobRequest, x_worker_token: str | None = Header(default=None)):
@@ -273,7 +284,7 @@ def create_worker(*, secret: str | None = None, model: Path | None = None,
             raise HTTPException(422, 'URL de entrada inválida.')
         if job.scl_url and not storage_url_allowed(job.scl_url, storage_base):
             raise HTTPException(422, 'URL SCL inválida.')
-        if set(job.uploads) != set(OUTPUT_FILES) or any(
+        if set(job.uploads) not in (set(OUTPUT_FILES), set(ALL_OUTPUT_FILES)) or any(
             not storage_url_allowed(value, storage_base, upload=True) for value in job.uploads.values()
         ):
             raise HTTPException(422, 'URLs de saída inválidas.')

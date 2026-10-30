@@ -9,6 +9,8 @@ from geo_worker.api.worker import (
     create_worker,
     DEMO,
     OUTPUT_FILES,
+    OPTIONAL_OUTPUT_FILES,
+    ALL_OUTPUT_FILES,
     MAX_IMAGE,
     MAX_SCL,
     MAX_JOB_BYTES,

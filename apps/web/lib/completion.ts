@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './db';
 import { OUTPUTS, exists, outputPath, readJson } from './storage';
 import { validDate } from './analyses';
+import { requiredOutputKinds } from './analysis-artifacts';
 
 export function parsedWorkerResult(value: unknown) {
   if (!value || typeof value!=='object' || Array.isArray(value)) throw new Error('Invalid result');
@@ -11,6 +12,7 @@ export function parsedWorkerResult(value: unknown) {
     typeof r.candidate_polygon_count!=='number'||!Number.isSafeInteger(r.candidate_polygon_count)||r.candidate_polygon_count<0)
     throw new Error('Invalid result');
   if(r.acquisition_date!=null && !validDate(r.acquisition_date)) throw new Error('Invalid acquisition date');
+  requiredOutputKinds(r);
   return {
     result:value as Prisma.InputJsonValue,
     acquisitionDate:typeof r.acquisition_date==='string'?new Date(r.acquisition_date+'T00:00:00.000Z'):undefined,
@@ -31,6 +33,8 @@ export async function completeAnalysis(id: string, status: 'ready'|'error') {
         if (!await exists(outputPath(record.ownerId,id,kind))) throw new Error('Output missing');
       const value=await readJson(outputPath(record.ownerId,id,'result'));
       ({result,acquisitionDate}=parsedWorkerResult(value));
+      for (const kind of requiredOutputKinds(value))
+        if (!(kind in OUTPUTS) && !await exists(outputPath(record.ownerId, id, kind))) throw new Error('Visualization missing');
     } catch { return {status:503,detail:'Arquivos incompletos.'}; }
   }
   const {count}=await prisma.analysis.updateMany({where:{id,status:'processing',expiresAt:{gt:new Date()}},

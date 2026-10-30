@@ -12,14 +12,15 @@ def main():
     parser=argparse.ArgumentParser()
     sub=parser.add_subparsers(dest='cmd',required=True)
     tr=sub.add_parser('train');tr.add_argument('--model',default='apps/geo-worker/models/v2/coffee_rf.joblib');tr.add_argument('--reference',default='data/reference/mapbiomas_2025_recorte_30m.tif')
-    cl=sub.add_parser('classify');cl.add_argument('image');cl.add_argument('--scl');cl.add_argument('--model',default='apps/geo-worker/models/v2/coffee_rf.joblib');cl.add_argument('--output',default='experiments/outputs/v2');cl.add_argument('--date')
+    cl=sub.add_parser('classify');cl.add_argument('image');cl.add_argument('--scl');cl.add_argument('--model',default='apps/geo-worker/models/v2/coffee_rf.joblib');cl.add_argument('--output',default='experiments/outputs/v2');cl.add_argument('--date');cl.add_argument('--visualizations',action='store_true')
     args=parser.parse_args()
     if args.cmd=='train':
         scenes=[('data/sample/imagem_multiespectral.tif','data/sample/qualidade_scl.tif',None),
                 ('data/additional/imagem_adicional_multiespectral.tif','data/additional/qualidade_adicional_scl.tif',None),
                 ('data/unseen/imagem_adicional_multiespectral.tif','data/unseen/qualidade_adicional_scl.tif',None)]
         result=train(scenes,Path(args.reference),Path(args.model))
-    else: result=classify(Path(args.image),Path(args.output),Path(args.model),Path(args.scl) if args.scl else None,acquisition_date=args.date)
+    else: result=classify(Path(args.image),Path(args.output),Path(args.model),Path(args.scl) if args.scl else None,acquisition_date=args.date,
+                         render_visualizations=args.visualizations,date_source='user_supplied' if args.date else 'unknown')
     print(json.dumps(result,ensure_ascii=False,indent=2))
 
 

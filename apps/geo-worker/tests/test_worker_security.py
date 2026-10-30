@@ -78,7 +78,7 @@ def test_duplicate_active_job_is_not_processed_twice(monkeypatch):
     entered, release, notified = threading.Event(), threading.Event(), threading.Event()
     executions = []
 
-    def classify(*args):
+    def classify(*args, **kwargs):
         executions.append(args)
         entered.set()
         assert release.wait(10)
@@ -142,7 +142,7 @@ def test_http_compression_is_rejected_before_decompression(tmp_path):
 def test_partial_storage_failure_never_signals_ready(monkeypatch):
     notified, outcomes = threading.Event(), []
 
-    def fake_classify(image, output, *args):
+    def fake_classify(image, output, *args, **kwargs):
         output.mkdir()
         for name, _ in worker.OUTPUT_FILES.values():
             (output / name).write_bytes(b'test-artifact')
@@ -166,7 +166,7 @@ def test_partial_storage_failure_never_signals_ready(monkeypatch):
 def test_callback_retries_after_transient_failure(monkeypatch):
     notified, outcomes = threading.Event(), []
 
-    def fake_classify(image, output, *args):
+    def fake_classify(image, output, *args, **kwargs):
         output.mkdir()
         for name, _ in worker.OUTPUT_FILES.values():
             (output / name).write_bytes(b'test-artifact')

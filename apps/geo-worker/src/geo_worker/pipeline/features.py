@@ -1,5 +1,6 @@
 """Validated reflectance and spectral predictors shared by inference and research."""
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 import rasterio
@@ -9,6 +10,16 @@ from scipy.ndimage import uniform_filter
 BANDS = ["B02", "B03", "B04", "B08"]
 EXTRA_BANDS = ["B05", "B06", "B07", "B8A", "B11", "B12"]
 MAX_PIXELS = 16_000_000
+
+
+class SceneData(NamedTuple):
+    features: np.ndarray
+    valid: np.ndarray
+    reflectance: np.ndarray
+    names: list[str]
+    quality: dict
+    source: dict
+    ndvi_defined: np.ndarray
 
 def align_scl(scl_path: Path, reference: rasterio.io.DatasetReader) -> np.ndarray:
     """Alinha classes categóricas de 20 m a 10 m usando vizinho mais próximo."""
@@ -48,7 +59,7 @@ def masked_local_stats(arr, valid, size=5):
     return mean, std
 
 
-def read_features(image: Path, scl: Path | None = None, extra: Path | None = None):
+def read_scene(image: Path, scl: Path | None = None, extra: Path | None = None) -> SceneData:
     with rasterio.open(image) as src:
         if src.driver != "GTiff" or src.count != 4 or src.crs is None or not src.crs.is_projected:
             raise ValueError("Envie GeoTIFF multiespectral de 4 bandas, com CRS projetado.")
@@ -57,6 +68,11 @@ def read_features(image: Path, scl: Path | None = None, extra: Path | None = Non
         if (not np.isfinite(tuple(src.transform)).all() or src.transform.a <= 0
                 or src.transform.e >= 0 or src.transform.b != 0 or src.transform.d != 0):
             raise ValueError("Grade geográfica inesperada (resolução/transform).")
+        source = {
+            "crs": str(src.crs),
+            "resolution": {"x": float(src.res[0]), "y": float(src.res[1]), "unit": src.crs.linear_units},
+            "bands": list(BANDS),
+        }
         declared = [description.upper().strip().split('_', 1)[0].split(' ', 1)[0]
                     if description else None for description in src.descriptions]
         if any(declared) and declared != BANDS:
@@ -74,6 +90,7 @@ def read_features(image: Path, scl: Path | None = None, extra: Path | None = Non
         if valid.any() and np.max(np.abs(data[:, valid])) > 2:
             raise ValueError("Reflectância incompatível: confira os metadados de escala/offset do GeoTIFF.")
         blue, green, red, nir = data
+        input_valid = valid.copy()
         if scl:
             valid &= np.isin(align_scl(scl, src), (4, 5))
         if not valid.any():
@@ -95,6 +112,7 @@ def read_features(image: Path, scl: Path | None = None, extra: Path | None = Non
                         raise ValueError("Bandas extras devem estar em reflectância física float32 (sem scale/offset).")
                     ext_arrays.append(resampled)
                 valid &= np.logical_and.reduce([np.isfinite(x) for x in ext_arrays])
+                input_valid &= np.logical_and.reduce([np.isfinite(x) for x in ext_arrays])
     ndvi = normalized_difference(nir, red)
     gndvi = normalized_difference(nir, green)
     evi2 = np.zeros_like(ndvi)
@@ -110,5 +128,26 @@ def read_features(image: Path, scl: Path | None = None, extra: Path | None = Non
         names += EXTRA_BANDS + ["ndre", "ndmi", "nbr"]
     stack = np.stack(arrays, axis=-1).astype('float32')
     stack = np.nan_to_num(stack, nan=0, posinf=0, neginf=0)
-    # Guardar CRS/transform; resultado sempre muda com pixels efetivos da entrada.
-    return stack, valid, data, names
+    # The classifier keeps its original predictors and eligibility. These extra
+    # exclusions affect only the displayed NDVI and per-polygon NDVI means.
+    ndvi_defined = valid & (np.abs(nir + red) > 1e-6) & np.isfinite(ndvi) & (ndvi >= -1) & (ndvi <= 1)
+    total = int(valid.size)
+    eligible = int(valid.sum())
+    input_count = int(input_valid.sum())
+    quality = {
+        "total_pixels": total,
+        "eligible_pixels": eligible,
+        "input_invalid_pixels": total - input_count,
+        "scl_excluded_pixels": input_count - eligible if scl else None,
+        "scl_applied": bool(scl),
+        # Match the nonnegative Math.round contract rather than bankers rounding.
+        "eligible_percent": float(np.floor(eligible / total * 1000 + 0.5) / 10),
+        "ndvi_defined_pixels": int(ndvi_defined.sum()),
+    }
+    return SceneData(stack, valid, data, names, quality, source, ndvi_defined)
+
+
+def read_features(image: Path, scl: Path | None = None, extra: Path | None = None):
+    """Preserve the four-value research/public API while inference uses read_scene."""
+    scene = read_scene(image, scl, extra)
+    return scene.features, scene.valid, scene.reflectance, scene.names

@@ -149,7 +149,9 @@ async function healthCheck(name: string, base: URL | null, path: string, worker:
       body += decoder.decode();
     } finally { reader.releaseLock(); }
     const data = JSON.parse(body);
-    const valid = data.status === 'ok' && (worker ? data.model_available === true && data.internal_worker === true : data.service === 'global-watch-web');
+    const valid = data.status === 'ok' && (worker
+      ? data.model_available === true && data.internal_worker === true && Array.isArray(data.output_schema_versions) && data.output_schema_versions.includes(2)
+      : data.service === 'global-watch-web');
     return { name, status: valid ? 'pass' : 'fail', code: valid ? 'liveness_only_confirmed' : 'unexpected_health_contract' };
   } catch { return { name, status: 'fail', code: 'unreachable_timeout_redirect_or_invalid_health' }; }
 }

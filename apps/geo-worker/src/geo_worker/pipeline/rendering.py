@@ -14,6 +14,29 @@ def rgb_composite(reflectance: np.ndarray) -> Image.Image:
     return Image.fromarray((255 * scaled).astype(np.uint8), "RGB").convert("RGBA")
 
 
+def false_color_composite(reflectance: np.ndarray, valid: np.ndarray) -> Image.Image:
+    """NIR/red/green presentation with the same fixed stretch as true color."""
+    channels = reflectance[[3, 2, 1]].transpose(1, 2, 0)
+    scaled = np.clip(channels / 0.32, 0, 1) ** 0.75
+    rgba = np.zeros((*valid.shape, 4), dtype=np.uint8)
+    rgba[:, :, :3] = (255 * scaled).astype(np.uint8)
+    rgba[:, :, 3] = valid.astype(np.uint8) * 255
+    rgba[~valid, :3] = 0
+    return Image.fromarray(rgba, "RGBA")
+
+
+def ndvi_composite(ndvi: np.ndarray, defined: np.ndarray) -> Image.Image:
+    """Fixed [-1, 0, 1] color scale; invalid values are transparent, never zero."""
+    positions = np.array([-1, 0, 1], dtype=np.float32)
+    colors = np.array([[140, 76, 45], [236, 225, 181], [46, 107, 79]], dtype=np.uint8)
+    rgba = np.zeros((*ndvi.shape, 4), dtype=np.uint8)
+    values = ndvi[defined]
+    for channel in range(3):
+        rgba[:, :, channel][defined] = np.rint(np.interp(values, positions, colors[:, channel])).astype(np.uint8)
+    rgba[:, :, 3] = defined.astype(np.uint8) * 255
+    return Image.fromarray(rgba, "RGBA")
+
+
 def draw_candidate_outlines(
     base: Image.Image, features_projected: list[dict], transform
 ) -> Image.Image:
@@ -34,7 +57,8 @@ def draw_candidate_outlines(
     return Image.alpha_composite(base, overlay)
 
 
-def save_leaflet_raster(src: rasterio.io.DatasetReader, source_rgba: Image.Image, path: Path):
+def save_leaflet_raster(src: rasterio.io.DatasetReader, source_rgba: Image.Image, path: Path,
+                        *, color_resampling: Resampling = Resampling.bilinear):
     """Gera PNG reamostrado em lon/lat, com limites utilizáveis no Leaflet."""
     dst_transform, width, height = calculate_default_transform(
         src.crs, "EPSG:4326", src.width, src.height, *src.bounds
@@ -51,7 +75,7 @@ def save_leaflet_raster(src: rasterio.io.DatasetReader, source_rgba: Image.Image
             src_crs=src.crs,
             dst_transform=dst_transform,
             dst_crs="EPSG:4326",
-            resampling=Resampling.nearest if band == 3 else Resampling.bilinear,
+            resampling=Resampling.nearest if band == 3 else color_resampling,
         )
     Image.fromarray(warped, "RGBA").save(path)
     left, top = dst_transform * (0, 0)

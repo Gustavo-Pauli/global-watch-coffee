@@ -1,7 +1,7 @@
 import 'server-only';
 import { timingSafeEqual } from 'node:crypto';
 import type { PrismaClient } from '@prisma/client';
-import { OUTPUTS, outputPath } from './storage';
+import { ALL_OUTPUTS, outputPath } from './storage';
 
 export type CleanupRow = { id: string; ownerId: string; imagePath: string | null; sclPath: string | null };
 export type CleanupRepository = {
@@ -46,7 +46,7 @@ export async function cleanupExpired(deps: {
   for (const row of rows) {
     const remainingMs = deadline - now();
     if (remainingMs <= 0) break;
-    const paths = [row.imagePath, row.sclPath, ...(Object.keys(OUTPUTS) as (keyof typeof OUTPUTS)[])
+    const paths = [row.imagePath, row.sclPath, ...(Object.keys(ALL_OUTPUTS) as (keyof typeof ALL_OUTPUTS)[])
       .map(kind => outputPath(row.ownerId, row.id, kind))].filter((value): value is string => !!value);
     try {
       await deps.removeObjects(paths, Math.min(10_000, remainingMs));
