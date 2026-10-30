@@ -1,6 +1,7 @@
 /* Both tabs share one stable panel; the canvas owns its navigation controls. */
 .analysis-workspace {
   display: block;
+  --map-control-size: 36px;
 }
 .analysis-state {
   width: 100%;
@@ -269,11 +270,88 @@
   border: 1.5px solid var(--accent);
 }
 .map-legend {
-  bottom: 68px;
-}
-.map-toolbar {
   top: 14px;
   left: 14px;
+  bottom: auto;
+  max-width: calc(100% - 148px);
+}
+.map-actions {
+  position: absolute;
+  z-index: 650;
+  top: 14px;
+  right: 14px;
+  left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: max-content;
+}
+.analysis-workspace:has(.analysis-inspector) .map-actions {
+  right: 354px;
+}
+.map-actions > .map-control-group {
+  position: static;
+}
+.analysis-workspace .map-control-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: max-content;
+  padding: 0;
+  gap: 0;
+  background: #202023;
+  border: 1px solid #424246;
+  border-radius: 6px;
+  box-shadow: 0 3px 12px #0003;
+  overflow: visible;
+}
+.map-control-group > .map-control-button {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--map-control-size);
+  height: var(--map-control-size);
+  min-height: var(--map-control-size);
+  min-width: var(--map-control-size);
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid #424246;
+  border-radius: 0;
+  background: transparent;
+  color: #ededee;
+  box-shadow: none;
+}
+.map-control-group > .map-control-button:first-child {
+  border-radius: 5px 5px 0 0;
+}
+.map-control-group > .map-control-button:last-child {
+  border-bottom: 0;
+  border-radius: 0 0 5px 5px;
+}
+.map-control-group > .map-control-button:only-child {
+  border-radius: 5px;
+}
+.map-control-group > .map-control-button > svg {
+  width: 18px;
+  height: 18px;
+}
+.map-control-group > .map-control-button:hover:not(:disabled),
+.map-control-group > .map-control-button[data-state="open"] {
+  background: #39393e;
+  color: var(--text);
+}
+.map-tool-tooltip {
+  z-index: 3600;
+  max-width: 240px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #242426;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 3px 12px #0003;
 }
 .maptiler-logo {
   position: absolute;
@@ -297,6 +375,7 @@
   max-width: calc(100cqw - 108px);
 }
 .map-navigation {
+  right: 14px;
   bottom: 41px;
 }
 .map-layers-popover .switch {
@@ -305,7 +384,7 @@
 @media (min-width: 900px) {
   /* Zoom belongs to the canvas edge, with either panel tab open. */
   .map-navigation {
-    right: 17px;
+    right: 14px;
     bottom: 41px;
   }
 }
@@ -319,17 +398,40 @@
     right: 0;
     visibility: hidden;
   }
+  .analysis-workspace:has(.analysis-inspector) .map-actions {
+    display: none;
+  }
 }
 @media (max-width: 760px) {
-  .map-toolbar {
+  .map-actions {
     top: 12px;
-    left: 12px;
+    right: 12px;
+    left: auto;
+  }
+  .map-navigation {
+    right: 12px;
   }
   .map-layers-popover {
     max-height: calc(100dvh - 160px);
   }
   .map-legend {
-    bottom: 72px;
+    top: 12px;
+    left: 12px;
+    bottom: auto;
+    display: grid;
+    grid-template-columns: 11px auto;
+    gap: 5px 8px;
+    max-width: calc(100% - 150px);
+    padding: 8px 10px;
+  }
+  .map-legend strong {
+    grid-column: 2;
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+  .map-legend .legend-hidden {
+    grid-column: 2;
   }
   .maptiler-logo {
     left: 12px;
@@ -339,6 +441,9 @@
   }
 }
 @media (pointer: coarse) {
+  .analysis-workspace {
+    --map-control-size: 40px;
+  }
   .inspector-tab {
     min-height: 44px;
   }

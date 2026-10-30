@@ -8,12 +8,10 @@ import { NavigationToggle, usePlatform } from "./PlatformShell";
 export default function PageHeader({
   title,
   meta,
-  count,
   fullWidth = false,
 }: {
   title: string;
   meta?: ReactNode;
-  count?: number | string;
   fullWidth?: boolean;
 }) {
   const { newAnalysis } = usePlatform();
@@ -29,16 +27,6 @@ export default function PageHeader({
         <div className="header-identity">
           <div className="header-title-row">
             <h1 title={title}>{title}</h1>
-            {count !== undefined && (
-              <span
-                className="record-count"
-                role="status"
-                aria-live="polite"
-                aria-label={`${count} análises`}
-              >
-                {count}
-              </span>
-            )}
           </div>
           {meta && <div className="header-meta">{meta}</div>}
         </div>

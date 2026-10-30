@@ -39,11 +39,15 @@ import {
   TableCell,
 } from "@/components/ui/table";
 
-export function AnalysisStatusLabel({ status }: { status: AnalysisStatus }) {
+export function AnalysisStatusLabel({
+  status,
+}: {
+  status: AnalysisStatus | "all";
+}) {
   return (
     <span className={`status-label status-${status}`}>
-      <span className="status-dot" />
-      {STATUS_LABELS[status]}
+      <span className="status-dot" aria-hidden="true" />
+      {status === "all" ? "Todos os status" : STATUS_LABELS[status]}
     </span>
   );
 }
@@ -119,16 +123,7 @@ export default function AnalysesPage() {
 
   return (
     <>
-      <PageHeader
-        title="Análises"
-        count={
-          loading && !items.length
-            ? undefined
-            : filtered.length === items.length
-              ? items.length
-              : `${filtered.length} de ${items.length}`
-        }
-      />
+      <PageHeader title="Análises" />
       <main className="collection-page page-container" id="main-content">
         <div className="collection-toolbar">
           <div className="collection-search">
@@ -159,10 +154,12 @@ export default function AnalysesPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper" align="start" sideOffset={4}>
-              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="all" textValue="Todos os status">
+                <AnalysisStatusLabel status="all" />
+              </SelectItem>
               {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
+                <SelectItem key={value} value={value} textValue={label}>
+                  <AnalysisStatusLabel status={value as AnalysisStatus} />
                 </SelectItem>
               ))}
             </SelectContent>
@@ -297,6 +294,13 @@ export default function AnalysesPage() {
             )
           )}
         </div>
+        {!error && (!loading || items.length > 0) && (
+          <p className="collection-caption" role="status" aria-live="polite">
+            {search.trim() || status !== "all"
+              ? `${filtered.length} de ${items.length} ${items.length === 1 ? "análise" : "análises"}`
+              : `${items.length} ${items.length === 1 ? "análise" : "análises"}`}
+          </p>
+        )}
       </main>
     </>
   );

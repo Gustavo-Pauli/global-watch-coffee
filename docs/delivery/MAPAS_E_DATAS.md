@@ -8,6 +8,8 @@ O menu **Camadas** reúne essas opções e a visibilidade da imagem analisada e 
 
 ## O que cada data significa
 
+A legenda da classificação chama-se **Plantações de Café** e permanece no alto à esquerda com os hectares, independentemente da aba do painel. Configurações no alto à direita e zoom/enquadramento embaixo usam grupos verticais iguais. A nomenclatura da camada não altera o método ou a ausência de validação em campo, documentados em Sobre o resultado.
+
 - **Imagem analisada:** a aquisição efetivamente informada/produzida pelo processamento. Aparece uma vez no cabeçalho, em formato numérico completo inclusive no celular. O rótulo acessível e o tooltip identificam a aquisição. Essa data identifica os resultados, não a imagem de fundo. Se não foi fornecida, a UI mostra **Sem data**.
 - **Satélite MapTiler:** mosaico de fontes e datas diferentes. A UI não o apresenta como uma cena da data da análise. O [catálogo oficial](https://docs.maptiler.com/schema-raster/satellite/) descreve o conjunto `satellite-v2` como composição de imagens de satélite e aéreas.
 - **Ruas:** cartografia para localização; não representa uma aquisição orbital.

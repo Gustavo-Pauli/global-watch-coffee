@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import {
   GeoJSON,
@@ -16,6 +22,7 @@ import type {
   GeoJSON as LeafletGeoJSON,
 } from "leaflet";
 import type { Bounds } from "./analysis-types";
+import MapToolButton from "./platform/MapToolButton";
 import {
   basemapSource,
   MAPTILER_ATTRIBUTION,
@@ -36,9 +43,10 @@ function MapTools({
     const canvas = map.getContainer().getBoundingClientRect();
     const inspector = inspectorRef.current?.getBoundingClientRect();
     // Framing respects the floating panel, without moving the map on tab changes.
-    const rightInset = inspector && canvas.width >= 700
-      ? Math.max(36, canvas.right - inspector.left + 16)
-      : 14;
+    const rightInset =
+      inspector && canvas.width >= 700
+        ? Math.max(36, canvas.right - inspector.left + 16)
+        : 14;
     map.fitBounds(bounds as LatLngBoundsExpression, {
       paddingTopLeft: [canvas.width < 600 ? 14 : 36, 68],
       paddingBottomRight: [rightInset, 64],
@@ -56,32 +64,20 @@ function MapTools({
   }, [map]);
   return (
     <div
-      className="map-navigation"
+      className="map-navigation map-control-group"
       aria-label="Navegação do mapa"
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
     >
-      <button
-        aria-label="Aproximar mapa"
-        title="Aproximar"
-        onClick={() => map.zoomIn()}
-      >
+      <MapToolButton label="Aproximar mapa" onClick={() => map.zoomIn()}>
         <Plus size={18} />
-      </button>
-      <button
-        aria-label="Afastar mapa"
-        title="Afastar"
-        onClick={() => map.zoomOut()}
-      >
+      </MapToolButton>
+      <MapToolButton label="Afastar mapa" onClick={() => map.zoomOut()}>
         <Minus size={18} />
-      </button>
-      <button
-        aria-label="Enquadrar imagem"
-        title="Enquadrar imagem"
-        onClick={fitImage}
-      >
+      </MapToolButton>
+      <MapToolButton label="Enquadrar imagem" onClick={fitImage}>
         <LocateFixed size={18} />
-      </button>
+      </MapToolButton>
     </div>
   );
 }
@@ -108,7 +104,7 @@ function CandidateLayer({ geojson }: { geojson: FeatureCollection }) {
         const content = document.createElement("div"),
           title = document.createElement("strong"),
           measure = document.createElement("span");
-        title.textContent = `Candidato ${Number.isFinite(id) ? id : "—"}`;
+        title.textContent = `Polígono ${Number.isFinite(id) ? id : "—"}`;
         measure.textContent = `${Number.isFinite(area) ? area.toLocaleString("pt-BR", { maximumFractionDigits: 2 }) : "—"} ha`;
         content.append(title, measure);
         item.bindPopup(content);

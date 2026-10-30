@@ -6,7 +6,6 @@ import * as DropdownMenu from "radix-ui/dropdown-menu";
 import * as Tabs from "radix-ui/tabs";
 import {
   ArrowUp,
-  ChevronDown,
   Download,
   FileImage,
   FileJson,
@@ -36,6 +35,7 @@ import {
 import PageHeader from "./PageHeader";
 import AboutResult from "./AboutResult";
 import MapLayersPicker from "./MapLayersPicker";
+import MapToolButton from "./MapToolButton";
 import type { BasemapId } from "../map-sources";
 
 const SatelliteMap = dynamic(() => import("../SatelliteMap"), {
@@ -48,7 +48,11 @@ const SatelliteMap = dynamic(() => import("../SatelliteMap"), {
   ),
 });
 const FILES: { kind: DownloadKind; label: string; extension: string }[] = [
-  { kind: "geojson", label: "Polígonos candidatos", extension: "GeoJSON" },
+  {
+    kind: "geojson",
+    label: "Polígonos de plantações de café",
+    extension: "GeoJSON",
+  },
   { kind: "classified", label: "Imagem com polígonos", extension: "PNG" },
   { kind: "tif", label: "Classificação", extension: "GeoTIFF" },
   { kind: "rgb", label: "Imagem RGB", extension: "PNG" },
@@ -369,76 +373,14 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   inspectorRef={panel}
                 />
               </div>
-              <div
-                className="map-toolbar"
-                role="group"
-                aria-label="Ferramentas da análise"
-              >
-                <MapLayersPicker
-                  basemap={basemap}
-                  onBasemap={selectBasemap}
-                  hasKey={hasMapKey}
-                  hasImage={Boolean(overlay)}
-                  showRaster={showRaster}
-                  onRaster={setShowRaster}
-                  showPolygons={showPolygons}
-                  onPolygons={setShowPolygons}
-                />
-                <span className="toolbar-separator" />
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger asChild>
-                    <button
-                      className="tool-button"
-                      aria-label="Baixar arquivos"
-                      aria-busy={Boolean(downloading)}
-                    >
-                      {downloading ? (
-                        <LoaderCircle size={17} className="spin" />
-                      ) : (
-                        <Download size={17} />
-                      )}
-                      <span>Baixar</span>
-                      <ChevronDown size={12} />
-                    </button>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                      className="menu-content download-menu"
-                      align="start"
-                      sideOffset={8}
-                      collisionPadding={12}
-                    >
-                      {FILES.map((file) => (
-                        <DropdownMenu.Item
-                          className="menu-item"
-                          key={file.kind}
-                          disabled={Boolean(downloading)}
-                          onSelect={() => void download(file.kind)}
-                        >
-                          {file.kind === "geojson" ? (
-                            <FileJson size={16} />
-                          ) : (
-                            <FileImage size={16} />
-                          )}
-                          <span>{file.label}</span>
-                          <span className="menu-detail">{file.extension}</span>
-                        </DropdownMenu.Item>
-                      ))}
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
-              </div>
               <div className="map-legend" aria-label="Legenda e área estimada">
                 <span
                   className={`legend-swatch${showPolygons ? "" : " is-hidden"}`}
                 />
-                <span>Áreas candidatas</span>
-                {(!inspectorOpen || inspectorTab !== "information") && (
-                  <strong>
-                    {formatNumber(data.result.candidate_area_ha)}{" "}
-                    <span>ha</span>
-                  </strong>
-                )}
+                <span className="legend-label">Plantações de Café</span>
+                <strong>
+                  {formatNumber(data.result.candidate_area_ha)} <span>ha</span>
+                </strong>
                 {!showPolygons && (
                   <span className="legend-hidden">Ocultas</span>
                 )}
@@ -462,22 +404,80 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                 </div>
               )}
             </div>
-            {!inspectorOpen && (
-              <button
-                ref={trigger}
-                className="button button-secondary map-results-button"
-                aria-label="Mostrar resultados"
-                aria-expanded={false}
-                aria-controls="analysis-inspector"
-                onClick={() => {
-                  focusInspector.current = true;
-                  setInspectorOpen(true);
-                }}
+            <div className="map-actions">
+              {!inspectorOpen && (
+                <div className="map-panel-control map-control-group">
+                  <MapToolButton
+                    ref={trigger}
+                    className="map-results-button"
+                    label="Mostrar resultados"
+                    aria-expanded={false}
+                    aria-controls="analysis-inspector"
+                    onClick={() => {
+                      focusInspector.current = true;
+                      setInspectorOpen(true);
+                    }}
+                  >
+                    <PanelRight size={16} />
+                  </MapToolButton>
+                </div>
+              )}
+              <div
+                className="map-toolbar map-control-group"
+                role="group"
+                aria-label="Ferramentas da análise"
               >
-                <PanelRight size={16} />
-                <span>Resultados</span>
-              </button>
-            )}
+                <MapLayersPicker
+                  basemap={basemap}
+                  onBasemap={selectBasemap}
+                  hasKey={hasMapKey}
+                  hasImage={Boolean(overlay)}
+                  showRaster={showRaster}
+                  onRaster={setShowRaster}
+                  showPolygons={showPolygons}
+                  onPolygons={setShowPolygons}
+                />
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <MapToolButton
+                      label="Baixar arquivos"
+                      aria-busy={Boolean(downloading)}
+                    >
+                      {downloading ? (
+                        <LoaderCircle size={17} className="spin" />
+                      ) : (
+                        <Download size={17} />
+                      )}
+                    </MapToolButton>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content
+                      className="menu-content download-menu"
+                      align="end"
+                      sideOffset={8}
+                      collisionPadding={12}
+                    >
+                      {FILES.map((file) => (
+                        <DropdownMenu.Item
+                          className="menu-item"
+                          key={file.kind}
+                          disabled={Boolean(downloading)}
+                          onSelect={() => void download(file.kind)}
+                        >
+                          {file.kind === "geojson" ? (
+                            <FileJson size={16} />
+                          ) : (
+                            <FileImage size={16} />
+                          )}
+                          <span>{file.label}</span>
+                          <span className="menu-detail">{file.extension}</span>
+                        </DropdownMenu.Item>
+                      ))}
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+              </div>
+            </div>
             {inspectorOpen && (
               <aside
                 ref={panel}
@@ -533,14 +533,14 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                     <div className="map-panel-body">
                       <dl className="result-summary">
                         <div className="primary-result">
-                          <dt>Área candidata</dt>
+                          <dt>Área estimada</dt>
                           <dd>
                             {formatNumber(data.result.candidate_area_ha)}{" "}
                             <span>ha</span>
                           </dd>
                         </div>
                         <div>
-                          <dt>Polígonos candidatos</dt>
+                          <dt>Polígonos identificados</dt>
                           <dd>
                             {formatNumber(
                               data.result.candidate_polygon_count,

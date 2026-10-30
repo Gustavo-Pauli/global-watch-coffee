@@ -2,11 +2,11 @@
 
 A organização vigente, incluindo a análise das quatro referências enviadas, está em [CONVERSA_E_NAVEGACAO_DO_MAPA.md](CONVERSA_E_NAVEGACAO_DO_MAPA.md): painel único e de geometria idêntica para Informações/Assistente, com os três controles no canto do canvas e sem deslocamento entre abas.
 
-Revisão de 30/10: [componentes, container e alinhamento](COMPONENTES_E_ALINHAMENTO.md). A coleção e o cabeçalho agora compartilham limites e gutters, os controles principais usam shadcn e a marca é somente Global Watch. As evidências abaixo documentam a revisão anterior do painel flutuante.
+Revisão vigente de 30/10: [componentes e organização](COMPONENTES_E_ALINHAMENTO.md). A coleção e o cabeçalho têm gutters alinhados sem largura central limitada; a contagem fica somente abaixo da tabela; o status tem cores; a sidebar recolhe ao abrir uma análise; a legenda fica no alto à esquerda e as ferramentas por ícones à direita. As evidências abaixo documentam a revisão anterior do painel flutuante.
 
 ## Navegação compartilhada
 
-A coleção e o mapa usam as mesmas regras de navegação. A sidebar mantém rótulos ou rail conforme a escolha do usuário, com preferência preservada entre rotas e recargas. A conta e os destinos não mudam de lugar quando uma análise é aberta.
+A coleção guarda a escolha de sidebar aberta ou recolhida. Cada entrada na análise começa recolhida e permite expansão manual transitória; voltar à coleção restaura sua escolha anterior. Conta e destinos preservam a identidade entre rotas.
 
 Nova análise tem um único lugar global no cabeçalho, inclusive no celular. A coleção não repete título/subtítulo/ação logo abaixo. O mapa não troca o shell nem acrescenta uma criação exclusiva à sidebar. Voltar à coleção usa a navegação Análises. Controles de mapa ficam no mapa; o painel mostra seu controle de reabertura somente quando está recolhido.
 

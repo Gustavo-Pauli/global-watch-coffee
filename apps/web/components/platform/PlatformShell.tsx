@@ -178,11 +178,18 @@ function AuthenticatedPlatform({
   const workspace = /^\/analyses\/[^/]+/.test(pathname);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [newOpen, setNewOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [collectionCollapsed, setCollectionCollapsed] = useState(false);
+  const [workspaceSidebar, setWorkspaceSidebar] = useState({
+    pathname,
+    collapsed: true,
+  });
+  const sidebarCollapsed = workspace
+    ? workspaceSidebar.pathname !== pathname || workspaceSidebar.collapsed
+    : collectionCollapsed;
   const [sidebarReady, setSidebarReady] = useState(false);
   useLayoutEffect(() => {
     try {
-      setSidebarCollapsed(
+      setCollectionCollapsed(
         localStorage.getItem("global-watch:sidebar:v1") === "collapsed",
       );
     } catch {
@@ -198,19 +205,27 @@ function AuthenticatedPlatform({
       cancelAnimationFrame(motionFrame);
     };
   }, []);
+  useLayoutEffect(() => {
+    // A manual expansion belongs to this visit, not the next analysis.
+    setWorkspaceSidebar((current) =>
+      current.pathname === pathname ? current : { pathname, collapsed: true },
+    );
+  }, [pathname]);
   function toggleSidebar() {
-    setSidebarCollapsed((current) => {
-      const next = !current;
-      try {
-        localStorage.setItem(
-          "global-watch:sidebar:v1",
-          next ? "collapsed" : "expanded",
-        );
-      } catch {
-        /* Optional browser preference. */
-      }
-      return next;
-    });
+    if (workspace) {
+      setWorkspaceSidebar({ pathname, collapsed: !sidebarCollapsed });
+      return;
+    }
+    const next = !collectionCollapsed;
+    setCollectionCollapsed(next);
+    try {
+      localStorage.setItem(
+        "global-watch:sidebar:v1",
+        next ? "collapsed" : "expanded",
+      );
+    } catch {
+      /* Optional browser preference. */
+    }
   }
 
   function navigation(compact: boolean, mobile = false) {

@@ -35,8 +35,6 @@
 }
 .sidebar-heading .brand {
   flex-shrink: 0;
-}
-.sidebar-heading .brand {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.35px;
@@ -92,18 +90,32 @@
 .platform-sidebar .navigation-account {
   padding: 8px;
 }
-.platform-sidebar .account-trigger {
-  height: auto;
-  min-height: 47px;
+.platform-sidebar .account-trigger,
+.navigation-sheet .account-trigger {
+  height: 52px;
+  min-height: 52px;
   display: grid;
   grid-template-columns: 31px minmax(0, 1fr) 15px;
+  align-items: center;
   gap: 10px;
   justify-content: start;
   padding: 7px;
   overflow: hidden;
   transition:
     grid-template-columns 200ms ease,
-    gap 200ms ease;
+    gap 200ms ease,
+    height 200ms ease;
+}
+.account-trigger .account-copy {
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  justify-content: center;
+  gap: 2px;
+  line-height: 16px;
+}
+.account-trigger .account-copy > * {
+  line-height: 16px;
 }
 .platform-sidebar .account-copy,
 .platform-sidebar .account-chevron {
@@ -111,9 +123,18 @@
     opacity 140ms ease,
     transform 200ms ease;
 }
+.platform-sidebar.is-rail .navigation-account {
+  padding: 8px 9px;
+}
 .platform-sidebar.is-rail .account-trigger {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
   grid-template-columns: 31px minmax(0, 0fr) 0px;
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
+  justify-content: center;
+  padding: 5.5px;
 }
 .platform-sidebar.is-rail .account-copy,
 .platform-sidebar.is-rail .account-chevron {
@@ -177,6 +198,7 @@
   .platform-sidebar .navigation-link,
   .navigation-label,
   .platform-sidebar .account-trigger,
+  .navigation-sheet .account-trigger,
   .platform-sidebar .account-copy,
   .platform-sidebar .account-chevron {
     transition: none !important;

@@ -8,6 +8,8 @@ A thread tem rolagem própria e o campo de pergunta fica fixo no rodapé. Inform
 
 Os três controles **aproximar, afastar e enquadrar** foram mantidos. Ficam no canto inferior direito do canvas, junto à divisória do painel em ambas as abas. Quando o painel é fechado, acompanham a borda externa do mapa ampliado. Créditos e escala também pertencem ao canvas e não ficam abaixo da conversa.
 
+A legenda **Plantações de Café**, com hectares permanentes, ocupa o alto à esquerda. Camadas/Baixar ocupam o alto à direita em um grupo vertical; o botão Mostrar resultados aparece acima, separado. Ambos usam o mesmo componente, tamanho, fundo, bordas e divisórias da navegação. Não existem dois padrões de botões cartográficos.
+
 ## Como as referências orientaram a decisão
 
 | Referência enviada | Padrão observado | Aplicação no Global Watch |

@@ -3,9 +3,10 @@
 import * as Popover from "radix-ui/popover";
 import * as RadioGroup from "radix-ui/radio-group";
 import * as Switch from "radix-ui/switch";
-import { ChevronDown, Layers, X } from "lucide-react";
+import { Layers, X } from "lucide-react";
 import { BASEMAPS, basemapSource, type BasemapId } from "../map-sources";
 import { formatDate } from "../analysis-types";
+import MapToolButton from "./MapToolButton";
 
 type Props = {
   basemap: BasemapId;
@@ -23,20 +24,15 @@ export default function MapLayersPicker(props: Props) {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <button
-          className="tool-button source-trigger"
-          aria-label="Camadas"
-        >
+        <MapToolButton className="source-trigger" label="Camadas">
           <Layers size={17} />
-          <span>Camadas</span>
-          <ChevronDown size={12} />
-        </button>
+        </MapToolButton>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
           className="map-layers-popover"
           sideOffset={9}
-          align="start"
+          align="end"
           collisionPadding={12}
           aria-label="Camadas"
         >
@@ -116,14 +112,14 @@ export default function MapLayersPicker(props: Props) {
             <div className="compact-layer-row">
               <label htmlFor="analysis-polygons">
                 <span className="layer-key layer-key-polygons" />
-                <span>Áreas candidatas</span>
+                <span>Plantações de Café</span>
               </label>
               <Switch.Root
                 className="switch"
                 id="analysis-polygons"
                 checked={props.showPolygons}
                 onCheckedChange={props.onPolygons}
-                aria-label="Áreas candidatas"
+                aria-label="Plantações de Café"
               >
                 <Switch.Thumb className="switch-thumb" />
               </Switch.Root>

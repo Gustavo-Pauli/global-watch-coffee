@@ -22,6 +22,8 @@ test('dedicated sign-in is readable on desktop and mobile', async ({ page }) => 
   await page.goto('/');
   await expect(page).toHaveURL(/\/analyses$/);
   await expect(page.getByRole('button', { name: /Continuar com Google/ })).toBeVisible();
+  await expect(page.locator('.brand')).toHaveText('Global Watch');
+  await expect(page.locator('.brand svg, .brand-product')).toHaveCount(0);
   await expect(page.locator('.leaflet-container')).toHaveCount(0);
   await noHorizontalOverflow(page);
   await screenshot(page, 'desktop-login.png');
@@ -128,7 +130,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await expect(page.locator('.leaflet-image-layer')).toHaveCount(0);
     await raster.click();
     await expect(page.locator('.leaflet-image-layer')).toBeVisible();
-    const polygons = page.getByRole('switch', { name: 'Áreas candidatas', exact: true });
+    const polygons = page.getByRole('switch', { name: 'Plantações de Café', exact: true });
     await polygons.click();
     await expect(page.locator('.leaflet-interactive')).toHaveCount(0);
     await polygons.click();
