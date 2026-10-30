@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import "@fontsource-variable/inter";
 import "leaflet/dist/leaflet.css";
-import "./ui.css";
 import "./globals.css";
-import "./map-workspace.css";
-import "./platform-shell.css";
-import "./navigation-shell.css";
-import "./collection.css";
+import "./leaflet.css";
 
 export const metadata: Metadata = {
   title: "Global Watch Coffee | Análise geoespacial",

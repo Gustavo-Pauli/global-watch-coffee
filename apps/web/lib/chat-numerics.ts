@@ -34,6 +34,8 @@ export function numericsSupported(answer: string, facts: Facts) {
     .replace(/(\*|_)(?=\S)([^\r\n]*?\S)\1/g, '$2')
     .replace(/[\u00a0\u202f]/g, ' ');
   if (/\d(?:[.,]\d+)?e[+-]?\d/i.test(text)) return false;
+  // A correct coverage value still cannot be relabelled as model accuracy.
+  if (/(?:precisão|acurácia|confiança|probabilidade)\s*(?:(?:do modelo|da classificação|de café|é|e|de|igual a)\s*|[:=]\s*)*\d+(?:[.,]\d+)?\s*%|\d+(?:[.,]\d+)?\s*%\s*(?:de\s*)?(?:precisão|acurácia|confiança|probabilidade)/i.test(text)) return false;
   let valid = true;
   text = text.replace(/Sentinel[-\s]?2/gi, 'Sentinel')
     .replace(/(?:pol[ií]gono(?:\s+(?:é|foi|o|de|com|identificado|pelo|n[úu]mero|identificador|identifica[çc][ãa]o|ID|n[º°]\.?)){0,8}|\bID)\s*[:#]?\s*(\d+)/gi, 'polígono $1');

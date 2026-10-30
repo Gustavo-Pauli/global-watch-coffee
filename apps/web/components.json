@@ -5,10 +5,10 @@
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "app/ui.css",
+    "css": "app/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
-    "prefix": "ui"
+    "prefix": ""
   },
   "iconLibrary": "lucide",
   "aliases": {

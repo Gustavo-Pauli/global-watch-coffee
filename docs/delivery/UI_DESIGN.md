@@ -13,7 +13,7 @@ A revisão de componentes e alinhamento está em [COMPONENTES_E_ALINHAMENTO.md](
 - Inter variável servida localmente por Fontsource; corpo 13–14 px e metadados 12 px. Inputs de toque usam 16 px.
 - Superfícies carvão neutras `#171717`, `#1d1d1f`, divisórias `#343437`, texto `#ededee`. Verde contido `#c0d6a6` nas geometrias e seleção; botão primário neutro.
 - Controles de aproximadamente 36 px no desktop e alvos ampliados no toque. Cantos de 5–8 px, sem grades de KPIs, gradientes, glows ou vidro.
-- Radix Dialog, Dropdown Menu, Avatar, Tabs, Switch e Tooltip com CSS próprio. Menus/dialogs não são imitações feitas apenas com `div` e handlers.
+- Componentes shadcn/Radix Dialog, Dropdown Menu, Avatar, Tabs, Switch e Tooltip estilizados com Tailwind 4 sem prefixo. Menus/dialogs não são imitações feitas apenas com `div` e handlers.
 
 ## Fluxos reais
 
@@ -44,3 +44,13 @@ No celular, o painel ocupa a área principal abaixo do cabeçalho em ambas as ab
 Não foram adicionados clima, alertas, séries, acurácia ou dados inventados. Áreas continuam candidatas, sem validação de campo. APIs, autorização por proprietário, processamento Python, armazenamento privado, cotas e retenção foram preservados. A coleção usa os até 30 registros recentes já retornados pela API; busca/filtro são locais nesse conjunto. Não se promete paginação ou busca global ainda não implementada. O nome original do upload não é persistido pelo schema atual; a identificação usa o ID real da análise.
 
 As referências enviadas, incluindo MapBiomas, orientam hierarquia e padrões de interação. Não são assets e não foram copiadas para o repositório. Decisões iniciais: [UI_REDESIGN.md](UI_REDESIGN.md). A evolução vigente de fontes/datas/painel está em [MAPAS_E_DATAS.md](MAPAS_E_DATAS.md), e a revisão do shell e da hierarquia em [SHELL_E_HIERARQUIA.md](SHELL_E_HIERARQUIA.md). Evidências técnicas e visuais não substituem a avaliação visual do usuário.
+
+## Inspeção multiespectral — 30/10/2026
+
+A migração preserva shell e controles e organiza componentes por feature. CSS permanece apenas nos tokens/base, animações e na ponte Leaflet; a ordem explícita das layers mantém as utilities acima da base.
+
+Camadas oferece Cor natural, Falsa cor e NDVI somente quando o resultado declara esses arquivos. O carregamento é sob demanda, com cache da análise, opacidade e preservação da última imagem válida em falhas. A escala NDVI representa [-1,1], sem categorias inventadas de saúde. Resultados legados continuam RGB.
+
+Explorar polígonos fica recolhido nas Informações: busca por número, ordenação por área/ID e paginação de 50 itens. Seleção na lista localiza o polígono; seleção no mapa mantém o painel como está. No celular, localizar fecha o painel para mostrar o mapa. Perguntar sobre o polígono apenas preenche o chat, sem enviar automaticamente.
+
+Qualidade e proveniência ficam em Sobre o resultado, sob divulgação progressiva. Metadados JSON estão no mesmo menu de downloads.

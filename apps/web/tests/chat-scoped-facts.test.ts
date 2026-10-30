@@ -102,6 +102,7 @@ test('quality counts and eligible percentage are field scoped and never authoriz
     'O modelo tem 99% de precisão.',
     'A confiança da classificação é 99%.',
     'A acurácia é de 99%.',
+    'A precisão é 99% dos pixels elegíveis.',
     'Há 4 pixels elegíveis.',
     'Há 990 pixels inválidos.',
     'Há 4 pixels excluídos pela SCL.',

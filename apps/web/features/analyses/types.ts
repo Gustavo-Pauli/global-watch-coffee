@@ -51,7 +51,7 @@ export function chatFallbackLabel(reason?: string) {
   if (reason === 'invalid_response') return 'Resposta por regras · resposta da IA incompleta';
   return 'Resposta por regras · IA indisponível';
 }
-export type DownloadKind = "geojson" | "classified" | "tif" | "rgb";
+export type DownloadKind = "geojson" | "classified" | "tif" | "rgb" | "result";
 
 export const SCENES = [
   {

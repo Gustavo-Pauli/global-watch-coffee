@@ -4,6 +4,8 @@ Aplicação de geoprocessamento para identificar **áreas candidatas a cafezais 
 
 Next.js + React + Better Auth/Google, **Prisma + PostgreSQL**, Supabase Storage privado e worker Python/FastAPI. A coleção em `/analyses` organiza as imagens; cada análise tem workspace cartográfico próprio. Upload, camadas, informações, arquivos e chat abrem sob demanda. O menu da conta permite editar o nome e sair. Não existem dados fictícios de clima, alertas ou séries temporais.
 
+Nas novas análises, **Camadas** alterna RGB, falsa cor e NDVI e ajusta a opacidade. **Explorar polígonos** localiza os resultados por número ou área; cada polígono mostra sua área e NDVI médio quando calculado. Qualidade da cena e proveniência ficam em **Sobre o resultado**, e o JSON está no menu de downloads. Análises anteriores continuam disponíveis em RGB.
+
 O estado verificável da entrega, comandos e limitações estão em [AUDITORIA_FINAL.md](docs/delivery/AUDITORIA_FINAL.md). Build local não comprova deploy. Nenhum push, alteração de visibilidade ou deploy é executado automaticamente.
 
 ## Executar localmente
@@ -103,6 +105,7 @@ O preflight é somente leitura, não exibe segredos e retorna código 1 se falta
 
 ## Documentos
 
+- [Organização atual, inspeção e contrato de resultados](docs/delivery/ARQUITETURA_E_INSPECAO.md)
 - [Revisão de 30/10: correções, conversa e pendências públicas](docs/delivery/REVISAO_ENTREGA_2026-10-30.md)
 - [Auditoria final e matriz de conformidade](docs/delivery/AUDITORIA_FINAL.md)
 - [Migração Prisma sem perda de dados](docs/delivery/PRISMA_MIGRATION.md)

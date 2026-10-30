@@ -1,4 +1,4 @@
-import { test, expect, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, type BrowserContext } from '@playwright/test';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createClient } from '@supabase/supabase-js';
@@ -7,23 +7,20 @@ import { createHash, createHmac, randomUUID } from 'node:crypto';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const screenshots = path.resolve('../../docs/delivery/screenshots');
+import { capture as screenshot, noHorizontalOverflow, screenshots } from './support/ui';
 
-async function screenshot(page: Page, name: string) {
-  await page.screenshot({ path: path.join(screenshots, name), fullPage: true, animations: 'disabled' });
-}
-
-async function noHorizontalOverflow(page: Page) {
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-}
+const disposableOutputs = [
+  'candidatos.geojson', 'imagem_classificada.png', 'imagem_mapa.png', 'imagem_rgb.png',
+  'classificacao.tif', 'resultado.json', 'mapa_falsa_cor.png', 'mapa_ndvi.png',
+];
 
 test('dedicated sign-in is readable on desktop and mobile', async ({ page }) => {
   await mkdir(screenshots, { recursive: true });
   await page.goto('/');
   await expect(page).toHaveURL(/\/analyses$/);
   await expect(page.getByRole('button', { name: /Continuar com Google/ })).toBeVisible();
-  await expect(page.locator('.brand')).toHaveText('Global Watch');
-  await expect(page.locator('.brand svg, .brand-product')).toHaveCount(0);
+  await expect(page.getByTestId('brand')).toHaveText('Global Watch');
+  await expect(page.getByTestId('brand').locator('svg, img')).toHaveCount(0);
   await expect(page.locator('.leaflet-container')).toHaveCount(0);
   await noHorizontalOverflow(page);
   await screenshot(page, 'desktop-login.png');
@@ -161,8 +158,8 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await page.getByRole('tab', { name: 'Assistente', exact: true }).click();
     await page.getByRole('textbox', { name: 'Pergunta sobre a análise', exact: true }).fill('Qual é a área candidata e quais são as limitações?');
     await page.getByRole('button', { name: 'Enviar pergunta', exact: true }).click();
-    await expect(page.locator('.chat-message.assistant')).toHaveCount(1);
-    await expect(page.locator('.chat-message.assistant')).toContainText(/candidatos|candidata/);
+    await expect(page.getByTestId('chat-message-assistant')).toHaveCount(1);
+    await expect(page.getByTestId('chat-message-assistant')).toContainText(/candidatos|candidata/);
     await screenshot(page, 'desktop-chat.png');
     await page.getByRole('button', { name: 'Fechar painel', exact: true }).click();
 
@@ -249,7 +246,7 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
           continue;
         }
         const prefix = `users/${createHash('sha256').update(ownerId).digest('hex')}/analyses/${analysis.id}`;
-        const files = [analysis.imagePath, analysis.sclPath, ...['candidatos.geojson', 'imagem_classificada.png', 'imagem_mapa.png', 'imagem_rgb.png', 'classificacao.tif', 'resultado.json'].map(file => `${prefix}/out/${file}`)].filter((file): file is string => !!file);
+        const files = [analysis.imagePath, analysis.sclPath, ...disposableOutputs.map(file => `${prefix}/out/${file}`)].filter((file): file is string => !!file);
         const { error } = await storage.storage.from(bucket).remove(files);
         if (error) throw new Error('Disposable browser Storage cleanup failed.');
       }

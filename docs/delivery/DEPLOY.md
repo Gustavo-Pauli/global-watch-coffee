@@ -38,7 +38,7 @@ As pastas `data` e `models` devem existir no checkout; não mova a raiz para `ap
 
 Variáveis: `WORKER_SECRET` idêntico ao Next, `SUPABASE_URL` e `NEXT_CALLBACK_URL=https://SEU-SITE.vercel.app`. Modelo v2 incluso; `COFFEE_MODEL` é override administrativo, nunca valor de upload. Não forneça credenciais PostgreSQL, chave Supabase administrativa ou sessão de usuário ao worker.
 
-Confirme `/health` com `model_available=true`, um job real, callback e os seis arquivos. O worker aceita só URLs assinadas do projeto configurado, autentica antes de ler o JSON, limita corpos, rasters e concorrência. Não é uma fila durável: reiniciar cancela a tarefa em memória; a aplicação marca ausência de callback como erro após o prazo.
+Publique o worker antes do Next. Confirme `/health` com `model_available=true` e `output_schema_versions: [1,2]`, um job real, callback e os oito arquivos declarados no resultado de esquema 2. Resultados anteriores continuam com os seis originais, sem migração SQL. O worker aceita só URLs assinadas do projeto configurado, autentica antes de ler o JSON, limita corpos, rasters e concorrência. Não é uma fila durável: reiniciar cancela a tarefa em memória; a aplicação marca ausência de callback como erro após o prazo.
 
 Render Free suspende após **15 minutos sem tráfego recebido**, leva cerca de um minuto para acordar e perde alterações no disco local. Há 750 horas gratuitas por workspace/mês e limites de transferência/build. Não acrescente tráfego artificial para impedir suspensão. [Render Free](https://render.com/docs/free). O plano de 512 MiB precisa de teste real Linux; medições locais constam em [AUDITORIA_GEO.md](AUDITORIA_GEO.md) e não provam o consumo no Render.
 

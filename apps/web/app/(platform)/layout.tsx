@@ -1,4 +1,4 @@
-import PlatformShell from "@/components/platform/PlatformShell";
+import PlatformShell from "@/features/shell/PlatformShell";
 
 export default function PlatformLayout({
   children,

@@ -1,4 +1,4 @@
-import AnalysisWorkspace from "@/components/platform/AnalysisWorkspace";
+import AnalysisWorkspace from "@/features/map/AnalysisWorkspace";
 
 export default async function Analysis({
   params,

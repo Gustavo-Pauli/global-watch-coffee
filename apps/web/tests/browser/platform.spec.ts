@@ -10,40 +10,24 @@ import { getCookies } from 'better-auth/cookies';
 import { test, expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import type { FeatureCollection, Polygon } from 'geojson';
 
-const screenshots = path.resolve('../../docs/delivery/screenshots');
+import { capture, noHorizontalOverflow, screenshots, settled } from './support/ui';
+import { assertResultFacts } from './support/result-facts';
 const outputs = ['candidatos.geojson', 'imagem_classificada.png', 'imagem_mapa.png', 'imagem_rgb.png', 'classificacao.tif', 'resultado.json'];
 
-async function settled(page: Page) {
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-    await Promise.all(document.getAnimations()
-      .filter(animation => animation.effect?.getTiming().iterations !== Infinity)
-      .map(animation => animation.finished.catch(() => {})));
-    await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-  });
-}
-
-async function capture(page: Page, filename: string) {
-  await settled(page);
-  await page.screenshot({ path: path.join(screenshots, filename), fullPage: true, animations: 'disabled' });
-}
-
 async function noOverflow(page: Page) {
-  await settled(page);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  for (const button of await page.locator('.map-toolbar button, .map-results-button').all()) {
+  await noHorizontalOverflow(page);
+  for (const button of await page.locator('[data-testid="map-toolbar"] button, [data-testid="map-results-control"] button').all()) {
     const rectangle = await button.boundingBox();
     if (!rectangle) continue;
     expect(rectangle.x).toBeGreaterThanOrEqual(0);
     expect(rectangle.x + rectangle.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   }
   if (await page.getByRole('dialog').count()) return;
-  const groups = await page.locator('.map-toolbar, .map-panel-control, .map-navigation, .map-legend, .leaflet-control-scale, .leaflet-control-attribution, .maptiler-logo, .analysis-inspector').evaluateAll(elements => elements.flatMap(element => {
+  const groups = await page.locator('[data-testid="map-toolbar"], [data-testid="map-results-control"], [data-testid="map-navigation"], [data-testid="map-legend"], .leaflet-control-scale, .leaflet-control-attribution, [data-testid="maptiler-logo"], [data-testid="result-inspector"]').evaluateAll(elements => elements.flatMap(element => {
     const style = getComputedStyle(element);
     const rectangle = element.getBoundingClientRect();
     if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0 || !rectangle.width || !rectangle.height) return [];
-    return [{ name: element.className, x: rectangle.x, y: rectangle.y, right: rectangle.right, bottom: rectangle.bottom }];
+    return [{ name: element.getAttribute("data-testid") ?? element.className, x: rectangle.x, y: rectangle.y, right: rectangle.right, bottom: rectangle.bottom }];
   }));
   for (let first = 0; first < groups.length; first++) {
     for (let second = first + 1; second < groups.length; second++) {
@@ -58,7 +42,7 @@ async function noOverflow(page: Page) {
 async function mapFrame(page: Page) {
   await settled(page);
   const rectangle = (element: Element) => { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; };
-  const canvas = await page.locator('.map-canvas').evaluate(rectangle);
+  const canvas = await page.getByTestId('map-canvas').evaluate(rectangle);
   const overlay = await page.locator('.leaflet-image-layer').evaluate(rectangle);
   return {
     canvas,
@@ -79,16 +63,16 @@ function sameMapFrame(before: Awaited<ReturnType<typeof mapFrame>>, after: Await
 async function dockedInspector(page: Page) {
   await settled(page);
   const rectangle = (element: Element) => { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; };
-  const canvas = await page.locator('.map-canvas').evaluate(rectangle);
-  const workspace = (await page.locator('.analysis-workspace').boundingBox())!;
-  const inspector = (await page.locator('.analysis-inspector').boundingBox())!;
+  const canvas = await page.getByTestId('map-canvas').evaluate(rectangle);
+  const workspace = (await page.getByTestId('map-workspace').boundingBox())!;
+  const inspector = (await page.getByTestId('result-inspector').boundingBox())!;
   expect(canvas.x).toBeCloseTo(workspace.x, 0);
   expect(inspector.y).toBeCloseTo(workspace.y, 0);
   expect(inspector.height).toBeCloseTo(workspace.height, 0);
   if (page.viewportSize()!.width < 900) {
     expect(inspector.x).toBeCloseTo(workspace.x, 0);
     expect(inspector.width).toBeCloseTo(workspace.width, 0);
-    await expect(page.locator('.map-stage')).toHaveCSS('visibility', 'hidden');
+    await expect(page.getByTestId('map-stage')).toHaveCSS('visibility', 'hidden');
     await expect(page.getByRole('button', { name: 'Aproximar mapa', exact: true })).toHaveCount(0);
   } else {
     expect(inspector.width).toBe(340);
@@ -96,7 +80,7 @@ async function dockedInspector(page: Page) {
     expect(canvas.width + inspector.width).toBeCloseTo(workspace.width, 0);
   }
   if (page.viewportSize()!.width >= 900) {
-    const navigation = page.locator('.map-navigation');
+    const navigation = page.getByTestId('map-navigation');
     const bounds = (await navigation.boundingBox())!;
     await expect(navigation.getByRole('button')).toHaveCount(3);
     for (const label of ['Aproximar mapa', 'Afastar mapa', 'Enquadrar imagem']) await expect(navigation.getByRole('button', { name: label, exact: true })).toBeVisible();
@@ -113,7 +97,7 @@ async function compactHeader(page: Page) {
   expect(header.height).toBeLessThanOrEqual(48);
   if (page.viewportSize()!.width > 760) expect(header.height).toBe(48);
   await expect(page.getByTestId('page-header').getByRole('button', { name: /Recolher navegação|Expandir navegação/ })).toHaveCount(0);
-  const acquisition = page.locator('.header-acquisition');
+  const acquisition = page.getByTestId('acquisition-date');
   if (await acquisition.count()) {
     const date = (await acquisition.boundingBox())!;
     const title = (await page.getByTestId('page-header').getByRole('heading', { level: 1 }).boundingBox())!;
@@ -132,7 +116,7 @@ async function controlTypography(control: Locator, weight?: string) {
 
 async function accountFootprint(account: Locator, compact: boolean) {
   const box = (await account.boundingBox())!;
-  const avatar = (await account.locator('.avatar').boundingBox())!;
+  const avatar = (await account.getByTestId('account-avatar').boundingBox())!;
   expect(Math.abs(avatar.y + avatar.height / 2 - box.y - box.height / 2)).toBeLessThanOrEqual(1);
   if (compact) {
     expect(box.width).toBe(44);
@@ -141,14 +125,14 @@ async function accountFootprint(account: Locator, compact: boolean) {
   } else {
     expect(box.height).toBeGreaterThanOrEqual(50);
     expect(box.height).toBeLessThanOrEqual(52);
-    await expect(account.locator('.account-copy')).toHaveCSS('gap', '2px');
+    await expect(account.getByTestId('account-copy')).toHaveCSS('gap', '2px');
   }
 }
 
 async function collectionAlignment(page: Page) {
   await settled(page);
-  const header = page.locator('.page-header-inner.page-container');
-  const content = page.locator('main.collection-page.page-container');
+  const header = page.getByTestId('header-inner');
+  const content = page.getByTestId('collection-page');
   const headerBox = (await header.boundingBox())!;
   const contentBox = (await content.boundingBox())!;
   expect(headerBox.x).toBeCloseTo(contentBox.x, 0);
@@ -159,14 +143,14 @@ async function collectionAlignment(page: Page) {
   await expect(content).toHaveCSS('padding-left', padding);
   await expect(content).toHaveCSS('padding-right', padding);
   const heading = (await header.getByRole('heading', { level: 1 }).boundingBox())!;
-  const toolbar = (await content.locator('.collection-toolbar').boundingBox())!;
-  const table = (await content.locator('.analysis-table-wrap').boundingBox())!;
+  const toolbar = (await content.getByTestId('collection-toolbar').boundingBox())!;
+  const table = (await content.getByTestId('analysis-table-wrap').boundingBox())!;
   const create = (await header.getByRole('button', { name: 'Nova análise', exact: true }).boundingBox())!;
   if (page.viewportSize()!.width > 760) expect(heading.x).toBeCloseTo(toolbar.x, 0);
   expect(toolbar.x).toBeCloseTo(table.x, 0);
   expect(create.x + create.width).toBeCloseTo(table.x + table.width, 0);
   if (page.viewportSize()!.width === 1920) {
-    const surface = (await page.locator('.platform-content').boundingBox())!;
+    const surface = (await page.getByTestId('app-main').boundingBox())!;
     expect(headerBox.x).toBeCloseTo(surface.x, 0);
     expect(headerBox.width).toBeCloseTo(surface.width, 0);
     expect(headerBox.width).toBeGreaterThan(1120);
@@ -174,8 +158,8 @@ async function collectionAlignment(page: Page) {
 }
 
 async function mapControls(page: Page) {
-  const open = await page.locator('.analysis-inspector').count() > 0;
-  const toolbar = page.locator('.map-toolbar');
+  const open = await page.getByTestId('result-inspector').count() > 0;
+  const toolbar = page.getByTestId('map-toolbar');
   if (open && page.viewportSize()!.width < 900) {
     await expect(toolbar).not.toBeVisible();
     return;
@@ -183,14 +167,14 @@ async function mapControls(page: Page) {
   await expect(toolbar).toBeVisible();
   await expect(toolbar.getByRole('button')).toHaveCount(2);
   const { canvas } = await mapFrame(page);
-  const actions = (await page.locator('.map-actions').boundingBox())!;
+  const actions = (await page.getByTestId('map-actions').boundingBox())!;
   const tools = (await toolbar.boundingBox())!;
-  const legend = (await page.locator('.map-legend').boundingBox())!;
+  const legend = (await page.getByTestId('map-legend').boundingBox())!;
   const inset = page.viewportSize()!.width <= 760 ? 12 : 14;
   expect(canvas.x + canvas.width - actions.x - actions.width).toBeCloseTo(inset, 0);
   expect(actions.y - canvas.y).toBeCloseTo(inset, 0);
   expect(tools.x).toBeCloseTo(actions.x, 0);
-  const panelControl = page.locator('.map-panel-control');
+  const panelControl = page.getByTestId('map-results-control');
   if (open) {
     await expect(panelControl).toHaveCount(0);
     expect(tools.y).toBeCloseTo(actions.y, 0);
@@ -208,7 +192,7 @@ async function mapControls(page: Page) {
     expect(await button.innerText()).toBe('');
     expect(await button.locator('svg').count()).toBeGreaterThan(0);
   }
-  const navigation = page.locator('.map-navigation');
+  const navigation = page.getByTestId('map-navigation');
   await expect(navigation.getByRole('button')).toHaveCount(3);
   for (const label of ['Aproximar mapa', 'Afastar mapa', 'Enquadrar imagem']) {
     await expect(navigation.getByRole('button', { name: label, exact: true })).toBeVisible();
@@ -218,8 +202,6 @@ async function mapControls(page: Page) {
     return { background: style.backgroundColor, border: style.borderColor, borderWidth: style.borderWidth,
       radius: style.borderRadius, padding: style.padding, shadow: style.boxShadow, direction: style.flexDirection, gap: style.gap };
   };
-  await expect(toolbar).toHaveClass(/map-control-group/);
-  await expect(navigation).toHaveClass(/map-control-group/);
   await expect(toolbar).toHaveCSS('flex-direction', 'column');
   await expect(toolbar).toHaveCSS('padding', '0px');
   expect(await toolbar.evaluate(groupStyle)).toEqual(await navigation.evaluate(groupStyle));
@@ -242,7 +224,6 @@ async function mapControls(page: Page) {
       padding: style.padding, font: style.font, shadow: style.boxShadow };
   });
   for (const control of controls) {
-    await expect(control).toHaveClass(/map-control-button/);
     const rectangle = (await control.boundingBox())!;
     expect(rectangle.width).toBe(size);
     expect(rectangle.height).toBe(size);
@@ -269,9 +250,9 @@ async function readyMap(page: Page) {
   await expect(page.locator('.leaflet-image-layer')).toBeVisible();
   await expect.poll(() => page.locator('.leaflet-image-layer').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   await expect(page.locator('.leaflet-interactive')).toHaveCount(24);
-  await expect(page.locator('.map-legend')).toContainText('Plantações de Café');
-  await expect(page.locator('.map-legend')).toContainText('22,66');
-  const date = page.locator('.header-acquisition');
+  await expect(page.getByTestId('map-legend')).toContainText('Plantações de Café');
+  await expect(page.getByTestId('map-legend')).toContainText('22,66');
+  const date = page.getByTestId('acquisition-date');
   await expect(date).toHaveText('16/08/2025');
   await expect(date).toHaveAttribute('datetime', '2025-08-16');
   await expect(date).toHaveAttribute('aria-label', /Aquisição:.*2025/);
@@ -333,6 +314,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
   assert.equal(result.coffee_validated, false);
   assert.equal(result.candidate_polygon_count, 24);
   assert.equal(geojson.features.length, result.candidate_polygon_count);
+  assertResultFacts(result, geojson);
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: database.toString(), max: 2 }) });
   const storage = createClient(process.env.SUPABASE_URL!, (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY)!, { auth: { persistSession: false } });
   const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'geo-private';
@@ -390,48 +372,56 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     expect(documentResponse?.headers()['referrer-policy']).toBe('strict-origin-when-cross-origin');
     const record = page.getByRole('link', { name: `Abrir análise ${id}`, exact: true });
     await expect(record).toBeVisible();
-    await expect(page.locator('.analysis-table-wrap')).toHaveAttribute('aria-busy', 'false');
+    await expect(page.getByTestId('analysis-table-wrap')).toHaveAttribute('aria-busy', 'false');
     const header = page.getByTestId('page-header');
-    const sidebar = page.locator('.platform-sidebar');
+    const sidebar = page.getByTestId('app-sidebar');
     const create = header.getByRole('button', { name: 'Nova análise', exact: true });
     await expect(header.getByRole('heading', { level: 1, name: 'Análises', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Nova análise', exact: true })).toHaveCount(1);
     await expect(sidebar.getByRole('link', { name: 'Análises', exact: true })).toBeVisible();
     await expect(sidebar.getByRole('button', { name: 'Menu da conta', exact: true })).toBeVisible();
-    await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
-    await expect(page.locator('.platform')).toHaveAttribute('data-sidebar-ready', 'true');
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'false');
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-ready', 'true');
     await settled(page);
     await compactHeader(page);
     await expect(sidebar.getByRole('button', { name: 'Recolher navegação', exact: true })).toBeVisible();
-    const collectionSidebarWidth = (await sidebar.boundingBox())!.width;
+    const collectionSidebar = (await sidebar.boundingBox())!;
+    const collectionSidebarWidth = collectionSidebar.width;
+    expect(collectionSidebarWidth).toBe(224);
+    expect(collectionSidebar.x).toBe(0);
+    expect(collectionSidebar.y).toBe(0);
+    expect(collectionSidebar.height).toBe(page.viewportSize()!.height);
+    const collectionSurface = (await page.getByTestId('app-main').boundingBox())!;
+    expect(collectionSurface.x).toBe(collectionSidebarWidth);
+    expect(collectionSurface.y).toBe(0);
     const collectionNavigation = await sidebar.getByRole('link').allTextContents();
     const collectionCreate = (await create.boundingBox())!;
-    await expect(sidebar.locator('.brand')).toHaveText('Global Watch');
-    await expect(sidebar.locator('.brand svg, .brand-product')).toHaveCount(0);
-    await expect(page.locator('.collection-caption')).toHaveCount(1);
-    await expect(page.locator('.collection-caption')).toHaveText('1 análise');
-    await expect(header.locator('.record-count')).toHaveCount(0);
+    await expect(sidebar.getByTestId('brand')).toHaveText('Global Watch');
+    await expect(sidebar.getByTestId('brand').locator('svg, img')).toHaveCount(0);
+    await expect(page.getByTestId('collection-caption')).toHaveCount(1);
+    await expect(page.getByTestId('collection-caption')).toHaveText('1 análise');
+    await expect(header).not.toContainText(/\d+ an[áa]lise/);
     await accountFootprint(sidebar.getByRole('button', { name: 'Menu da conta', exact: true }), false);
     await controlTypography(create, '500');
     await controlTypography(page.getByLabel('Buscar análises', { exact: true }));
     const statusFilter = page.getByRole('combobox', { name: 'Filtrar por status', exact: true });
     await controlTypography(statusFilter, '500');
     await expect(statusFilter).toHaveAttribute('data-slot', 'select-trigger');
-    await expect(page.locator('select.filter-select')).toHaveCount(0);
+    await expect(page.locator('select[aria-label="Filtrar por status"]')).toHaveCount(0);
     await collectionAlignment(page);
     await page.setViewportSize({ width: 1920, height: 1080 });
     await collectionAlignment(page);
     await capture(page, 'wide-analyses.png');
     await page.setViewportSize({ width: 1440, height: 1000 });
-    const neutralStatusColor = await statusFilter.locator('.status-dot').evaluate(element => getComputedStyle(element).backgroundColor);
+    const neutralStatusColor = await statusFilter.getByTestId('status-dot').evaluate(element => getComputedStyle(element).backgroundColor);
     await statusFilter.click();
     await expect(page.getByRole('listbox')).toBeVisible();
     const statusColors: Record<string, string> = {};
     for (const label of ['Todos os status', 'Aguardando envio', 'Processando', 'Concluída', 'Falha no processamento']) {
       const option = page.getByRole('option', { name: label, exact: true });
       await expect(option).toBeVisible();
-      statusColors[label] = await option.locator('.status-dot').evaluate(element => getComputedStyle(element).backgroundColor);
+      statusColors[label] = await option.getByTestId('status-dot').evaluate(element => getComputedStyle(element).backgroundColor);
       expect(statusColors[label]).not.toBe('rgba(0, 0, 0, 0)');
     }
     expect(statusColors['Concluída']).not.toBe(statusColors['Falha no processamento']);
@@ -444,8 +434,8 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(statusFilter).toContainText('Concluída');
     await expect(statusFilter).toBeFocused();
     await expect(record).toBeVisible();
-    expect(await statusFilter.locator('.status-dot').evaluate(element => getComputedStyle(element).backgroundColor)).toBe(statusColors['Concluída']);
-    expect(await page.locator('.analysis-table .status-ready .status-dot').evaluate(element => getComputedStyle(element).backgroundColor)).toBe(statusColors['Concluída']);
+    expect(await statusFilter.getByTestId('status-dot').evaluate(element => getComputedStyle(element).backgroundColor)).toBe(statusColors['Concluída']);
+    expect(await page.getByTestId('analysis-table').locator('[data-testid="status-dot"][data-status="ready"]').evaluate(element => getComputedStyle(element).backgroundColor)).toBe(statusColors['Concluída']);
     await capture(page, 'desktop-filter-ready.png');
     await page.keyboard.press('Space');
     await expect(page.getByRole('listbox')).toBeVisible();
@@ -458,11 +448,11 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await page.keyboard.press('Enter');
     await expect(record).not.toBeVisible();
     await expect(page.getByRole('heading', { name: 'Nenhuma análise encontrada', exact: true })).toBeVisible();
-    await expect(page.locator('.collection-caption')).toHaveText('0 de 1 análise');
+    await expect(page.getByTestId('collection-caption')).toHaveText('0 de 1 análise');
     await page.getByRole('button', { name: 'Limpar filtros', exact: true }).click();
     await expect(record).toBeVisible();
     await expect(statusFilter).toContainText('Todos os status');
-    await expect(page.locator('.collection-caption')).toHaveText('1 análise');
+    await expect(page.getByTestId('collection-caption')).toHaveText('1 análise');
     await statusFilter.click();
     await page.keyboard.press('Escape');
     await expect(statusFilter).toBeFocused();
@@ -492,12 +482,13 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
 
     // Collection density persists; opening a map starts a separate compact visit.
     await sidebar.getByRole('button', { name: 'Recolher navegação', exact: true }).click();
-    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true');
     await settled(page);
     const collapsedSidebarWidth = (await sidebar.boundingBox())!.width;
+    expect(collapsedSidebarWidth).toBe(64);
     expect(collapsedSidebarWidth).toBeLessThan(collectionSidebarWidth);
     await accountFootprint(sidebar.getByRole('button', { name: 'Menu da conta', exact: true }), true);
-    const normalTransition = await page.locator('.platform').evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(',').map(value => Number.parseFloat(value))));
+    const normalTransition = await page.getByTestId('app-shell').evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(',').map(value => Number.parseFloat(value))));
     expect(normalTransition).toBeGreaterThan(0);
     expect(normalTransition).toBeLessThanOrEqual(0.3);
     await sidebar.getByRole('link', { name: 'Análises', exact: true }).hover();
@@ -519,18 +510,18 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(page.getByRole('tooltip', { name: 'Menu da conta', exact: true })).toBeVisible();
     await page.reload();
     await expect(record).toBeVisible();
-    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
-    await expect(page.locator('.platform')).toHaveAttribute('data-sidebar-ready', 'true');
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true');
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-ready', 'true');
     await expect(sidebar.getByRole('button', { name: 'Expandir navegação', exact: true })).toBeVisible();
     await sidebar.getByRole('button', { name: 'Expandir navegação', exact: true }).click();
     await settled(page);
-    await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'false');
     // These are our own disposable records; verify recoverable actions against
     // the real terminal API states rather than retrying a failed job forever.
     for (const status of ['error', 'uploading'] as const) {
       await prisma.analysis.update({ where: { id }, data: { status, errorCode: status === 'error' ? 'processing_failed' : null } });
       await page.goto(`/analyses/${id}`);
-      const state = page.locator('.analysis-state');
+      const state = page.getByTestId('analysis-state');
       await expect(state.getByRole('alert')).toBeVisible();
       await expect(state.getByRole('button', { name: 'Tentar novamente', exact: true })).toHaveCount(0);
       await state.getByRole('button', { name: 'Nova análise', exact: true }).click();
@@ -544,11 +535,11 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(record).toBeVisible();
     await record.click();
     await readyMap(page);
-    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true');
     expect((await sidebar.boundingBox())!.width).toBe(collapsedSidebarWidth);
     const collapsedFrame = await mapFrame(page);
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    const reducedTransition = await page.locator('.platform').evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(',').map(value => Number.parseFloat(value))));
+    const reducedTransition = await page.getByTestId('app-shell').evaluate(element => Math.max(...getComputedStyle(element).transitionDuration.split(',').map(value => Number.parseFloat(value))));
     expect(reducedTransition).toBeLessThanOrEqual(0.01);
     await sidebar.getByRole('button', { name: 'Expandir navegação', exact: true }).click();
     await settled(page);
@@ -563,7 +554,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(header.getByRole('heading', { level: 1, name: `Análise ${id.slice(0, 8)}`, exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Nova análise', exact: true })).toHaveCount(1);
-    const workspaceHeader = (await page.locator('.workspace-header-inner').boundingBox())!;
+    const workspaceHeader = (await page.getByTestId('header-inner').boundingBox())!;
     const workspaceCreate = (await create.boundingBox())!;
     expect(workspaceCreate.x + workspaceCreate.width).toBeCloseTo(workspaceHeader.x + workspaceHeader.width - 14, 0);
     expect((await create.boundingBox())!.width).toBe(collectionCreate.width);
@@ -585,7 +576,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     expect(tileRequests.length).toBeGreaterThan(0);
     expect(tileRequests.every(tile => tile.host === 'api.maptiler.com' && tile.referer === tileOrigin)).toBe(true);
     expect(tileResponses.every(status => status === 200 || status === 304)).toBe(true);
-    await expect(page.locator('.basemap-error')).toHaveCount(0);
+    await expect(page.getByTestId('basemap-error')).toHaveCount(0);
     await noOverflow(page);
     await capture(page, 'desktop-results.png');
     await expect(page.getByRole('tabpanel', { name: 'Informações', exact: true })).toBeVisible();
@@ -608,7 +599,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const layers = page.getByRole('button', { name: 'Camadas', exact: true });
     await layers.hover();
     await expect(page.getByRole('tooltip', { name: 'Camadas', exact: true })).toBeVisible();
-    await expect(page.locator('.map-tool-tooltip')).toHaveAttribute('data-side', 'left');
+    await expect(page.getByTestId('map-tool-tooltip')).toHaveAttribute('data-side', 'left');
     await page.mouse.move(700, 400, { steps: 12 });
     await expect(page.getByRole('tooltip', { name: 'Camadas', exact: true })).not.toBeVisible();
     await layers.click();
@@ -647,9 +638,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await page.mouse.move(700, 400, { steps: 12 });
     await page.getByRole('button', { name: 'Baixar arquivos', exact: true }).focus();
     await expect(page.getByRole('tooltip', { name: 'Baixar arquivos', exact: true })).toBeVisible();
-    await expect(page.locator('.map-tool-tooltip')).toHaveAttribute('data-side', 'left');
+    await expect(page.getByTestId('map-tool-tooltip')).toHaveAttribute('data-side', 'left');
     await page.getByRole('button', { name: 'Baixar arquivos', exact: true }).click();
-    await expect(page.locator('.download-menu')).toHaveAttribute('data-side', 'left');
+    await expect(page.getByTestId('download-menu')).toHaveAttribute('data-side', 'left');
     await expect(page.getByRole('tooltip', { name: 'Baixar arquivos', exact: true })).not.toBeVisible();
     await capture(page, 'desktop-download.png');
     const downloaded = page.waitForEvent('download');
@@ -662,7 +653,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const info = page.getByRole('tabpanel', { name: 'Informações', exact: true });
     const resultFrame = await mapFrame(page);
     const informationLayout = await dockedInspector(page);
-    const informationNavigation = (await page.locator('.map-navigation').boundingBox())!;
+    const informationNavigation = (await page.getByTestId('map-navigation').boundingBox())!;
     expect(informationLayout.inspector.width).toBeGreaterThanOrEqual(320);
     expect(informationLayout.inspector.width).toBeLessThanOrEqual(340);
     expect(informationLayout.inspector.height).toBeCloseTo(informationLayout.canvas.height, 0);
@@ -673,7 +664,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(info).toContainText('0,559');
     await expect(info.locator('time, details')).toHaveCount(0);
     await expect(info).not.toContainText('Áreas potenciais de café, sem validação em campo.');
-    await expect(page.locator('.header-acquisition')).toHaveCount(1);
+    await expect(page.getByTestId('acquisition-date')).toHaveCount(1);
     const aboutTrigger = info.getByRole('button', { name: 'Sobre o resultado', exact: true });
     await aboutTrigger.click();
     const about = page.getByRole('dialog', { name: 'Sobre o resultado', exact: true });
@@ -698,7 +689,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(assistant).toBeVisible();
     sameMapFrame(resultFrame, await mapFrame(page));
     const chatLayout = await dockedInspector(page);
-    const chatNavigation = (await page.locator('.map-navigation').boundingBox())!;
+    const chatNavigation = (await page.getByTestId('map-navigation').boundingBox())!;
     expect(chatNavigation).toEqual(informationNavigation);
     expect(chatNavigation.y).toBeCloseTo(informationNavigation.y, 0);
     expect(chatLayout.inspector).toEqual(informationLayout.inspector);
@@ -711,15 +702,15 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(composer).toHaveValue('Como interpretar as áreas candidatas?');
     await expect(composer).toBeFocused();
     await expect(assistant.getByRole('button', { name: 'Enviar pergunta', exact: true })).toBeEnabled();
-    const composerBefore = (await assistant.locator('.chat-composer').boundingBox())!;
-    const scroll = assistant.locator('.chat-scroll');
+    const composerBefore = (await assistant.getByTestId('chat-composer').boundingBox())!;
+    const scroll = assistant.getByTestId('chat-scroll');
     await expect(scroll).toHaveCSS('overflow-y', 'auto');
-    const tallContent = await page.addStyleTag({ content: '.chat-introduction { min-height: 1200px !important; }' });
+    const tallContent = await page.addStyleTag({ content: '[data-testid="chat-empty"] { min-height: 1200px !important; }' });
     try {
       await scroll.evaluate(element => { element.scrollTop = element.scrollHeight; });
       await settled(page);
       expect(await scroll.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
-      const composerAfter = (await assistant.locator('.chat-composer').boundingBox())!;
+      const composerAfter = (await assistant.getByTestId('chat-composer').boundingBox())!;
       expect(composerAfter.y).toBeCloseTo(composerBefore.y, 0);
       expect(composerAfter.height).toBeCloseTo(composerBefore.height, 0);
       expect(composerAfter.y + composerAfter.height).toBeLessThanOrEqual(chatLayout.inspector.y + chatLayout.inspector.height);
@@ -757,7 +748,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(account).toBeFocused();
     await page.reload();
     await readyMap(page);
-    await expect(page.locator('.platform')).toHaveClass(/is-sidebar-collapsed/);
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'true');
     await account.click();
     await page.getByRole('menuitem', { name: 'Meu perfil', exact: true }).click();
     await expect(profile.getByRole('textbox', { name: 'Nome', exact: true })).toHaveValue('Revisão visual');
@@ -785,7 +776,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await page.setViewportSize({ width: 1440, height: 1000 });
     await sidebar.getByRole('link', { name: 'Análises', exact: true }).click();
     await expect(record).toBeVisible();
-    await expect(page.locator('.platform')).not.toHaveClass(/is-sidebar-collapsed/);
+    await expect(page.getByTestId('app-shell')).toHaveAttribute('data-sidebar-collapsed', 'false');
     await collectionAlignment(page);
     await account.click();
     await page.getByRole('menuitem', { name: 'Sair da conta', exact: true }).click();
@@ -818,9 +809,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await capture(mobile, 'mobile-layers.png');
     await mobile.getByRole('button', { name: 'Fechar camadas', exact: true }).click();
     await mobile.getByRole('button', { name: 'Baixar arquivos', exact: true }).click();
-    await expect(mobile.locator('.download-menu')).toHaveAttribute('data-side', 'left');
+    await expect(mobile.getByTestId('download-menu')).toHaveAttribute('data-side', 'left');
     await expect(mobile.getByRole('tooltip', { name: 'Baixar arquivos', exact: true })).not.toBeVisible();
-    const downloadBounds = (await mobile.locator('.download-menu').boundingBox())!;
+    const downloadBounds = (await mobile.getByTestId('download-menu').boundingBox())!;
     expect(downloadBounds.x).toBeGreaterThanOrEqual(0);
     expect(downloadBounds.x + downloadBounds.width).toBeLessThanOrEqual(320);
     await capture(mobile, 'mobile-download.png');
@@ -860,18 +851,18 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await dockedInspector(mobile);
     sameMapFrame(mobileFrame, await mapFrame(mobile));
     await noOverflow(mobile);
-    await expect.poll(() => mobile.locator('.classification-preview img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await expect.poll(() => mobile.getByTestId('chat-image').getByRole('img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
     await capture(mobile, 'mobile-chat-ready.png');
     await mobile.setViewportSize({ width: 390, height: 500 });
     await compactHeader(mobile);
     await expect(mobile.getByRole('tabpanel', { name: 'Assistente', exact: true })).toBeVisible();
     const shortLayout = await dockedInspector(mobile);
-    const shortComposer = (await mobile.locator('.chat-composer').boundingBox())!;
+    const shortComposer = (await mobile.getByTestId('chat-composer').boundingBox())!;
     expect(shortComposer.y).toBeGreaterThan(shortLayout.inspector.y);
     expect(shortComposer.y + shortComposer.height).toBeLessThanOrEqual(shortLayout.inspector.y + shortLayout.inspector.height);
     await expect(mobileComposer).toHaveValue('Como interpretar as áreas candidatas?');
     await expect(mobile.getByRole('button', { name: 'Fechar painel', exact: true })).toBeVisible();
-    await expect(mobile.locator('.chat-scroll')).toHaveCSS('overflow-y', 'auto');
+    await expect(mobile.getByTestId('chat-scroll')).toHaveCSS('overflow-y', 'auto');
     await noOverflow(mobile);
     await capture(mobile, 'mobile-short-chat.png');
     await mobile.getByRole('button', { name: 'Fechar painel', exact: true }).click();
@@ -880,8 +871,8 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await mobile.getByRole('button', { name: 'Abrir navegação', exact: true }).click();
     const navigation = mobile.getByRole('dialog', { name: 'Navegação', exact: true });
     await expect(navigation).toBeVisible();
-    await expect(navigation.locator('.brand')).toHaveText('Global Watch');
-    await expect(navigation.locator('.brand svg, .brand-product')).toHaveCount(0);
+    await expect(navigation.getByTestId('brand')).toHaveText('Global Watch');
+    await expect(navigation.getByTestId('brand').locator('svg, img')).toHaveCount(0);
     await accountFootprint(navigation.getByRole('button', { name: 'Menu da conta', exact: true }), false);
     await capture(mobile, 'mobile-navigation.png');
     await navigation.getByRole('button', { name: 'Menu da conta', exact: true }).click();
@@ -904,9 +895,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(mobile.getByRole('link', { name: `Abrir análise ${id}`, exact: true })).toBeVisible();
     await collectionAlignment(mobile);
     await controlTypography(mobile.getByRole('button', { name: 'Nova análise', exact: true }), '500');
-    const mobileSearch = (await mobile.locator('.collection-search').boundingBox())!;
+    const mobileSearch = (await mobile.getByTestId('collection-search').boundingBox())!;
     const mobileStatus = (await mobile.getByRole('combobox', { name: 'Filtrar por status', exact: true }).boundingBox())!;
-    const mobileTable = (await mobile.locator('.analysis-table-wrap').boundingBox())!;
+    const mobileTable = (await mobile.getByTestId('analysis-table-wrap').boundingBox())!;
     expect(mobileSearch.width).toBeCloseTo(mobileTable.width, 0);
     expect(mobileStatus.y).toBeGreaterThan(mobileSearch.y + mobileSearch.height);
     await capture(mobile, 'mobile-analyses.png');
