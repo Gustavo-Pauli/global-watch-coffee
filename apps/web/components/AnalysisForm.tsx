@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useId, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { FileImage, LoaderCircle, Upload } from "lucide-react";
@@ -150,7 +151,8 @@ export default function AnalysisForm({ busy, onDemo, onUpload }: Props) {
                 </p>
               )}
               {(scl || sclError) && (
-                <button
+                <Button
+                  variant="ghost"
                   className="button"
                   type="button"
                   disabled={busy}
@@ -161,7 +163,7 @@ export default function AnalysisForm({ busy, onDemo, onUpload }: Props) {
                   }}
                 >
                   Remover máscara
-                </button>
+                </Button>
               )}
             </div>
             <div className="field">
@@ -203,7 +205,8 @@ export default function AnalysisForm({ busy, onDemo, onUpload }: Props) {
       </Tabs.Root>
 
       <div className="form-actions">
-        <button
+        <Button
+          variant="default"
           className="button button-primary"
           type="submit"
           disabled={
@@ -216,7 +219,7 @@ export default function AnalysisForm({ busy, onDemo, onUpload }: Props) {
             <LoaderCircle className="spin" size={16} aria-hidden="true" />
           )}
           {busy ? "Iniciando análise…" : "Iniciar análise"}
-        </button>
+        </Button>
       </div>
     </form>
   );

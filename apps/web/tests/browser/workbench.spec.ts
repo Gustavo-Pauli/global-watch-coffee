@@ -193,11 +193,14 @@ test('real account, collection, creation, map tools, files, chat and mobile navi
     await search.clear();
     await expect(record).toBeVisible();
     const filter = page.getByLabel('Filtrar por status', { exact: true });
-    await filter.selectOption('processing');
+    await filter.click();
+    await page.getByRole('option', { name: 'Processando', exact: true }).click();
     await expect(record).not.toBeVisible();
-    await filter.selectOption('ready');
+    await filter.click();
+    await page.getByRole('option', { name: 'Concluída', exact: true }).click();
     await expect(record).toBeVisible();
-    await filter.selectOption('all');
+    await filter.click();
+    await page.getByRole('option', { name: 'Todos os status', exact: true }).click();
     await screenshot(page, 'desktop-analyses.png');
     await record.click();
     await expect(page).toHaveURL(new RegExp(`/analyses/${analysisId}$`));

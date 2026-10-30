@@ -8,6 +8,8 @@ O shell compartilhado separa navegação, conta e conteúdo. A mesma sidebar com
 
 ## Sistema visual
 
+A revisão de componentes e grid está em [COMPONENTES_E_ALINHAMENTO.md](COMPONENTES_E_ALINHAMENTO.md): container compartilhado de 1120 px incluindo gutters de 24/16 px, marca textual Global Watch, Button/Input/Select/Table do shadcn e contagens sem repetição. A coleção tem largura limitada; o mapa mantém o canvas completo.
+
 - Inter variável servida localmente por Fontsource; corpo 13–14 px e metadados 12 px. Inputs de toque usam 16 px.
 - Superfícies carvão neutras `#171717`, `#1d1d1f`, divisórias `#343437`, texto `#ededee`. Verde contido `#c0d6a6` nas geometrias e seleção; botão primário neutro.
 - Controles de aproximadamente 36 px no desktop e alvos ampliados no toque. Cantos de 5–8 px, sem grades de KPIs, gradientes, glows ou vidro.
@@ -21,7 +23,7 @@ O shell compartilhado separa navegação, conta e conteúdo. A mesma sidebar com
 
 **Resultado:** mapa ocupa o workspace, com imagem RGB efetivamente produzida, polígonos interativos, enquadramento, zoom, escala e atribuição. Zoom fracionário enquadra a imagem sem perder uma faixa inteira de resolução de zoom. Legenda, hectares e data da imagem analisada ficam visíveis. A aquisição aparece uma vez, no cabeçalho, em formato numérico que cabe no celular; o rótulo acessível e o tooltip identificam seu significado. O fundo padrão é Satélite MapTiler, com Ruas e Sem fundo no seletor. As imagens mantêm suas cores reais; não se aplica o filtro do antigo mapa base.
 
-**Ferramentas:** Informações e Assistente são abas no mesmo painel flutuante à direita. Informações tem altura conforme o conteúdo; Assistente fica mais alto, com histórico rolável e composição fixa. O mapa mantém toda a largura e não muda de enquadramento ao alternar abas/fechar o painel. Enquadrar imagem considera o espaço encoberto em telas largas. O painel começa aberto no desktop e pode ser recolhido; no celular começa fechado. Quando recolhido, **Resultados** aparece junto ao mapa para reabri-lo. **Camadas** reúne mapa de fundo e visibilidade do resultado. **Baixar** abre o menu para GeoJSON, PNG com polígonos, GeoTIFF classificado e RGB. O seletor distingue o fundo MapTiler da imagem analisada e seus polígonos; não inventa um raster NDVI ou um calendário de aquisições.
+**Ferramentas:** Informações e Assistente são abas do mesmo painel à direita: 340 px, altura completa e geometria idêntica. Apenas o conteúdo muda. A conversa tem histórico rolável e composição fixa. Aproximar, afastar e enquadrar ficam no canto inferior direito do canvas, junto à divisória, sem mudar de posição entre abas. O mapa cede largura ao abrir o painel e recupera essa faixa ao fechá-lo, mantendo centro e zoom. O painel começa aberto no desktop e recolhido no celular. Quando recolhido, **Resultados** permite reabri-lo. **Camadas** reúne mapa de fundo e visibilidade do resultado. **Baixar** abre o menu para GeoJSON, PNG com polígonos, GeoTIFF classificado e RGB. O seletor distingue o fundo MapTiler da imagem analisada e seus polígonos; não inventa um raster NDVI ou um calendário de aquisições.
 
 **Explicação científica:** o painel mostra área candidata, contagem e NDVI. **Sobre o resultado** abre um dialog com método, limitações reais e significado do índice; dados técnicos ficam em disclosure. O popup mostra identificação e hectares. As ressalvas não se repetem a cada polígono, sem remover a distinção entre candidato e café confirmado.
 
@@ -33,7 +35,7 @@ O shell compartilhado separa navegação, conta e conteúdo. A mesma sidebar com
 
 Dialogs usam título, descrição, foco contido, Escape e retorno de foco ao botão de origem. O sheet móvel segue o mesmo comportamento. Ferramentas do mapa são regiões não modais: mantêm o mapa utilizável, recebem foco ao abrir e fecham com Escape, sem interferir em outro dialog/menu aberto. Botões possuem rótulos; formulários têm labels e erros anunciados. O campo do chat preserva o foco durante a espera. Há link de salto, contraste e foco visível; animações respeitam reduced motion.
 
-No celular os painéis têm largura limitada ao viewport, altura limitada e rolagem interna. Abrem abaixo das ferramentas, conservando zoom, escala e créditos acessíveis. Em pouca altura, a conversa ganha espaço e os controles concorrentes ficam ocultos até fechar o painel; escala e créditos permanecem visíveis. A data continua visível no cabeçalho do resultado. A tabela oculta colunas secundárias em telas estreitas, mantendo registro/status/abertura.
+No celular, o painel ocupa a área principal abaixo do cabeçalho em ambas as abas. O mapa e os controles ficam temporariamente ocultos. Fechar o painel restaura o mapa sem alterar sua posição. A data continua visível no cabeçalho. A tabela oculta colunas secundárias em telas estreitas, mantendo registro/status/abertura. Decisão e capturas: [CONVERSA_E_NAVEGACAO_DO_MAPA.md](CONVERSA_E_NAVEGACAO_DO_MAPA.md).
 
 ## Dados e limites preservados
 

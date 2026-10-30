@@ -7,7 +7,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createClient } from '@supabase/supabase-js';
 import { getCookies } from 'better-auth/cookies';
-import { test, expect, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, type BrowserContext, type Locator, type Page } from '@playwright/test';
 import type { FeatureCollection, Polygon } from 'geojson';
 
 const screenshots = path.resolve('../../docs/delivery/screenshots');
@@ -57,8 +57,9 @@ async function noOverflow(page: Page) {
 
 async function mapFrame(page: Page) {
   await settled(page);
-  const canvas = (await page.locator('.map-canvas').boundingBox())!;
-  const overlay = (await page.locator('.leaflet-image-layer').boundingBox())!;
+  const rectangle = (element: Element) => { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; };
+  const canvas = await page.locator('.map-canvas').evaluate(rectangle);
+  const overlay = await page.locator('.leaflet-image-layer').evaluate(rectangle);
   return {
     canvas,
     centerX: (canvas.x + canvas.width / 2 - overlay.x) / overlay.width,
@@ -67,24 +68,41 @@ async function mapFrame(page: Page) {
 }
 
 function sameMapFrame(before: Awaited<ReturnType<typeof mapFrame>>, after: Awaited<ReturnType<typeof mapFrame>>) {
-  for (const coordinate of ['x', 'y', 'width', 'height'] as const) {
-    expect(after.canvas[coordinate]).toBeCloseTo(before.canvas[coordinate], 0);
-  }
-  expect(after.centerX).toBeCloseTo(before.centerX, 3);
-  expect(after.centerY).toBeCloseTo(before.centerY, 3);
+  for (const coordinate of ['x', 'y', 'height'] as const) expect(after.canvas[coordinate]).toBeCloseTo(before.canvas[coordinate], 0);
+  const widthChange = Math.abs(after.canvas.width - before.canvas.width);
+  expect(Math.min(widthChange, Math.abs(widthChange - 340))).toBeLessThan(1);
+  // Leaflet rounds pixel offsets when resizing; the geographic center stays stable.
+  expect(Math.abs(after.centerX - before.centerX)).toBeLessThan(0.003);
+  expect(Math.abs(after.centerY - before.centerY)).toBeLessThan(0.003);
 }
 
 async function floatingInspector(page: Page) {
   await settled(page);
-  const canvas = (await page.locator('.map-canvas').boundingBox())!;
+  const rectangle = (element: Element) => { const r = element.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; };
+  const canvas = await page.locator('.map-canvas').evaluate(rectangle);
   const workspace = (await page.locator('.analysis-workspace').boundingBox())!;
   const inspector = (await page.locator('.analysis-inspector').boundingBox())!;
   expect(canvas.x).toBeCloseTo(workspace.x, 0);
-  expect(canvas.width).toBeCloseTo(workspace.width, 0);
-  expect(inspector.x).toBeGreaterThan(canvas.x);
-  expect(inspector.x + inspector.width).toBeLessThan(canvas.x + canvas.width);
-  expect(inspector.y).toBeGreaterThan(canvas.y);
-  expect(inspector.y + inspector.height).toBeLessThan(canvas.y + canvas.height);
+  expect(inspector.y).toBeCloseTo(workspace.y, 0);
+  expect(inspector.height).toBeCloseTo(workspace.height, 0);
+  if (page.viewportSize()!.width < 900) {
+    expect(inspector.x).toBeCloseTo(workspace.x, 0);
+    expect(inspector.width).toBeCloseTo(workspace.width, 0);
+    await expect(page.locator('.map-stage')).toHaveCSS('visibility', 'hidden');
+    await expect(page.getByRole('button', { name: 'Aproximar mapa', exact: true })).toHaveCount(0);
+  } else {
+    expect(inspector.width).toBe(340);
+    expect(inspector.x).toBeCloseTo(canvas.x + canvas.width, 0);
+    expect(canvas.width + inspector.width).toBeCloseTo(workspace.width, 0);
+  }
+  if (page.viewportSize()!.width >= 900) {
+    const navigation = page.locator('.map-navigation');
+    const bounds = (await navigation.boundingBox())!;
+    await expect(navigation.getByRole('button')).toHaveCount(3);
+    for (const label of ['Aproximar mapa', 'Afastar mapa', 'Enquadrar imagem']) await expect(navigation.getByRole('button', { name: label, exact: true })).toBeVisible();
+    expect(canvas.x + canvas.width - bounds.x - bounds.width).toBeCloseTo(17, 0);
+    expect(canvas.y + canvas.height - bounds.y - bounds.height).toBeCloseTo(41, 0);
+  }
   return { canvas, inspector };
 }
 
@@ -106,24 +124,38 @@ async function compactHeader(page: Page) {
   }
 }
 
-async function compareInspectorLayouts(page: Page) {
-  // Compare the same real result and viewport, without adding a product mode
-  // or requesting another basemap. The test already selected "Sem fundo".
-  const before = await mapFrame(page);
-  await capture(page, 'shell-floating-information.png');
-  const dock = await page.addStyleTag({ content: `
-    .analysis-workspace { overflow: visible !important; }
-    .analysis-workspace .map-stage { right: 340px !important; }
-    .analysis-workspace .analysis-inspector { position: absolute !important; top: -48px !important; right: 0 !important; bottom: 0 !important; width: 340px !important; height: calc(100% + 48px) !important; max-height: none !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
-    .platform-page-header { width: calc(100% - 340px) !important; }
-  ` });
-  try {
-    await capture(page, 'shell-docked-comparison.png');
-  } finally {
-    await dock.evaluate(element => element.parentNode?.removeChild(element));
+async function controlTypography(control: Locator, weight?: string) {
+  expect(await control.evaluate(element => getComputedStyle(element).fontFamily)).toMatch(/Inter/i);
+  await expect(control).toHaveCSS('font-size', '13px');
+  if (weight) await expect(control).toHaveCSS('font-weight', weight);
+}
+
+async function collectionAlignment(page: Page) {
+  await settled(page);
+  const header = page.locator('.page-header-inner.page-container');
+  const content = page.locator('main.collection-page.page-container');
+  const headerBox = (await header.boundingBox())!;
+  const contentBox = (await content.boundingBox())!;
+  expect(headerBox.x).toBeCloseTo(contentBox.x, 0);
+  expect(headerBox.width).toBeCloseTo(contentBox.width, 0);
+  expect(headerBox.width).toBeLessThanOrEqual(1120);
+  const padding = page.viewportSize()!.width <= 760 ? '16px' : '24px';
+  await expect(header).toHaveCSS('padding-left', padding);
+  await expect(header).toHaveCSS('padding-right', padding);
+  await expect(content).toHaveCSS('padding-left', padding);
+  await expect(content).toHaveCSS('padding-right', padding);
+  const heading = (await header.getByRole('heading', { level: 1 }).boundingBox())!;
+  const toolbar = (await content.locator('.collection-toolbar').boundingBox())!;
+  const table = (await content.locator('.analysis-table-wrap').boundingBox())!;
+  const create = (await header.getByRole('button', { name: 'Nova análise', exact: true }).boundingBox())!;
+  if (page.viewportSize()!.width > 760) expect(heading.x).toBeCloseTo(toolbar.x, 0);
+  expect(toolbar.x).toBeCloseTo(table.x, 0);
+  expect(create.x + create.width).toBeCloseTo(table.x + table.width, 0);
+  if (page.viewportSize()!.width === 1920) {
+    expect(headerBox.width).toBe(1120);
+    const surface = (await page.locator('.platform-content').boundingBox())!;
+    expect(headerBox.x - surface.x).toBeCloseTo(surface.x + surface.width - headerBox.x - headerBox.width, 0);
   }
-  const after = await mapFrame(page);
-  sameMapFrame(before, after);
 }
 
 async function readyMap(page: Page) {
@@ -131,7 +163,9 @@ async function readyMap(page: Page) {
   await expect(page.locator('.leaflet-image-layer')).toBeVisible();
   await expect.poll(() => page.locator('.leaflet-image-layer').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
   await expect(page.locator('.leaflet-interactive')).toHaveCount(24);
-  await expect(page.locator('.map-legend')).toContainText('22,66');
+  await expect(page.locator('.map-legend')).toContainText('Áreas candidatas');
+  if (await page.locator('#analysis-inspector.is-information').isVisible()) await expect(page.locator('.map-legend')).not.toContainText('22,66');
+  else await expect(page.locator('.map-legend')).toContainText('22,66');
   const date = page.locator('.header-acquisition');
   await expect(date).toHaveText('16/08/2025');
   await expect(date).toHaveAttribute('datetime', '2025-08-16');
@@ -267,6 +301,37 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const collectionSidebarWidth = (await sidebar.boundingBox())!.width;
     const collectionNavigation = await sidebar.getByRole('link').allTextContents();
     const collectionCreate = (await create.boundingBox())!;
+    await expect(sidebar.locator('.brand')).toHaveText('Global Watch');
+    await expect(sidebar.locator('.brand svg, .brand-product')).toHaveCount(0);
+    await expect(page.locator('.collection-caption')).toHaveCount(0);
+    await expect(header.locator('.record-count')).toHaveText('1');
+    await controlTypography(create, '500');
+    await controlTypography(page.getByLabel('Buscar análises', { exact: true }));
+    const statusFilter = page.getByRole('combobox', { name: 'Filtrar por status', exact: true });
+    await controlTypography(statusFilter, '500');
+    await expect(statusFilter).toHaveAttribute('data-slot', 'select-trigger');
+    await expect(page.locator('select.filter-select')).toHaveCount(0);
+    await collectionAlignment(page);
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await collectionAlignment(page);
+    await capture(page, 'wide-analyses.png');
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await statusFilter.click();
+    await expect(page.getByRole('listbox')).toBeVisible();
+    await capture(page, 'desktop-status-filter.png');
+    await page.keyboard.press('c');
+    await expect(page.getByRole('option', { name: 'Concluída', exact: true })).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(statusFilter).toContainText('Concluída');
+    await expect(record).toBeVisible();
+    await statusFilter.click();
+    await page.getByRole('option', { name: 'Processando', exact: true }).click();
+    await expect(record).not.toBeVisible();
+    await expect(header.locator('.record-count')).toHaveText('0 de 1');
+    await page.getByRole('button', { name: 'Limpar filtros', exact: true }).click();
+    await expect(record).toBeVisible();
+    await expect(statusFilter).toContainText('Todos os status');
+    await expect(header.locator('.record-count')).toHaveText('1');
     await capture(page, 'desktop-analyses.png');
     await page.getByLabel('Buscar análises', { exact: true }).fill('imagem-inexistente');
     await expect(record).not.toBeVisible();
@@ -302,6 +367,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     expect(normalTransition).toBeLessThanOrEqual(0.3);
     await sidebar.getByRole('link', { name: 'Análises', exact: true }).hover();
     await expect(page.getByRole('tooltip', { name: 'Análises', exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await collectionAlignment(page);
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await capture(page, 'desktop-sidebar-collapsed.png');
     // Leave Radix's pointer-grace region before testing another trigger. A
     // single synthetic jump between triggers does not model a moving pointer.
@@ -339,7 +407,9 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(header.getByRole('heading', { level: 1, name: `Análise ${id.slice(0, 8)}`, exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
     await expect(page.getByRole('button', { name: 'Nova análise', exact: true })).toHaveCount(1);
-    expect((await create.boundingBox())!.x).toBe(collectionCreate.x);
+    const workspaceHeader = (await page.locator('.workspace-header-inner').boundingBox())!;
+    const workspaceCreate = (await create.boundingBox())!;
+    expect(workspaceCreate.x + workspaceCreate.width).toBeCloseTo(workspaceHeader.x + workspaceHeader.width - 14, 0);
     expect((await create.boundingBox())!.width).toBe(collectionCreate.width);
     await expect(header.getByRole('link', { name: 'Análises', exact: true })).toHaveCount(0);
     await expect(header.getByRole('button', { name: /Detalhes|Painel da análise/ })).toHaveCount(0);
@@ -406,7 +476,6 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(page.getByRole('link', { name: 'MapTiler', exact: true })).toHaveCount(0);
     await readyMap(page);
     await page.keyboard.press('Escape');
-    await compareInspectorLayouts(page);
     await layers.click();
     await page.getByRole('radio', { name: 'Satélite', exact: true }).click();
     await expect(page.locator('.basemap-satellite img.leaflet-tile-loaded').first()).toBeVisible();
@@ -423,9 +492,10 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     const info = page.getByRole('tabpanel', { name: 'Informações', exact: true });
     const resultFrame = await mapFrame(page);
     const informationLayout = await floatingInspector(page);
+    const informationNavigation = (await page.locator('.map-navigation').boundingBox())!;
     expect(informationLayout.inspector.width).toBeGreaterThanOrEqual(320);
     expect(informationLayout.inspector.width).toBeLessThanOrEqual(340);
-    expect(informationLayout.inspector.height).toBeLessThan(informationLayout.canvas.height * 0.7);
+    expect(informationLayout.inspector.height).toBeCloseTo(informationLayout.canvas.height, 0);
     await expect(info).toContainText('24');
     await expect(info).toContainText('0,559');
     await expect(info.locator('time, details')).toHaveCount(0);
@@ -455,7 +525,10 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await expect(assistant).toBeVisible();
     sameMapFrame(resultFrame, await mapFrame(page));
     const chatLayout = await floatingInspector(page);
-    expect(chatLayout.inspector.height).toBeGreaterThan(informationLayout.inspector.height + 100);
+    const chatNavigation = (await page.locator('.map-navigation').boundingBox())!;
+    expect(chatNavigation).toEqual(informationNavigation);
+    expect(chatNavigation.y).toBeCloseTo(informationNavigation.y, 0);
+    expect(chatLayout.inspector).toEqual(informationLayout.inspector);
     const classifiedPreview = assistant.getByRole('img', { name: 'Imagem processada com os polígonos candidatos a café', exact: true });
     await expect(classifiedPreview).toBeVisible();
     await expect.poll(() => classifiedPreview.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
@@ -592,9 +665,11 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     await floatingInspector(mobile);
     sameMapFrame(mobileFrame, await mapFrame(mobile));
     await noOverflow(mobile);
+    await expect.poll(() => mobile.locator('.classification-preview img').evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
     await capture(mobile, 'mobile-chat-ready.png');
     await mobile.setViewportSize({ width: 390, height: 500 });
-    await readyMap(mobile);
+    await compactHeader(mobile);
+    await expect(mobile.getByRole('tabpanel', { name: 'Assistente', exact: true })).toBeVisible();
     const shortLayout = await floatingInspector(mobile);
     const shortComposer = (await mobile.locator('.chat-composer').boundingBox())!;
     expect(shortComposer.y).toBeGreaterThan(shortLayout.inspector.y);
@@ -652,7 +727,7 @@ test('real ready-analysis UI, profile, keyboard, mobile and logout without proce
     expect(quotaAfter).toEqual(quotaBefore);
     console.log(JSON.stringify({ readyUI: true, consistentShell: true, sidebarPreferencePersisted: true, aboutResultAccessible: true,
       profilePersisted: true, desktopSidebarLogout: true, mobileNestedProfileAndLogout: true,
-      floatingInspector: true, mapFramingPreserved: true, compactHeader: true, reducedMotion: true, shortChatViewport: '390x500',
+      floatingInspector: true, fullHeightConversation: true, mapControlsAtCanvasEdge: true, mapFramingPreserved: true, compactHeader: true, reducedMotion: true, shortChatViewport: '390x500',
       acquisitionDate: '16/08/2025', dateUnclippedAtWidths: [320, 390, 768, 1440],
       processingJobsStarted: 0, geminiCalls: 0, globalQuotaCount: quotaAfter.reduce((sum, row) => sum + row.count, 0),
       artifacts: 'real precomputed public Sentinel-2 scene', oauthHandshakeTested: false,

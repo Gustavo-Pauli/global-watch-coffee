@@ -1,5 +1,9 @@
 # Shell, hierarquia e leitura dos resultados
 
+A organização vigente, incluindo a análise das quatro referências enviadas, está em [CONVERSA_E_NAVEGACAO_DO_MAPA.md](CONVERSA_E_NAVEGACAO_DO_MAPA.md): painel único e de geometria idêntica para Informações/Assistente, com os três controles no canto do canvas e sem deslocamento entre abas.
+
+Revisão de 30/10: [componentes, container e alinhamento](COMPONENTES_E_ALINHAMENTO.md). A coleção e o cabeçalho agora compartilham limites e gutters, os controles principais usam shadcn e a marca é somente Global Watch. As evidências abaixo documentam a revisão anterior do painel flutuante.
+
 ## Navegação compartilhada
 
 A coleção e o mapa usam as mesmas regras de navegação. A sidebar mantém rótulos ou rail conforme a escolha do usuário, com preferência preservada entre rotas e recargas. A conta e os destinos não mudam de lugar quando uma análise é aberta.

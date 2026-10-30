@@ -1,0 +1,147 @@
+/* The collection and its header use the same container and inner edges. */
+.collection-page.page-container {
+  padding-block: 24px;
+}
+.collection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.collection-search {
+  position: relative;
+  width: 300px;
+  max-width: 100%;
+}
+.collection-search > svg {
+  position: absolute;
+  top: 9px;
+  left: 11px;
+  color: var(--subtle);
+  pointer-events: none;
+}
+.collection-search [data-slot="input"] {
+  height: 34px;
+  padding-inline: 34px;
+  background: var(--surface);
+  font-size: 13px;
+}
+.collection-search .collection-search-clear {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
+.collection-status[data-slot="select-trigger"] {
+  width: 176px;
+  height: 34px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.collection-toolbar .refresh-button {
+  margin-left: auto;
+  width: 34px;
+  height: 34px;
+}
+.collection-page .analysis-table th,
+.collection-page .analysis-table td {
+  padding: 12px 16px;
+}
+.collection-page .analysis-table th:first-child,
+.collection-page .analysis-table td:first-child {
+  padding-left: 0;
+  width: auto;
+}
+.collection-page .analysis-table th:last-child,
+.collection-page .analysis-table td:last-child {
+  padding-right: 0;
+  text-align: right;
+}
+.collection-page .analysis-table th {
+  height: 40px;
+}
+.collection-page .analysis-table td {
+  height: 62px;
+}
+.collection-page .analysis-link {
+  gap: 0;
+}
+.collection-page .analysis-link-copy {
+  gap: 4px;
+}
+.collection-page .sort-button {
+  padding: 0;
+  gap: 6px;
+  font: inherit;
+  color: inherit;
+}
+.collection-page .analysis-table th:last-child .sort-button {
+  margin-left: auto;
+}
+.collection-empty-action {
+  margin-top: 6px;
+}
+.platform-page-header .header-new-analysis {
+  height: 32px;
+  min-height: 32px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+.button {
+  font-size: 13px;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+@media (max-width: 760px) {
+  .collection-page.page-container {
+    padding-block: 20px;
+  }
+  .collection-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .collection-search {
+    width: 100%;
+    flex-basis: 100%;
+  }
+  .collection-status[data-slot="select-trigger"] {
+    width: 176px;
+    max-width: none;
+  }
+  .collection-page .analysis-table th,
+  .collection-page .analysis-table td {
+    padding-inline: 8px;
+  }
+  .collection-page .analysis-table td {
+    height: 60px;
+  }
+  .collection-page .analysis-table th:first-child,
+  .collection-page .analysis-table td:first-child {
+    padding-left: 0;
+  }
+  .collection-page .analysis-table th:last-child,
+  .collection-page .analysis-table td:last-child {
+    padding-right: 0;
+  }
+}
+@media (pointer: coarse) {
+  .collection-search [data-slot="input"] {
+    font-size: 16px;
+    height: 40px;
+  }
+  .collection-search > svg {
+    top: 12px;
+  }
+  .collection-search .collection-search-clear {
+    top: 6px;
+  }
+  .collection-status[data-slot="select-trigger"],
+  .collection-toolbar .refresh-button {
+    height: 40px;
+  }
+}

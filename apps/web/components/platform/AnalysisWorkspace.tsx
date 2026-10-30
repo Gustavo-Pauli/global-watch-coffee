@@ -203,9 +203,11 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
     setInspectorOpen(false);
   }, []);
   useEffect(() => {
+    let focusFrame = 0;
     if (!inspectorOpen && focusReopen.current) {
-      trigger.current?.focus();
       focusReopen.current = false;
+      // On mobile the map becomes visible again when the conversation closes.
+      focusFrame = requestAnimationFrame(() => trigger.current?.focus());
     }
     if (inspectorOpen && focusInspector.current) {
       panel.current
@@ -213,6 +215,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
         ?.focus();
       focusInspector.current = false;
     }
+    return () => cancelAnimationFrame(focusFrame);
   }, [inspectorOpen]);
   useEffect(() => {
     if (inspectorOpen && inspectorTab === "chat")
@@ -301,6 +304,7 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
   return (
     <>
       <PageHeader
+        fullWidth
         title={analysisTitle(id)}
         meta={
           data ? (
@@ -424,30 +428,17 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
               </div>
-              {!inspectorOpen && (
-                <button
-                  ref={trigger}
-                  className="button button-secondary map-results-button"
-                  aria-label="Mostrar resultados"
-                  aria-expanded={false}
-                  aria-controls="analysis-inspector"
-                  onClick={() => {
-                    focusInspector.current = true;
-                    setInspectorOpen(true);
-                  }}
-                >
-                  <PanelRight size={16} />
-                  <span>Resultados</span>
-                </button>
-              )}
               <div className="map-legend" aria-label="Legenda e área estimada">
                 <span
                   className={`legend-swatch${showPolygons ? "" : " is-hidden"}`}
                 />
                 <span>Áreas candidatas</span>
-                <strong>
-                  {formatNumber(data.result.candidate_area_ha)} <span>ha</span>
-                </strong>
+                {(!inspectorOpen || inspectorTab !== "information") && (
+                  <strong>
+                    {formatNumber(data.result.candidate_area_ha)}{" "}
+                    <span>ha</span>
+                  </strong>
+                )}
                 {!showPolygons && (
                   <span className="legend-hidden">Ocultas</span>
                 )}
@@ -471,6 +462,22 @@ export default function AnalysisWorkspace({ id }: { id: string }) {
                 </div>
               )}
             </div>
+            {!inspectorOpen && (
+              <button
+                ref={trigger}
+                className="button button-secondary map-results-button"
+                aria-label="Mostrar resultados"
+                aria-expanded={false}
+                aria-controls="analysis-inspector"
+                onClick={() => {
+                  focusInspector.current = true;
+                  setInspectorOpen(true);
+                }}
+              >
+                <PanelRight size={16} />
+                <span>Resultados</span>
+              </button>
+            )}
             {inspectorOpen && (
               <aside
                 ref={panel}

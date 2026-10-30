@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "radix-ui/dialog";
@@ -131,17 +132,18 @@ export default function NewAnalysisDialog({
         >
           <div className="dialog-header">
             <Dialog.Title className="dialog-title">Nova análise</Dialog.Title>
-            <Dialog.Description className="dialog-description">
+            <Dialog.Description className="sr-only">
               Identifique áreas candidatas a café em uma imagem.
             </Dialog.Description>
             <Dialog.Close asChild>
-              <button
+              <Button
+                variant="ghost"
                 className="icon-button dialog-close"
                 aria-label="Fechar nova análise"
                 disabled={Boolean(stage)}
               >
                 <X size={18} />
-              </button>
+              </Button>
             </Dialog.Close>
           </div>
           <AnalysisForm

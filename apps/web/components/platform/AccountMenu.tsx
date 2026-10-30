@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useId, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import * as Avatar from "radix-ui/avatar";
@@ -138,7 +140,8 @@ export default function AccountMenu({
         >
           <Tooltip.Trigger asChild>
             <DropdownMenu.Trigger asChild>
-              <button
+              <Button
+                variant="ghost"
                 ref={triggerRef}
                 type="button"
                 className={`account-trigger${compact ? " is-compact" : ""}`}
@@ -146,7 +149,10 @@ export default function AccountMenu({
                 data-testid="account-menu-trigger"
               >
                 <UserAvatar user={currentUser} />
-                <span className="account-copy" aria-hidden={compact || undefined}>
+                <span
+                  className="account-copy"
+                  aria-hidden={compact || undefined}
+                >
                   <strong>{currentUser.name || currentUser.email}</strong>
                   <span>{currentUser.email}</span>
                 </span>
@@ -155,7 +161,7 @@ export default function AccountMenu({
                   size={15}
                   aria-hidden="true"
                 />
-              </button>
+              </Button>
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
           <Tooltip.Portal>
@@ -243,14 +249,15 @@ export default function AccountMenu({
                 Conta conectada com Google
               </Dialog.Description>
               <Dialog.Close asChild>
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   className="icon-button dialog-close"
                   aria-label="Fechar perfil"
                   disabled={saving}
                 >
                   <X size={18} aria-hidden="true" />
-                </button>
+                </Button>
               </Dialog.Close>
             </div>
             <form onSubmit={saveProfile} aria-busy={saving}>
@@ -258,7 +265,7 @@ export default function AccountMenu({
                 <label className="field-label" htmlFor={nameId}>
                   Nome
                 </label>
-                <input
+                <Input
                   ref={nameRef}
                   id={nameId}
                   className="text-input"
@@ -279,7 +286,7 @@ export default function AccountMenu({
                 <label className="field-label" htmlFor={emailId}>
                   Email
                 </label>
-                <input
+                <Input
                   id={emailId}
                   className="text-input"
                   type="email"
@@ -294,15 +301,17 @@ export default function AccountMenu({
               )}
               <div className="dialog-footer">
                 <Dialog.Close asChild>
-                  <button
+                  <Button
+                    variant="outline"
                     type="button"
                     className="button button-secondary"
                     disabled={saving}
                   >
                     Cancelar
-                  </button>
+                  </Button>
                 </Dialog.Close>
-                <button
+                <Button
+                  variant="default"
                   type="submit"
                   className="button button-primary"
                   disabled={saving || name.trim() === currentUser.name.trim()}
@@ -315,7 +324,7 @@ export default function AccountMenu({
                     />
                   )}
                   {saving ? "Salvando…" : "Salvar alterações"}
-                </button>
+                </Button>
               </div>
             </form>
           </Dialog.Content>

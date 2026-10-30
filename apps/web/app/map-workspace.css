@@ -1,13 +1,12 @@
-/* The canvas stays full width. The inspector is a tool inset over the map. */
+/* Both tabs share one stable panel; the canvas owns its navigation controls. */
 .analysis-workspace {
   display: block;
-  --inspector-top: 14px;
-  --inspector-clearance: 174px;
 }
 .analysis-state {
   width: 100%;
 }
 .map-stage {
+  container-type: inline-size;
   position: absolute;
   inset: 0;
   min-width: 0;
@@ -16,28 +15,27 @@
 }
 .analysis-inspector {
   position: absolute;
-  top: var(--inspector-top);
-  right: 14px;
-  width: min(320px, calc(100% - 28px));
+  inset: 0 0 0 auto;
+  width: 340px;
+  height: 100%;
   min-width: 0;
   min-height: 0;
-  max-height: calc(100% - var(--inspector-top) - var(--inspector-clearance));
   display: flex;
   flex-direction: column;
   background: #1d1d20;
-  border: 1px solid #404045;
-  border-radius: 8px;
-  box-shadow: 0 4px 18px #0004;
+  border: 0;
+  border-left: 1px solid #404045;
   overflow: hidden;
   z-index: 1000;
-  animation: inspector-enter 160ms ease-out;
 }
-.analysis-inspector.is-chat {
-  height: min(640px, calc(100% - var(--inspector-top) - var(--inspector-clearance)));
+.analysis-workspace:has(.analysis-inspector) .map-stage {
+  right: 340px;
 }
-.analysis-inspector.is-information .inspector-tabs {
+.inspector-tabs {
   height: auto;
-  max-height: calc(100dvh - 48px - var(--inspector-top) - var(--inspector-clearance));
+  max-height: calc(
+    100dvh - 48px - var(--inspector-top) - var(--inspector-clearance)
+  );
 }
 .analysis-inspector.is-information .info-content {
   overflow-y: auto;
@@ -296,7 +294,7 @@
   bottom: 34px;
 }
 .leaflet-control-attribution {
-  max-width: calc(100vw - 108px);
+  max-width: calc(100cqw - 108px);
 }
 .map-navigation {
   bottom: 41px;
@@ -304,17 +302,22 @@
 .map-layers-popover .switch {
   margin-right: 2px;
 }
-@keyframes inspector-enter {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (min-width: 900px) {
+  /* Zoom belongs to the canvas edge, with either panel tab open. */
+  .map-navigation {
+    right: 17px;
+    bottom: 41px;
+  }
 }
 @media (max-width: 899px) {
-  .analysis-workspace {
-    --inspector-top: 64px;
-  }
   .analysis-inspector {
-    right: 12px;
-    width: min(350px, calc(100% - 24px));
+    inset: 0;
+    width: 100%;
+    border: 0;
+  }
+  .analysis-workspace:has(.analysis-inspector) .map-stage {
+    right: 0;
+    visibility: hidden;
   }
 }
 @media (max-width: 760px) {
@@ -332,24 +335,7 @@
     left: 12px;
   }
   .leaflet-control-attribution {
-    max-width: calc(100vw - 108px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .analysis-inspector {
-    animation: none;
-  }
-}
-@media (max-height: 560px) {
-  .analysis-workspace {
-    --inspector-top: 12px;
-    --inspector-clearance: 68px;
-  }
-  /* Give the conversation room when a mobile keyboard reduces the viewport. */
-  .analysis-workspace:has(.analysis-inspector) .map-toolbar,
-  .analysis-workspace:has(.analysis-inspector) .map-navigation,
-  .analysis-workspace:has(.analysis-inspector) .map-legend {
-    visibility: hidden;
+    max-width: calc(100cqw - 108px);
   }
 }
 @media (pointer: coarse) {

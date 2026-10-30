@@ -141,7 +141,6 @@ function Login() {
           </p>
         )}
       </section>
-      <span className="login-footer">Global Watch Coffee</span>
     </main>
   );
 }
@@ -222,7 +221,7 @@ function AuthenticatedPlatform({
           <Link
             className="brand-link"
             href="/analyses"
-            aria-label="Global Watch Coffee — Análises"
+            aria-label="Global Watch — Análises"
             aria-hidden={compact || undefined}
             tabIndex={compact ? -1 : undefined}
             onClick={() => setNavigationOpen(false)}

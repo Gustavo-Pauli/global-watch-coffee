@@ -36,13 +36,10 @@
 .sidebar-heading .brand {
   flex-shrink: 0;
 }
-.sidebar-heading .brand > svg {
-  width: 22px;
-  height: 22px;
-}
-.sidebar-heading .brand-product {
-  font-size: 11px;
-  margin-top: 1px;
+.sidebar-heading .brand {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.35px;
 }
 .sidebar-toggle {
   position: absolute;
@@ -96,6 +93,8 @@
   padding: 8px;
 }
 .platform-sidebar .account-trigger {
+  height: auto;
+  min-height: 47px;
   display: grid;
   grid-template-columns: 31px minmax(0, 1fr) 15px;
   gap: 10px;

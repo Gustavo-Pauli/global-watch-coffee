@@ -4,9 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowDown,
-  ArrowUpRight,
   ChevronRight,
-  FileImage,
   FolderClosed,
   LoaderCircle,
   RefreshCw,
@@ -23,6 +21,23 @@ import {
 } from "../analysis-types";
 import { usePlatform } from "./PlatformShell";
 import PageHeader from "./PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 export function AnalysisStatusLabel({ status }: { status: AnalysisStatus }) {
   return (
@@ -104,69 +119,90 @@ export default function AnalysesPage() {
 
   return (
     <>
-      <PageHeader title="Análises" count={items.length} />
-      <main className="collection-page" id="main-content">
+      <PageHeader
+        title="Análises"
+        count={
+          loading && !items.length
+            ? undefined
+            : filtered.length === items.length
+              ? items.length
+              : `${filtered.length} de ${items.length}`
+        }
+      />
+      <main className="collection-page page-container" id="main-content">
         <div className="collection-toolbar">
-          <label className="search-field">
+          <div className="collection-search">
             <Search size={16} />
-            <input
+            <Input
               aria-label="Buscar análises"
               placeholder="Buscar análises…"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
             {search && (
-              <button
-                className="icon-button"
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="collection-search-clear"
                 aria-label="Limpar busca"
                 onClick={() => setSearch("")}
               >
                 <X size={14} />
-              </button>
+              </Button>
             )}
-          </label>
-          <select
-            className="filter-select"
-            aria-label="Filtrar por status"
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <option value="all">Todos os status</option>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <button
-            className="icon-button refresh-button"
+          </div>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger
+              className="collection-status"
+              aria-label="Filtrar por status"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent position="popper" align="start" sideOffset={4}>
+              <SelectItem value="all">Todos os status</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="refresh-button"
             aria-label="Atualizar análises"
             title="Atualizar análises"
             disabled={loading}
             onClick={() => void load()}
           >
             <RefreshCw size={16} className={loading ? "spin" : ""} />
-          </button>
+          </Button>
         </div>
         {error && (
           <div className="inline-error" role="alert">
             <span>{error}</span>
-            <button className="text-button" onClick={() => void load()}>
+            <Button
+              variant="ghost"
+              className="text-button"
+              onClick={() => void load()}
+            >
               Tentar novamente
-            </button>
+            </Button>
           </div>
         )}
         <div className="analysis-table-wrap" aria-busy={loading}>
-          <table className="analysis-table">
-            <thead>
-              <tr>
-                <th scope="col">Imagem</th>
-                <th scope="col" className="acquisition-column">
+          <Table className="analysis-table">
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">Imagem</TableHead>
+                <TableHead scope="col" className="acquisition-column">
                   Aquisição
-                </th>
-                <th scope="col">Status</th>
-                <th scope="col" className="created-column">
-                  <button
+                </TableHead>
+                <TableHead scope="col">Status</TableHead>
+                <TableHead scope="col" className="created-column">
+                  <Button
+                    variant="ghost"
                     className="sort-button"
                     onClick={() => setAscending((value) => !value)}
                     aria-label={
@@ -180,26 +216,20 @@ export default function AnalysesPage() {
                       size={13}
                       className={ascending ? "is-ascending" : ""}
                     />
-                  </button>
-                </th>
-                <th scope="col">
-                  <span className="sr-only">Abrir</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+                  </Button>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.map((item) => (
-                <tr key={item.id}>
-                  <td>
+                <TableRow key={item.id}>
+                  <TableCell>
                     <Link
                       className="analysis-link"
                       data-testid="analysis-link"
                       href={`/analyses/${item.id}`}
                       aria-label={`Abrir análise ${item.id}`}
                     >
-                      <span className="file-symbol">
-                        <FileImage size={19} strokeWidth={1.5} />
-                      </span>
                       <span className="analysis-link-copy">
                         <strong>{analysisTitle(item.id)}</strong>
                         <span>
@@ -209,29 +239,20 @@ export default function AnalysesPage() {
                         </span>
                       </span>
                     </Link>
-                  </td>
-                  <td className="acquisition-column">
+                  </TableCell>
+                  <TableCell className="acquisition-column">
                     {formatDate(sceneDate(item.scene, item.date))}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell>
                     <AnalysisStatusLabel status={item.status} />
-                  </td>
-                  <td className="created-column">
+                  </TableCell>
+                  <TableCell className="created-column">
                     {createdDate(item.created)}
-                  </td>
-                  <td className="row-open">
-                    <Link
-                      href={`/analyses/${item.id}`}
-                      tabIndex={-1}
-                      aria-hidden="true"
-                    >
-                      <ArrowUpRight size={17} />
-                    </Link>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
           {loading && items.length === 0 ? (
             <div className="collection-empty" role="status">
               <LoaderCircle size={22} className="spin" />
@@ -253,33 +274,29 @@ export default function AnalysesPage() {
                     : "Envie uma imagem ou escolha um exemplo para começar."}
                 </p>
                 {items.length ? (
-                  <button
-                    className="button button-secondary"
+                  <Button
+                    variant="outline"
+                    className="collection-empty-action"
                     onClick={() => {
                       setSearch("");
                       setStatus("all");
                     }}
                   >
                     Limpar filtros
-                  </button>
+                  </Button>
                 ) : (
-                  <button
-                    className="button button-secondary"
+                  <Button
+                    variant="outline"
+                    className="collection-empty-action"
                     onClick={newAnalysis}
                   >
                     Criar primeira análise <ChevronRight size={15} />
-                  </button>
+                  </Button>
                 )}
               </div>
             )
           )}
         </div>
-        {items.length > 0 && (
-          <p className="collection-caption">
-            {filtered.length} {filtered.length === 1 ? "análise" : "análises"}
-            {search || status !== "all" ? ` de ${items.length}` : ""}
-          </p>
-        )}
       </main>
     </>
   );
