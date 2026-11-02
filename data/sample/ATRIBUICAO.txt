@@ -1,7 +1,7 @@
 PROCEDÊNCIA DOS DADOS
 
 Contains modified Copernicus Sentinel data (2025).
-Modificações pela preparação do desafio: recorte espacial e empilhamento das
+Modificações neste conjunto de dados: recorte espacial e empilhamento das
 bandas B02, B03, B04 e B08; recorte da SCL sem mudança de resolução.
 Nenhuma classificação de café foi adicionada.
 
@@ -20,4 +20,4 @@ https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice
 O aviso de atribuição e os termos de origem devem acompanhar os dados ao
 redistribuir este recorte. Não se atribui à Global Watch a autoria das imagens.
 As condições dos dados de origem são independentes da licença do código
-que o participante escolher para seu próprio repositório.
+adotada pelo repositório.

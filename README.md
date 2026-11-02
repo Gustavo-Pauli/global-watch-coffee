@@ -1,121 +1,89 @@
-﻿# Global Watch Coffee
+# Global Watch Coffee
 
-Aplicação de geoprocessamento para identificar **áreas candidatas a cafezais existentes** em GeoTIFFs Sentinel-2. Os resultados são exploratórios: não comprovam café, não avaliam aptidão agrícola e não representam precisão validada em campo.
+Plataforma experimental para explorar imagens Sentinel-2 e identificar áreas candidatas a cafezais. Permite enviar GeoTIFFs, visualizar RGB, falsa cor e NDVI, inspecionar polígonos e baixar resultados geoespaciais.
 
-Next.js + React + Better Auth/Google, **Prisma + PostgreSQL**, Supabase Storage privado e worker Python/FastAPI. A coleção em `/analyses` organiza as imagens; cada análise tem workspace cartográfico próprio. Upload, camadas, informações, arquivos e chat abrem sob demanda. O menu da conta permite editar o nome e sair. Não existem dados fictícios de clima, alertas ou séries temporais.
+Os resultados precisam de revisão: não comprovam cultivo, não avaliam aptidão agrícola e não têm precisão validada em campo. O projeto está em desenvolvimento para uso público; a hospedagem gratuita ainda precisa ser validada para a carga real.
 
-Nas novas análises, **Camadas** alterna RGB, falsa cor e NDVI e ajusta a opacidade. **Explorar polígonos** localiza os resultados por número ou área; cada polígono mostra sua área e NDVI médio quando calculado. Qualidade da cena e proveniência ficam em **Sobre o resultado**, e o JSON está no menu de downloads. Análises anteriores continuam disponíveis em RGB.
+## Estrutura
 
-O estado verificável da entrega, comandos e limitações estão em [AUDITORIA_FINAL.md](docs/delivery/AUDITORIA_FINAL.md). Build local não comprova deploy. Nenhum push, alteração de visibilidade ou deploy é executado automaticamente.
+- `apps/web`: Next.js, React, Leaflet, Better Auth e Prisma/PostgreSQL. Autenticação Google, análises por usuário, armazenamento privado e chat sobre os resultados.
+- `apps/geo-worker`: FastAPI e pipeline Python. `pipeline/` contém o processamento operacional; `research/` mantém treinamento e avaliação reproduzíveis.
+- `data`: cenas de exemplo, referência de treinamento, metadados e atribuições.
+- `scripts`: obtenção de dados, experimentos de limiares e verificação do repositório.
 
-## Executar localmente
+O worker utiliza o Random Forest em `apps/geo-worker/models/v2`. A versão v1 permanece para regressões e comparação científica. As predições históricas necessárias aos testes estão em `apps/geo-worker/tests/fixtures/predictions`; novas análises processam os pixels recebidos.
 
-Requisitos: Node >=22.12, pnpm 10.12.1, Python 3.12, PostgreSQL, projeto Supabase e cliente Google OAuth. Uma chave Gemini é necessária para respostas generativas; sem ela há contingência explicitamente identificada como resposta por regras.
+## Desenvolvimento local
+
+Requisitos: Node >=22.12, pnpm 10.12.1, Python 3.12, PostgreSQL, Supabase Storage e cliente Google OAuth.
 
 ```powershell
 pnpm.cmd install --frozen-lockfile
-# Somente se ainda não existir .venv:
 python -m venv apps/geo-worker/.venv
 & apps/geo-worker/.venv/Scripts/python.exe -m pip install -e './apps/geo-worker[dev]'
 ```
 
-Crie os arquivos locais a partir de `.env.example` **somente se não existirem**. Nunca sobrescreva credenciais nem recrie a `.venv` existente. O Next lê `apps/web/.env.local`; o worker lê `apps/geo-worker/.env`, independentemente do diretório atual.
+Crie a `.venv` apenas se ela não existir. Copie `apps/web/.env.example` para `apps/web/.env.local` e `apps/geo-worker/.env.example` para `apps/geo-worker/.env`, preservando configurações existentes. Os exemplos descrevem as variáveis; não versione credenciais.
 
-`pnpm-workspace.yaml` permite explicitamente os scripts de instalação de `@prisma/engines`, `prisma` e `esbuild`; não habilita scripts arbitrários de todas as dependências. A instalação gera o cliente Prisma automaticamente.
+- PostgreSQL: configure `DATABASE_URL` e, se necessário, `DIRECT_URL` para a CLI. `docker compose up -d postgres` inicia um banco local com os valores de `compose.yaml`.
+- Supabase: crie o bucket **privado** `geo-private`, com limite por objeto de **12582912 bytes (12 MiB)**. Configure URL e chave secreta no Next; o worker recebe URLs assinadas por job.
+- Google OAuth: cadastre `http://localhost:3000/api/auth/callback/google` e configure cliente, segredo e Better Auth no Next.
+- Worker: use o mesmo `WORKER_SECRET` de pelo menos 32 caracteres nos dois serviços. Configure `PYTHON_WORKER_URL=http://127.0.0.1:8000` no Next e `NEXT_CALLBACK_URL=http://localhost:3000` no worker.
+- Mapas: configure a chave pública MapTiler com restrições de origem. Gemini é opcional para respostas generativas; sem chave, o chat identifica a resposta por regras.
 
-| Configuração | Onde |
-|---|---|
-| `DATABASE_URL`, `DIRECT_URL` opcional | Next/Prisma; runtime pelo pooler, CLI por conexão direta ou pooler de sessão |
-| `BETTER_AUTH_URL`, `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Somente Next |
-| `SUPABASE_URL` | Next e worker |
-| `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET=geo-private` | Somente Next; chave `sb_secret_...` |
-| `WORKER_SECRET` com >=32 caracteres | Mesmo valor no Next e worker |
-| `PYTHON_WORKER_URL` | Next; local `http://127.0.0.1:8000` |
-| `NEXT_CALLBACK_URL` | Worker; local `http://localhost:3000` |
-| `CRON_SECRET` | Next; segredo da limpeza |
-| `GEMINI_API_KEY`, `GEMINI_MODEL` opcional | Somente Next |
-| `NEXT_PUBLIC_MAPTILER_KEY` | Web/build Next; chave pública do mapa, com origens restritas no MapTiler |
-
-No Supabase, crie um bucket **privado**, `geo-private`, com limite por objeto **12 MiB (12582912 bytes)**. O servidor recusa emitir URLs de upload se o bucket estiver público ou sem limite adequado. SCL tem limite adicional de 4 MiB na aplicação. O PostgreSQL pode continuar local; Supabase Storage não exige mover o banco.
-
-### Banco novo versus banco existente
+Para um **banco vazio**:
 
 ```powershell
 pnpm.cmd db:generate
 pnpm.cmd db:validate
-# Banco vazio, exclusivamente:
 pnpm.cmd db:deploy
 ```
 
-**Banco já utilizado:** não rode a migration inicial sobre tabelas existentes. Siga [PRISMA_MIGRATION.md](docs/delivery/PRISMA_MIGRATION.md) para comparar o schema e registrar o baseline sem recriar tabelas. `db:baseline` só é correto após essa comparação. `auth:migrate` agora é um alias de `prisma migrate deploy`; não execute mais o CLI `auth@latest` como mecanismo normal de atualização.
+Em banco existente, faça backup e compare o schema antes de marcar `0_existing_schema` como aplicado com `pnpm.cmd db:baseline`. O comando não verifica equivalência: confira também CHECKs e FKs nas migrations. Não marque a baseline em banco vazio. A migration seguinte habilita RLS e revoga acesso público; a conexão privada do servidor precisa ser proprietária das tabelas ou ter BYPASSRLS e permissões de CRUD.
 
-### Servidores
-
-No Git Bash, é possível iniciar os dois serviços na raiz com a `.venv` ativa:
-
-```bash
-source apps/geo-worker/.venv/Scripts/activate
-pnpm dev
-```
-
-Esse comando usa as tarefas persistentes já configuradas no `turbo.json`, sem o parâmetro obsoleto `--parallel` ([Turborepo](https://turborepo.dev/docs/reference/run#--parallel)). As portas 3000 e 8000 precisam estar livres. Se os serviços já estiverem abertos em outros terminais, encerre essas instâncias antes de iniciar o conjunto. No Windows, outro worker ocupando 8000 pode causar `WinError 10013`.
-
-Para executar em terminais separados:
+Inicie em terminais separados:
 
 ```powershell
-# Terminal 1 (Python da .venv, sem depender do PATH global):
+# Terminal 1
 & apps/geo-worker/.venv/Scripts/python.exe -m uvicorn geo_worker.server:app --app-dir apps/geo-worker/src --reload --host 127.0.0.1 --port 8000
-# Terminal 2:
+# Terminal 2
 pnpm.cmd dev:web
 ```
 
-No Git Bash, ative `source apps/geo-worker/.venv/Scripts/activate` antes de `pnpm dev:worker`. Acesse `http://localhost:3000` e `http://127.0.0.1:8000/health`. Cadastre no mesmo cliente Google usado pelo app a URI exata `http://localhost:3000/api/auth/callback/google`.
+Acesse `http://localhost:3000`. A saúde do worker está em `http://127.0.0.1:8000/health`.
 
-## Fluxo e limites
+## Limites atuais
 
-1. Better Auth verifica a sessão no PostgreSQL; todas as operações conferem o proprietário.
-2. Next autoriza upload por URL assinada. Os bytes TIFF vão diretamente ao Storage, sem passar pelas funções Vercel.
-3. Next confirma os objetos, faz a transição atômica para processamento e envia o job ao worker autenticado.
-4. Python processa pixels reais, usando B02/B03/B04/B08, máscaras de qualidade, índices e RF v2. Retorna polígonos WGS84, hectares geodésicos, PNGs, GeoTIFF e JSON.
-5. Os oito arquivos das novas análises são enviados ao Storage privado. Callback autenticado finaliza o estado no banco; repetições são idempotentes.
-6. O usuário recupera o resultado e baixa arquivos por rotas que conferem propriedade. O chat usa apenas fatos calculados, com contingência rotulada quando a IA não está disponível.
+O upload aceita GeoTIFF com quatro bandas B02/B03/B04/B08, CRS projetado em metros, até um milhão de pixels e 12 MiB. A SCL opcional aceita até 4 MiB. Os arquivos ficam no Storage privado; as rotas verificam o proprietário da análise.
 
-TIFF: 12 MiB, quatro bandas, CRS projetado em metros, até um milhão de pixels; SCL: 4 MiB e até um milhão de pixels. Cinco tentativas de criação por hora/usuário e dez processamentos globais/dia; apenas um job simultâneo no worker. Retenção lógica de três dias; remoção física pelo cron diário pode ocorrer depois do vencimento. URLs assinadas já emitidas continuam válidas até expirar.
+Há cinco tentativas de criação por hora/usuário, dez processamentos globais/dia e um job simultâneo no worker. A retenção lógica é de três dias; a exclusão física depende da chamada diária autenticada a `/api/internal/cleanup` com `CRON_SECRET`. URLs assinadas permanecem válidas até expirar.
 
-O worker não usa banco nem disco persistente. Reinícios podem interromper jobs: não há fila durável, e tarefas sem callback expiram. Não há promessa de execução contínua no plano gratuito.
+O worker mantém jobs em memória, sem fila durável. Reinícios podem interromper análises. `render.yaml` e `apps/web/vercel.json` são configurações existentes; sua presença não comprova disponibilidade contínua nem operação sem custos.
 
-## Verificações
+O modelo foi treinado com supervisão fraca do MapBiomas em uma região de Guaxupé/MG. As três cenas locais participaram do treino v2, inclusive a pasta historicamente chamada `unseen`. Não constituem teste independente desse modelo. Scores não são probabilidades calibradas; transferência para outras regiões não foi validada.
+
+## Verificações e contribuição
+
+Trabalhe em branches a partir de `develop` e abra pull requests para ela. A `main` preserva a versão anterior durante a avaliação em andamento.
 
 ```powershell
+pnpm.cmd check:files
 pnpm.cmd test:web
 & apps/geo-worker/.venv/Scripts/python.exe -m pytest apps/geo-worker/tests -q --disable-warnings
 pnpm.cmd typecheck
 pnpm.cmd build
-pnpm.cmd release:check --mode=local
-& apps/geo-worker/.venv/Scripts/python.exe scripts/check_repository.py
 ```
 
-`pnpm test:db` exige `TEST_DATABASE_URL` apontando para banco descartável cujo nome contenha `test` ou `audit`; consulte [migração](docs/delivery/PRISMA_MIGRATION.md). Os testes unitários ignoram essa integração quando a variável está ausente. Nunca aponte testes para produção.
+Os testes de banco só executam com `TEST_DATABASE_URL` explícita para um banco descartável cujo nome contenha `test` ou `audit`, com migrations aplicadas.
 
-Para revisão visual: execute o app local, instale Chrome ou `pnpm --filter @global-watch/web exec playwright install chromium`, e execute `pnpm test:browser`. O fluxo real opt-in usa `RUN_LIVE_BROWSER=1`, cria usuários/sessões descartáveis e limpa seus próprios objetos; usa a configuração local e consome a cota de processamento. **Não testa o consentimento OAuth Google**. Capturas de testes vão para a pasta temporária `global-watch-browser-screenshots`, configurável por `BROWSER_SCREENSHOT_DIR`. A evidência Gemini documentada é mantida em `docs/delivery/screenshots`; não há screenshots externos copiados.
+Com o app local aberto, `pnpm.cmd test:browser` executa Playwright. Instale Chromium com `pnpm.cmd --filter @global-watch/web exec playwright install chromium` se necessário. `RUN_LIVE_BROWSER=1` habilita fluxos com banco/Storage e processamento real; use ambiente isolado. `RUN_UI_BROWSER=1` habilita fixtures de interface e exige `UI_FIXTURE_DIR` com os oito arquivos listados em `apps/web/tests/browser/workbench.spec.ts`. Essas verificações não cobrem o consentimento OAuth Google. Capturas vão para o diretório temporário `global-watch-browser-screenshots` ou `BROWSER_SCREENSHOT_DIR`.
 
-A regressão adicional `RUN_UI_BROWSER=1` testa o workspace pronto e conta no servidor local sem iniciar jobs. Ela usa arquivos realmente processados da cena pública e fixtures próprios no PostgreSQL/Storage. Preparação e limites em [UI_DESIGN.md](docs/delivery/UI_DESIGN.md); `UI_FIXTURE_DIR` aponta para os seis artefatos. A busca da coleção atua sobre até 30 registros recentes retornados pela API.
+`pnpm.cmd release:check --mode=local` verifica configuração sem publicar. As verificações `test:retention:live` e `test:gemini:live` exigem opt-in descrito nos scripts e utilizam serviços reais.
 
-O preflight é somente leitura, não exibe segredos e retorna código 1 se faltar uma configuração obrigatória, inclusive a chave Gemini. Nunca declara produção pronta sozinho. A verificação de retenção real tem opt-in e banco/servidor isolados; consulte os procedimentos antes de executá-la.
+Mudanças no classificador devem preservar a proveniência e distinguir concordância com rótulos de treino de validação independente. Melhor precisão exige avaliação espacial e temporal independente.
 
-## Documentação da entrega
+## Licença e atribuições
 
-- [Arquitetura](docs/architecture/ARQUITETURA.md) e [organização/contrato de resultados](docs/delivery/ARQUITETURA_E_INSPECAO.md)
-- [Resultados da validação e limites da evidência](docs/delivery/AUDITORIA_FINAL.md)
-- [Geoprocessamento e análise dos erros](docs/delivery/AUDITORIA_GEO.md)
-- [Deploy e migrations](docs/delivery/DEPLOY.md) · [banco existente/baseline](docs/delivery/PRISMA_MIGRATION.md)
-- [Interface e interação](docs/delivery/UI_DESIGN.md) · [mapas e datas](docs/delivery/MAPAS_E_DATAS.md)
-- [Pesquisa editável](docs/research/NOTA_PESQUISA_FINAL.md) e [PDF de duas páginas](docs/research/NOTA_PESQUISA_FINAL.pdf)
-- [Fontes e licenças](docs/delivery/PESQUISA_PROVENIENCIA.md)
-- [Checklist público](docs/delivery/CHECKLIST_ENTREGA.md) e [roteiro do vídeo](docs/delivery/ROTEIRO_VIDEO.md)
+O código original é distribuído sob a [licença MIT](LICENSE). Dados, mapas e componentes de terceiros mantêm seus próprios termos; consulte [data/README.md](data/README.md) e `apps/web/components/ui/LICENSE`.
 
-MapBiomas é supervisão fraca, não verdade de campo; outubro participou do treinamento final e não é teste independente. Scores não são confiança calibrada. Modelos v1 são pesquisa histórica, v2 é o modelo do worker. Crédito: Contains modified Copernicus Sentinel data (2025); manter atribuições dos dados e dos mapas.
-
-Para gerar a nota de pesquisa, instale o extra Python `[research]` e execute `python scripts/build_research_pdf.py`. O gerador usa DejaVu Sans instalado no Linux ou Arial do Windows e não depende de caminhos Linux no Windows. Confira sempre o limite de duas páginas e a renderização depois de alterar o texto.
-
-ChatGPT e Codex auxiliaram pesquisa, implementação e documentação; processamento e números dependem de pixels reais e verificações registradas. Prithvi e Clay foram pesquisados, não executados. As referências visuais do redesign foram usadas apenas para orientação, sem copiar marcas, dados, layouts ou assets de terceiros.
+Contains modified Copernicus Sentinel data (2025). MapBiomas é a fonte de supervisão fraca, sem vínculo institucional com o projeto.

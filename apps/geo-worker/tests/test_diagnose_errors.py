@@ -18,10 +18,10 @@ class DiagnosisTests(unittest.TestCase):
                 ROOT / "data/sample/imagem_multiespectral.tif",
                 ROOT / "data/reference/mapbiomas_2025_recorte_30m.tif",
                 {
-                    "baseline": ROOT / "experiments/outputs/baseline/candidatos.geojson",
-                    "rf_aug": ROOT / "experiments/outputs/model_uma_data/candidatos.geojson",
-                    "rf_jul": ROOT / "experiments/outputs/model_adicional/candidatos.geojson",
-                    "rf_both": ROOT / "experiments/outputs/model/candidatos.geojson",
+                    "baseline": ROOT / "apps/geo-worker/tests/fixtures/predictions/baseline.geojson",
+                    "rf_aug": ROOT / "apps/geo-worker/tests/fixtures/predictions/model_uma_data.geojson",
+                    "rf_jul": ROOT / "apps/geo-worker/tests/fixtures/predictions/model_adicional.geojson",
+                    "rf_both": ROOT / "apps/geo-worker/tests/fixtures/predictions/model.geojson",
                 },
                 Path(folder),
             )

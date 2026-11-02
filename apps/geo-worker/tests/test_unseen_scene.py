@@ -32,8 +32,8 @@ class UnseenSceneTests(unittest.TestCase):
             report = evaluate(
                 ROOT / "data/sample/imagem_multiespectral.tif",
                 ROOT / "data/reference/mapbiomas_2025_recorte_30m.tif",
-                {"aug_jul": ROOT / "experiments/outputs/model/candidatos.geojson",
-                 "oct_unseen": ROOT / "experiments/outputs/model_outubro/candidatos.geojson"},
+                {"aug_jul": ROOT / "apps/geo-worker/tests/fixtures/predictions/model.geojson",
+                 "oct_unseen": ROOT / "apps/geo-worker/tests/fixtures/predictions/model_outubro.geojson"},
                 Path(folder),
             )
             self.assertFalse(report["comparison_is_validation_against_field_truth"])
@@ -47,7 +47,7 @@ class UnseenSceneTests(unittest.TestCase):
                 ROOT / "data/additional/imagem_adicional_multiespectral.tif",
                 ROOT / "data/unseen/imagem_adicional_multiespectral.tif",
                 ROOT / "data/reference/mapbiomas_2025_recorte_30m.tif",
-                ROOT / "experiments/outputs/model/candidatos.geojson", Path(folder), ids=(33,),
+                ROOT / "apps/geo-worker/tests/fixtures/predictions/model.geojson", Path(folder), ids=(33,),
             )
             self.assertEqual(report[0]["polygon_id"], 33)
             self.assertTrue((Path(folder) / "poligono_33_inspecao.png").is_file())

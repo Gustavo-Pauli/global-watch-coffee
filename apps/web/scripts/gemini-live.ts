@@ -115,7 +115,7 @@ async function main() {
     const followUpReply = await followUp.json() as ChatAnswer;
     assert.equal(followUpReply.type, 'ai_grounded', `browser follow-up fell back: ${followUpReply.type === 'rules_fallback_not_ai' ? followUpReply.reason : ''}`);
     await expect(page.getByTestId('chat-message-assistant').locator('p').last()).toHaveText(followUpReply.answer, { timeout: 10_000 });
-    const screenshotRoot = resolve(__dirname, '../../../docs/delivery/screenshots');
+    const screenshotRoot = resolve(process.env.BROWSER_SCREENSHOT_DIR || join(tmpdir(), 'global-watch-browser-screenshots'));
     await mkdir(screenshotRoot, { recursive: true });
     await page.screenshot({ path: join(screenshotRoot, 'desktop-chat-gemini.png'), fullPage: true, animations: 'disabled' });
     console.log(JSON.stringify({ model: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite', publicDemoFacts: { areaHa: result.candidate_area_ha, polygons: result.candidate_polygon_count, ndvi: result.ndvi_median }, checks, browserAIGrounded: true, browserConversationTurns: 2, oauthHandshakeTested: false }));

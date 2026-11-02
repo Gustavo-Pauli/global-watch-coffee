@@ -5,3 +5,8 @@
 *.png binary
 *.pdf binary
 *.zip binary
+
+# Sample checksums must stay valid on Windows and Linux checkouts.
+data/sample/*.txt text eol=lf
+data/sample/*.json text eol=lf
+data/sample/*.geojson text eol=lf
