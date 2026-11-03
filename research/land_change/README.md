@@ -111,3 +111,20 @@ label yourself an expert unless that accurately describes your review.
 
 Contains modified Copernicus Sentinel data (2025, 2026). Other source products
 and pretrained models retain their own attribution and license conditions.
+
+## Private internal-Lab bundle
+
+After the frozen acquisition, detection, review revision 2, feature extraction
+and model probes exist, export the portable UI dataset from the repository root:
+
+```powershell
+apps/geo-worker/.venv/Scripts/python.exe -m research.land_change.export_lab
+```
+
+The exporter verifies raster hashes and cross-artifact identities, then publishes
+`apps/web/.lab-data/bundles/<study_id>/study.json` and content-addressed image assets.
+This directory is private and ignored by Git; never copy the dataset into `public/`.
+Sample frames preserve the original dates and the orange 160 m evaluation support.
+The bundle carries no annotation labels, absolute research paths or source URLs.
+`build.json` records size, counts and export timing; the dataset fingerprint remains
+stable across reruns and relocation of an unchanged frozen source directory.

@@ -4,10 +4,11 @@ import type { ReactNode } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavigationToggle, usePlatform } from "./PlatformShell";
-export default function PageHeader({ title, meta, fullWidth = false, }: {
+export default function PageHeader({ title, meta, fullWidth = false, action, }: {
     title: string;
     meta?: ReactNode;
     fullWidth?: boolean;
+    action?: ReactNode;
 }) {
     const { newAnalysis } = usePlatform();
     return (<header className={"h-[48px] min-h-[48px] border-b border-solid border-[var(--line-soft)] bg-[#18181a] p-0 text-[12px] text-muted-foreground"} data-testid="page-header">
@@ -19,10 +20,10 @@ export default function PageHeader({ title, meta, fullWidth = false, }: {
           </div>
           {meta && <div className={"shrink-0 text-[13px] font-medium leading-[20px] tracking-normal text-muted-foreground"}>{meta}</div>}
         </div>
-        <Button size="sm" className={"ml-auto h-[32px] min-h-[32px] shrink-0 gap-[6px] px-[10px] py-[5px] text-[13px] font-medium leading-[20px] tracking-normal max-[760px]:px-[9px] max-[760px]:py-[6px]"} onClick={newAnalysis}>
+        {action === undefined ? <Button size="sm" className={"ml-auto h-[32px] min-h-[32px] shrink-0 gap-[6px] px-[10px] py-[5px] text-[13px] font-medium leading-[20px] tracking-normal max-[760px]:px-[9px] max-[760px]:py-[6px]"} onClick={newAnalysis}>
           <Plus size={16}/>
           <span>Nova análise</span>
-        </Button>
+        </Button> : action}
       </div>
     </header>);
 }

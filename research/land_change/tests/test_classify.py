@@ -129,6 +129,19 @@ def test_small_test_class_suppresses_five_class_metrics():
     assert evaluation['per_class']['5']['f1'] is None
 
 
+def test_human_visual_references_are_accepted_without_claiming_expert_or_field_validation():
+    samples = complete_samples()
+    for item in samples:
+        item['reference_kind'] = 'human_visual_interpretation'
+    report, model = classify_feature_matrix(matrix(samples), samples)
+    assert model is not None
+    assert report['human_expert_reference_count'] == 0
+    assert report['field_validated'] is False
+    assert report['independent_field_accuracy'] is None
+    for split in ('validation', 'test', 'transfer_test'):
+        assert report['evaluations'][split]['reference_type'] == 'agreement_with_human_visual_interpretation'
+
+
 def test_preannotation_support_amendment_allows_local_five_but_not_transfer_five():
     selected = []
     counts = {}

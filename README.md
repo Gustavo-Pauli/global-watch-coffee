@@ -41,11 +41,19 @@ pnpm.cmd db:deploy
 
 Em banco existente, faça backup e compare o schema antes de marcar `0_existing_schema` como aplicado com `pnpm.cmd db:baseline`. O comando não verifica equivalência: confira também CHECKs e FKs nas migrations. Não marque a baseline em banco vazio. A migration seguinte habilita RLS e revoga acesso público; a conexão privada do servidor precisa ser proprietária das tabelas ou ter BYPASSRLS e permissões de CRUD.
 
-Inicie em terminais separados:
+Inicie os dois serviços com:
+
+```powershell
+pnpm.cmd dev
+```
+
+Os scripts do worker usam automaticamente `apps/geo-worker/.venv` no Windows e no Linux/macOS, sem precisar ativá-la no terminal. Sem `.venv`, usam o `python` disponível no PATH, que precisa ter as dependências instaladas.
+
+Para iniciar em terminais separados:
 
 ```powershell
 # Terminal 1
-& apps/geo-worker/.venv/Scripts/python.exe -m uvicorn geo_worker.server:app --app-dir apps/geo-worker/src --reload --host 127.0.0.1 --port 8000
+pnpm.cmd dev:worker
 # Terminal 2
 pnpm.cmd dev:web
 ```

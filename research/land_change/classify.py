@@ -303,7 +303,7 @@ def agreement_name(samples: list[dict], indices: list[int]) -> str:
     if kinds == {'expert_visual_interpretation'}:
         return 'agreement_with_expert_visual_interpretation'
     if kinds == {'human_visual_interpretation'}:
-        return 'agreement_with_nonexpert_visual_interpretation'
+        return 'agreement_with_human_visual_interpretation'
     return 'agreement_with_mixed_visual_interpretation'
 
 

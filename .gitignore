@@ -40,3 +40,4 @@ private_data/
 experiments/outputs/
 experiments/evaluation/
 /experiments-acquire.log
+apps/web/.lab-data/

@@ -1,0 +1,29 @@
+"use client";
+
+import { useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import type { LabStudy } from "./types";
+import { labAssetUrl } from "./types";
+import { labDate, labNumber } from "./api";
+import { LabImage } from "./LabShared";
+import styles from "./experiments.module.css";
+
+export function StudyResults({ study }: { study: LabStudy }) {
+  const [showAllCases, setShowAllCases] = useState(false);
+  const cases = showAllCases ? study.caseCards : study.caseCards.slice(0, 4);
+  return <div className={styles.results} data-testid="experiment-results">
+    <section className={styles.section}><h3>O que esta rodada permite concluir</h3><p>{study.interpretationNote}</p>{study.hypotheses.map(hypothesis => <div className={styles.hypothesis} key={hypothesis.id}><h4>{hypothesis.title}</h4><p>{hypothesis.question}</p><p>{hypothesis.finding}</p></div>)}</section>
+    <section className={styles.section}><h3>Resultados da detecção</h3><p>Os polígonos são candidatos espectrais. A avaliação dos acertos, omissões e usos posteriores depende das referências revisadas.</p><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Piloto</th><th>Candidatos</th><th>Área candidata</th><th>Novos dentro da série</th></tr></thead><tbody>{study.regions.map(region => <tr key={region.id}><td>{region.name}</td><td>{labNumber(region.metrics.candidateCount, 0)}</td><td>{labNumber(region.metrics.candidateAreaHa)} ha</td><td>{labNumber(region.metrics.newlyObservedCount, 0)} · {labNumber(region.metrics.newlyObservedAreaHa)} ha</td></tr>)}</tbody></table></div></section>
+    {cases.length > 0 && <section className={styles.section}><h3>Evidências para inspecionar</h3><div className={styles.caseGrid}>{cases.map(card => <figure className={styles.caseFigure} key={card.id}><LabImage src={labAssetUrl(study.id, card.imageAssetId)} alt={card.caption} /><figcaption>{card.caption}</figcaption></figure>)}</div>{study.caseCards.length > 4 && <button className={styles.button} style={{ marginTop: 14 }} onClick={() => setShowAllCases(value => !value)}>{showAllCases ? "Mostrar menos casos" : `Ver todos os ${study.caseCards.length} casos`}</button>}</section>}
+    <section className={styles.section}><h3>Classificação e referências</h3><p>{labNumber(study.sampleCount, 0)} amostras foram preparadas, com {labNumber(study.usableSampleCount, 0)} suportes utilizáveis na extração atual. A tarefa compara floresta, pastagem, cultivo, solo exposto e água. Sem referências suficientes por classe, não há uma comparação de precisão concluída.</p><p style={{ marginTop: 10 }}>A interpretação visual se refere a uma área de 160 × 160 m em uma observação datada. Concordância com uma interpretação humana ou assistida por IA deve ser reportada conforme sua origem; não equivale a validação de campo.</p></section>
+    <section className={styles.section}><h3>Modelo pré-treinado: execução local</h3><p>Os testes abaixo medem a extração de características do encoder. Eles não são uma classificação treinada nem uma medição de acurácia.</p><div className={styles.tableWrap}><table className={styles.table}><thead><tr><th>Modelo / cena</th><th>Janelas</th><th>Forward GPU</th><th>Memória PyTorch</th><th>Grade das características</th></tr></thead><tbody>{study.modelRuns.map((run, index) => <tr key={`${run.sceneId}:${index}`}><td>{run.name}<br /><span className={styles.muted}>{labDate(run.date)}</span></td><td>{labNumber(run.tileCount, 0)}</td><td>{labNumber(run.inferenceSeconds, 3)} s</td><td>{labNumber(run.peakAllocatedMiB)} MiB</td><td>{run.featureSpacingM} m</td></tr>)}</tbody></table></div><p style={{ marginTop: 12 }}>O tempo é apenas de inferência, excluindo carregamento, leitura, hashes e exportação. A memória indicada é do alocador PyTorch e exclui contexto CUDA, driver e outros processos. Características espaçadas a 160 m não constituem segmentação validada a 10 m.</p></section>
+    <section className={styles.section}><h3>Método e limites</h3><p>{study.method.explanation}</p><details className={styles.disclosure} style={{ marginTop: 15 }}><summary>Parâmetros desta rodada</summary><div><dl className={styles.detailsList}>{study.method.parameters.map(parameter => <div key={parameter.label} style={{ display: "contents" }}><dt>{parameter.label}</dt><dd>{parameter.value}</dd></div>)}</dl></div></details><details className={styles.disclosure}><summary>Limitações da interpretação</summary><div><ul className={styles.limitationList}>{study.method.limitations.map(limitation => <li key={limitation}>{limitation}</li>)}</ul></div></details><details className={styles.disclosure}><summary>Acesso aos produtos comparadores</summary><div>{study.referenceAccess.map(reference => <div className={styles.hypothesis} key={reference.name}><h4>{reference.name}</h4><p>{reference.detail}</p></div>)}</div></details></section>
+    <p className={styles.muted} style={{ fontSize: 11, lineHeight: 1.7 }}>{study.attribution}</p>
+  </div>;
+}
+
+const paperKind = { journal: "Artigo em periódico", conference: "Artigo em conferência", preprint: "Preprint · resultados ainda sujeitos a revisão", documentation: "Documentação e dados" };
+
+export function StudyPapers({ study }: { study: LabStudy }) {
+  return <div className={styles.results} data-testid="experiment-papers"><section className={styles.section}><h3>Pesquisas que orientam o estudo</h3><p>Estes trabalhos fundamentam os experimentos e ajudam a interpretar seus limites. Os resultados dos artigos não são resultados já demonstrados nesta plataforma.</p>{study.papers.map(paper => <article className={styles.paper} key={paper.url}><span className={styles.paperYear}>{paper.year}</span><div><h4><a href={paper.url} target="_blank" rel="noreferrer noopener">{paper.title}</a></h4><p>{paper.relevance}</p><div className={styles.paperKind}>{paperKind[paper.kind]}</div></div><ArrowUpRight size={16} aria-hidden="true" /></article>)}</section></div>;
+}

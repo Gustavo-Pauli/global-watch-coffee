@@ -17,6 +17,7 @@ model User {
   updatedAt     DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
   sessions      Session[]
   accounts      Account[]
+  experimentReviews ExperimentReview[]
 
   @@map("user")
 }
@@ -97,4 +98,26 @@ model RateLimit {
 
   @@index([expiresAt], map: "app_rate_limits_expires_idx")
   @@map("app_rate_limits")
+}
+
+model ExperimentReview {
+  id            String   @id @default(uuid()) @db.Uuid
+  studyId       String   @map("study_id") @db.Text
+  fingerprint   String   @db.Text
+  sampleId      String   @map("sample_id") @db.Text
+  reviewerId    String   @map("reviewer_id") @db.Text
+  decision      String   @db.Text
+  label         Int?
+  certainty     String   @db.Text
+  notes         String   @default("") @db.Text
+  referenceKind String   @map("reference_kind") @db.Text
+  blindReview   Boolean  @default(false) @map("blind_review")
+  revision      Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  reviewer      User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "experiment_reviews_reviewer_fk")
+
+  @@unique([studyId, fingerprint, sampleId, reviewerId], map: "experiment_reviews_unique_reviewer")
+  @@index([studyId, fingerprint, reviewerId], map: "experiment_reviews_owner")
+  @@map("experiment_reviews")
 }

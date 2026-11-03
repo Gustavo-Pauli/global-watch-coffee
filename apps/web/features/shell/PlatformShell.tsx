@@ -3,14 +3,14 @@ import { cn } from "@/lib/utils";
 import { actionButtonVariants, textButtonClass } from "@/components/ui/action";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { createContext, useContext, useLayoutEffect, useState, type ReactNode, } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState, type ReactNode, } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@/components/ui/dialog";
 import * as Tooltip from "radix-ui/tooltip";
-import { ChevronRight, FolderClosed, LoaderCircle, Menu, PanelLeftClose, PanelLeftOpen, X, } from "lucide-react";
+import { ChevronRight, FlaskConical, FolderClosed, LoaderCircle, Menu, PanelLeftClose, PanelLeftOpen, X, } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
-import { errorMessage } from "@/lib/client-api";
+import { errorMessage, requestJSON } from "@/lib/client-api";
 import AccountMenu from "./AccountMenu";
 import Brand from "./Brand";
 import NewAnalysisDialog from "@/features/analyses/NewAnalysisDialog";
@@ -111,6 +111,15 @@ function AuthenticatedPlatform({ children, user, }: {
 }) {
     const pathname = usePathname();
     const workspace = /^\/analyses\/[^/]+/.test(pathname);
+    const experimentsActive = pathname === '/experiments' || pathname.startsWith('/experiments/');
+    const [canExperiment, setCanExperiment] = useState(false);
+    useEffect(() => {
+        const controller = new AbortController();
+        void requestJSON<{ allowed: boolean }>('/api/experiments/access', { signal: controller.signal })
+            .then(result => { if (!controller.signal.aborted) setCanExperiment(result.allowed); })
+            .catch(() => { if (!controller.signal.aborted) setCanExperiment(false); });
+        return () => controller.abort();
+    }, [user.id]);
     const [navigationOpen, setNavigationOpen] = useState(false);
     const [newOpen, setNewOpen] = useState(false);
     const [collectionCollapsed, setCollectionCollapsed] = useState(false);
@@ -172,13 +181,19 @@ function AuthenticatedPlatform({ children, user, }: {
         </div>
         <nav className={cn("flex flex-col gap-[7px]", mobile ? "px-[12px] pb-[9px] pt-[14px]" : "px-[10px] py-[14px]")} id={mobile ? undefined : "platform-navigation"} aria-label={mobile ? "Navegação móvel" : "Navegação principal"}>
           <NavigationHint enabled={compact} label="Análises">
-            <Link className={cn("items-center rounded-[5px] border-0 bg-[#262628] text-[13px] font-medium text-foreground hover:bg-[#252527]", mobile ? "flex min-h-[37px] px-[11px] py-[10px] pointer-coarse:min-h-[42px]" : "grid h-[38px] min-h-[38px] grid-cols-[18px_minmax(0,1fr)] justify-start overflow-hidden px-[13px] py-[9px] transition-[gap] duration-200 pointer-coarse:h-[44px] pointer-coarse:min-h-[44px] motion-reduce:transition-none", compact ? "gap-0" : "gap-[10px]")} aria-label="Análises" aria-current={workspace ? undefined : "page"} href="/analyses" onClick={() => setNavigationOpen(false)}>
+            <Link className={cn("items-center rounded-[5px] border-0 text-[13px] font-medium text-foreground hover:bg-[#252527]", !experimentsActive && "bg-[#262628]", mobile ? "flex min-h-[37px] px-[11px] py-[10px] pointer-coarse:min-h-[42px]" : "grid h-[38px] min-h-[38px] grid-cols-[18px_minmax(0,1fr)] justify-start overflow-hidden px-[13px] py-[9px] transition-[gap] duration-200 pointer-coarse:h-[44px] pointer-coarse:min-h-[44px] motion-reduce:transition-none", compact ? "gap-0" : "gap-[10px]")} aria-label="Análises" aria-current={!experimentsActive && !workspace ? "page" : undefined} href="/analyses" onClick={() => setNavigationOpen(false)}>
               <FolderClosed size={18} aria-hidden="true"/>
               <span className={cn("overflow-hidden whitespace-nowrap transition-[opacity,translate] duration-200 motion-reduce:transition-none", compact && "-translate-x-[6px] opacity-0")} aria-hidden={compact || undefined}>
                 Análises
               </span>
             </Link>
           </NavigationHint>
+          {canExperiment && <NavigationHint enabled={compact} label="Experimentação">
+            <Link className={cn("items-center rounded-[5px] border-0 text-[13px] font-medium text-foreground hover:bg-[#252527]", experimentsActive && "bg-[#262628]", mobile ? "flex min-h-[37px] px-[11px] py-[10px] pointer-coarse:min-h-[42px]" : "grid h-[38px] min-h-[38px] grid-cols-[18px_minmax(0,1fr)] justify-start overflow-hidden px-[13px] py-[9px] transition-[gap] duration-200 pointer-coarse:h-[44px] pointer-coarse:min-h-[44px] motion-reduce:transition-none", compact ? "gap-0" : "gap-[10px]")} aria-label="Experimentação" aria-current={experimentsActive ? "page" : undefined} href="/experiments" onClick={() => setNavigationOpen(false)}>
+              <FlaskConical size={18} aria-hidden="true" />
+              <span className={cn("overflow-hidden whitespace-nowrap transition-[opacity,translate] duration-200 motion-reduce:transition-none", compact && "-translate-x-[6px] opacity-0")} aria-hidden={compact || undefined}>Experimentação</span>
+            </Link>
+          </NavigationHint>}
         </nav>
         <div className={cn("mt-auto", mobile ? "p-[10px]" : compact ? "px-[9px] py-[8px]" : "p-[8px]")}>
           <AccountMenu user={user} compact={compact}/>
