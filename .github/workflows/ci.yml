@@ -15,7 +15,7 @@ jobs:
       - name: Install geo-worker
         run: python -m pip install -e './apps/geo-worker[dev]'
       - name: Python regressions and real-pixel integration
-        run: python -m pytest apps/geo-worker/tests -q --disable-warnings
+        run: python -m pytest apps/geo-worker/tests research/land_change/tests -q --disable-warnings
       - name: Required repository files
         run: python scripts/check_repository.py
   web:

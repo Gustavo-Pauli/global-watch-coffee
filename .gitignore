@@ -39,3 +39,4 @@ private_data/
 # Generated research outputs (regression inputs live in tests/fixtures)
 experiments/outputs/
 experiments/evaluation/
+/experiments-acquire.log

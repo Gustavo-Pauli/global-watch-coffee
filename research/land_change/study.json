@@ -1,0 +1,28 @@
+{
+  "study_id": "amazon-land-change-20261102-v1",
+  "cutoff_utc": "2026-11-02T23:59:59Z",
+  "recent_start": "2026-08-01T00:00:00Z",
+  "baseline_start": "2025-08-01T00:00:00Z",
+  "baseline_end": "2025-10-31T23:59:59Z",
+  "catalog": "https://earth-search.aws.element84.com/v1",
+  "collection": "sentinel-2-c1-l2a",
+  "resolution_m": 10,
+  "clear_scl_classes": [4, 5, 6],
+  "max_recent_scenes": 12,
+  "max_baseline_scenes": 4,
+  "selection_interval_days": 8,
+  "min_region_clear_percent": 15,
+  "disk_budget_bytes": 20000000000,
+  "seed": 20261102,
+  "bands": ["blue", "green", "red", "nir", "swir16", "swir22"],
+  "regions": [
+    {"id": "novo_progresso", "name": "Novo Progresso / PA", "role": "development", "bbox": [-55.5, -7.2, -55.3, -7.0]},
+    {"id": "belterra", "name": "Belterra / PA", "role": "geographic_holdout", "bbox": [-54.95, -3.4, -54.75, -3.2]}
+  ],
+  "claims": {
+    "field_validated": false,
+    "source_labels_are_independent_truth": false,
+    "native_swir_resolution_m": 20,
+    "cause_attribution_from_images_alone": false
+  }
+}

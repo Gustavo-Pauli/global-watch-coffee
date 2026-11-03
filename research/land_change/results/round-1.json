@@ -1,0 +1,926 @@
+{
+  "study_id": "amazon-land-change-20261102-v1",
+  "cutoff_utc": "2026-11-02T23:59:59Z",
+  "stage": "acquisition_and_feasibility; reference_evaluation_pending",
+  "config_sha256": "eaf20c59df96e85658f73a27383ac4f0e89269a148707e7dd52586ab1744117a",
+  "manifest_sha256": "af74e70f080caf99fd9ebc1a2edb6489f4cbf1e0a6ef7d2318d04fa6f46e78a9",
+  "observations": [
+    {
+      "region": "novo_progresso",
+      "bbox": [
+        -55.5,
+        -7.2,
+        -55.3,
+        -7.0
+      ],
+      "scenes": [
+        {
+          "id": "S2C_T21MXN_20250803T140445_L2A",
+          "date": "2025-08-03T14:04:53.652000Z",
+          "phase": "baseline",
+          "image_sha256": "4fb8e80cc3f4360eed6b67ad9a563db5816dea2f7dc423bceb52a126e6e77a73",
+          "scl_sha256": "13b5d635f7f569fea2148fd2ebebd35a743cf39b774bc281688d331b15089641",
+          "download_seconds": 111.9,
+          "quality": {
+            "clear_percent": 30.913,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 64.457631,
+            "full_resolution_clear_percent": 30.946
+          }
+        },
+        {
+          "id": "S2A_T21MXN_20250825T140106_L2A",
+          "date": "2025-08-25T14:04:44.112000Z",
+          "phase": "baseline",
+          "image_sha256": "4b5e7373c8903c06e09de70b0b5f4cdc0f9b786679f8a662d54012c802213a83",
+          "scl_sha256": "931e8c08b8ba7c76b4377bbeddb14a5dcb021810b5b9614850beadf7f814e590",
+          "download_seconds": 117.08,
+          "quality": {
+            "clear_percent": 99.588,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 22.058263,
+            "full_resolution_clear_percent": 99.563
+          }
+        },
+        {
+          "id": "S2B_T21MXN_20250927T135901_L2A",
+          "date": "2025-09-27T14:04:29.875000Z",
+          "phase": "baseline",
+          "image_sha256": "4b121e42a3e7e609c82c0a2a32a8f3a188589ca307f806ff8106099e489b9ac0",
+          "scl_sha256": "f2cd1bdca12bf73f6d6a215f8a6fa9e1b8419b08e856a96b337d189727d27166",
+          "download_seconds": 111.31,
+          "quality": {
+            "clear_percent": 91.474,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 27.252463,
+            "full_resolution_clear_percent": 91.436
+          }
+        },
+        {
+          "id": "S2B_T21MXN_20251027T140153_L2A",
+          "date": "2025-10-27T14:04:28.861000Z",
+          "phase": "baseline",
+          "image_sha256": "8aa40134f5af923e587ff1b86bef392c89b5e8029e24245a555dc4013381b6b3",
+          "scl_sha256": "5b114ac9880ad30c9a38440e05513a31154108ca18c602ac468be4ddbce75717",
+          "download_seconds": 118.05,
+          "quality": {
+            "clear_percent": 82.936,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 61.692327,
+            "full_resolution_clear_percent": 82.916
+          }
+        },
+        {
+          "id": "S2B_T21MXN_20260803T135702_L2A",
+          "date": "2026-08-03T14:04:29.613000Z",
+          "phase": "recent",
+          "image_sha256": "797657a50321526a982c0d1fcefd0b6bd7295f19a90282f5db4d04c3a0e0f2a9",
+          "scl_sha256": "04f73ab86f21c8f8574cfd86adb95c1af94c5599fc5d5e1e2894aa0c710bac74",
+          "download_seconds": 120.65,
+          "quality": {
+            "clear_percent": 99.649,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 0.124098,
+            "full_resolution_clear_percent": 99.63
+          }
+        },
+        {
+          "id": "S2C_T21MXN_20260808T135702_L2A",
+          "date": "2026-08-08T14:04:29.527000Z",
+          "phase": "recent",
+          "image_sha256": "572b8cda89a7af5c90d8a9768aec552aedf2774e60968565c3f384f32a7cad0c",
+          "scl_sha256": "0103349a35ded7e53e4fcfb2ac58669c2f4d7ec50af5990e41ebd94804091053",
+          "download_seconds": 122.27,
+          "quality": {
+            "clear_percent": 96.205,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 0.972277,
+            "full_resolution_clear_percent": 96.226
+          }
+        },
+        {
+          "id": "S2C_T21MXN_20260818T135659_L2A",
+          "date": "2026-08-18T14:04:26.991000Z",
+          "phase": "recent",
+          "image_sha256": "9b7819395fb2cc751a9cc141eee3dc80d0114fc26e1446f1f460c28301c92986",
+          "scl_sha256": "ca5e19606aec136c82458f9136cec64ed992841c1a9ad67f75bde8990bbdede3",
+          "download_seconds": 121.02,
+          "quality": {
+            "clear_percent": 99.582,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 8.668194,
+            "full_resolution_clear_percent": 99.587
+          }
+        },
+        {
+          "id": "S2A_T21MXN_20260830T140106_L2A",
+          "date": "2026-08-30T14:04:44.653000Z",
+          "phase": "recent",
+          "image_sha256": "0922acd88f6eafc341f16f6c5524762a78449fc4951dbe49217398e05c46934b",
+          "scl_sha256": "e32b723252df0d25216a1ceda3cd9a68b4105e146a83591554699c04055713c6",
+          "download_seconds": 124.14,
+          "quality": {
+            "clear_percent": 94.454,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 4.073038,
+            "full_resolution_clear_percent": 94.535
+          }
+        },
+        {
+          "id": "S2B_T21MXN_20260902T135659_L2A",
+          "date": "2026-09-02T14:04:26.851000Z",
+          "phase": "recent",
+          "image_sha256": "e6f058d8fa49498dd8ac007aa44a783e736b1df0aab7024b4555795359ffc7e5",
+          "scl_sha256": "5352b14573e91fcaddca259b89f7e86def1234aa29ab3487e67505fa02e50494",
+          "download_seconds": 118.56,
+          "quality": {
+            "clear_percent": 98.858,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 1.190489,
+            "full_resolution_clear_percent": 98.796
+          }
+        },
+        {
+          "id": "S2B_T21MXN_20260912T140101_L2A",
+          "date": "2026-09-12T14:04:27.039000Z",
+          "phase": "recent",
+          "image_sha256": "b7b24f08a598c22ba2f6816b3cce16115a9879e4019a6f5cfa7bd1ad9453a440",
+          "scl_sha256": "fd96db1ff98ac9bd020ce42af1d09e1a411a2920dbb5ab33984a39ddf838433c",
+          "download_seconds": 123.49,
+          "quality": {
+            "clear_percent": 93.274,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 24.490957,
+            "full_resolution_clear_percent": 93.215
+          }
+        },
+        {
+          "id": "S2C_T21MXN_20260917T135701_L2A",
+          "date": "2026-09-17T14:04:28.951000Z",
+          "phase": "recent",
+          "image_sha256": "7f118af1a403e38b7369e49476d45cb20c58c5b12d01a62be443fa32b3727dc4",
+          "scl_sha256": "3199e5472c265910693db32ad77d721cc48f2bd1b8a0dd8932b5fc1c5d2b39bc",
+          "download_seconds": 122.32,
+          "quality": {
+            "clear_percent": 80.383,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 5.49984,
+            "full_resolution_clear_percent": 80.474
+          }
+        },
+        {
+          "id": "S2C_T21MXN_20260927T140011_L2A",
+          "date": "2026-09-27T14:04:30.667000Z",
+          "phase": "recent",
+          "image_sha256": "9c6e9db7d3f9f3f48a0e25cd8acf13c904fb0e46d0ddccde833d494a28b6341d",
+          "scl_sha256": "88817e0c2f5b833d053c903291ad3ac840cd677c74184ec8e8e6516d8e0a9b62",
+          "download_seconds": 130.69,
+          "quality": {
+            "clear_percent": 68.9,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 21.654503,
+            "full_resolution_clear_percent": 68.772
+          }
+        },
+        {
+          "id": "S2C_T21MXN_20261007T140044_L2A",
+          "date": "2026-10-07T14:04:31.196000Z",
+          "phase": "recent",
+          "image_sha256": "9dd74220f3e805bd086ae9c9421edaa6941fc57814b8b2e8860b1508377a6aeb",
+          "scl_sha256": "849551bfb0af84fecdff68afe968bbefe2627297d5ca751a6f472a7311aaacc1",
+          "download_seconds": 120.43,
+          "quality": {
+            "clear_percent": 97.794,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 1.536853,
+            "full_resolution_clear_percent": 97.803
+          }
+        },
+        {
+          "id": "S2C_T21MXN_20261017T135703_L2A",
+          "date": "2026-10-17T14:04:30.356000Z",
+          "phase": "recent",
+          "image_sha256": "5177f76eee744049b2d9436a51426ab3684915b769b6edd45e746992695291aa",
+          "scl_sha256": "0b96680ac74d109346285c2f83d581eea65f1fc4d80edeb391df5b99a259fe8b",
+          "download_seconds": 131.87,
+          "quality": {
+            "clear_percent": 72.605,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 36.067834,
+            "full_resolution_clear_percent": 72.629
+          }
+        },
+        {
+          "id": "S2A_T21MXN_20261019T140304_L2A",
+          "date": "2026-10-19T14:04:39.280000Z",
+          "phase": "recent",
+          "image_sha256": "80bf67dcba8e068b7e5a42c52be8965307d9841784faef7839cfeec0d2758aff",
+          "scl_sha256": "8e37ff09e2a2258fc312664ab911f722cff1d0c5de4dd3c1e76549170002d234",
+          "download_seconds": 129.63,
+          "quality": {
+            "clear_percent": 79.167,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 21.106911,
+            "full_resolution_clear_percent": 79.109
+          }
+        },
+        {
+          "id": "S2B_T21MXN_20261101T140358_L2A",
+          "date": "2026-11-01T14:04:30.352000Z",
+          "phase": "recent",
+          "image_sha256": "131d543fdce4dc0085deb36a2b4e17f867348835779cc14052b405211c871960",
+          "scl_sha256": "fc819b43e52a651a8b84ae931ec25421575de5dd913c0243856e926c9438b839",
+          "download_seconds": 124.96,
+          "quality": {
+            "clear_percent": 80.879,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 60.209727,
+            "full_resolution_clear_percent": 80.88
+          }
+        }
+      ]
+    },
+    {
+      "region": "belterra",
+      "bbox": [
+        -54.95,
+        -3.4,
+        -54.75,
+        -3.2
+      ],
+      "scenes": [
+        {
+          "id": "S2C_T21MYS_20250803T140112_L2A",
+          "date": "2025-08-03T14:03:48.491000Z",
+          "phase": "baseline",
+          "image_sha256": "cdefc5cf1e2b9e7ee339a6d7882e6e8899973008cce6c384c2617e990f3b0ccd",
+          "scl_sha256": "92662b2965fbd86dc9893c4663af6d2b8232d9cf6e200ef6dc45ff26dbf6c2eb",
+          "download_seconds": 115.01,
+          "quality": {
+            "clear_percent": 41.59,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 45.220861,
+            "full_resolution_clear_percent": 41.645
+          }
+        },
+        {
+          "id": "S2C_T21MYS_20250902T140110_L2A",
+          "date": "2025-09-02T14:03:46.272000Z",
+          "phase": "baseline",
+          "image_sha256": "b91fca2d2039c58106d948da8853949f8ab57474d71afc33de03abf8612df708",
+          "scl_sha256": "6fc6c55a6e350a62b4532a0f34b0248aafd186d8ce5f87b1c3622088e40c7b38",
+          "download_seconds": 120.93,
+          "quality": {
+            "clear_percent": 85.318,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 15.185024,
+            "full_resolution_clear_percent": 85.374
+          }
+        },
+        {
+          "id": "S2A_T21MYS_20250924T140106_L2A",
+          "date": "2025-09-24T14:03:43.798000Z",
+          "phase": "baseline",
+          "image_sha256": "0e6fcde6f816734f5aae70157180968abeec2c929123e598f2c0b7eb31fbc9b6",
+          "scl_sha256": "bf712e4acd8c49bbb5ff93215538b6ffecf9acb0f6e5b58f0eb5f8fed57b721b",
+          "download_seconds": 119.02,
+          "quality": {
+            "clear_percent": 52.252,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 74.984974,
+            "full_resolution_clear_percent": 52.35
+          }
+        },
+        {
+          "id": "S2B_T21MYS_20251027T140153_L2A",
+          "date": "2025-10-27T14:03:27.526000Z",
+          "phase": "baseline",
+          "image_sha256": "cf4c98cc81786a012ccac246cb726e2ae4bf574158fbe686e3a0fd01f647005f",
+          "scl_sha256": "7cbb956d87651d7e6889a9123d3dfd4febdfcbced76c186615607441b2279b7f",
+          "download_seconds": 114.94,
+          "quality": {
+            "clear_percent": 53.284,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 64.035296,
+            "full_resolution_clear_percent": 53.337
+          }
+        },
+        {
+          "id": "S2B_T21MYS_20260803T135702_L2A",
+          "date": "2026-08-03T14:03:28.282000Z",
+          "phase": "recent",
+          "image_sha256": "4c3fd3668644f46655d43cf454068e1672a4cbce7c2a5f6400a2eebaaebd6789",
+          "scl_sha256": "573538e8772443775117085f42de39551d87ca5e537e789bf236757614b6800c",
+          "download_seconds": 124.32,
+          "quality": {
+            "clear_percent": 92.967,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 8.076941,
+            "full_resolution_clear_percent": 92.939
+          }
+        },
+        {
+          "id": "S2B_T21MYS_20260813T135700_L2A",
+          "date": "2026-08-13T14:03:26.332000Z",
+          "phase": "recent",
+          "image_sha256": "35dc7f6b4690a56d49036bb85c30fbd771cf3246ec15f2c078ccca8a6cb000ac",
+          "scl_sha256": "b14eaed8879dc3dbf6eb507d5952e61bbb748e8e724c0c66b1b67ae550d20163",
+          "download_seconds": 126.7,
+          "quality": {
+            "clear_percent": 55.853,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 30.425882,
+            "full_resolution_clear_percent": 55.961
+          }
+        },
+        {
+          "id": "S2A_T21MYS_20260820T140106_L2A",
+          "date": "2026-08-20T14:03:42.899000Z",
+          "phase": "recent",
+          "image_sha256": "0657de7f9f1eea5f70b573c665147a3299dd3515e117b7150b075f62ba214633",
+          "scl_sha256": "f836c2eabb627ecf8dab6ee11439f265b5552d63ed4d322ad97e5d2fd69f2e2c",
+          "download_seconds": 119.6,
+          "quality": {
+            "clear_percent": 76.824,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 20.281866,
+            "full_resolution_clear_percent": 76.768
+          }
+        },
+        {
+          "id": "S2A_T21MYS_20260830T140106_L2A",
+          "date": "2026-08-30T14:03:43.313000Z",
+          "phase": "recent",
+          "image_sha256": "1f0f1b9586f371bfff54f9e0c5837fbce04fa556409795f02ece3e7922b696a8",
+          "scl_sha256": "07f9df59f67ce08dba30363962098d30005f31ea3c6173aaa5d204979aeb26be",
+          "download_seconds": 119.14,
+          "quality": {
+            "clear_percent": 98.948,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 5.531014,
+            "full_resolution_clear_percent": 98.964
+          }
+        },
+        {
+          "id": "S2B_T21MYS_20260902T135659_L2A",
+          "date": "2026-09-02T14:03:25.520000Z",
+          "phase": "recent",
+          "image_sha256": "97312c8b9ba02b1bd6e54f18131840378ebd5c0e8b51223796c4670d5d52e68d",
+          "scl_sha256": "e73d8479aa9eb87c22374a25d8d2c759ccb1a284ddf9b1320bf7af784d7ffe09",
+          "download_seconds": 120.1,
+          "quality": {
+            "clear_percent": 87.791,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 13.044252,
+            "full_resolution_clear_percent": 87.896
+          }
+        },
+        {
+          "id": "S2A_T21MYS_20260909T140312_L2A",
+          "date": "2026-09-09T14:03:42.586000Z",
+          "phase": "recent",
+          "image_sha256": "dc44225d66a3399080b31ea12054364cffbfa664fc07bcf0595d0c14d7b65912",
+          "scl_sha256": "26defd355a7fd881a7cd2e83351a9cea97bd82e1a24ca2cb070d35cddebf6581",
+          "download_seconds": 118.9,
+          "quality": {
+            "clear_percent": 84.917,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 41.077453,
+            "full_resolution_clear_percent": 84.971
+          }
+        },
+        {
+          "id": "S2A_T21MYS_20260919T140104_L2A",
+          "date": "2026-09-19T14:03:41.608000Z",
+          "phase": "recent",
+          "image_sha256": "8b183086345293574fb8909f39fab2f16f148c65c160c5967e3d2f5c7d33b577",
+          "scl_sha256": "53c59345a01af3e49506c28b62b5b2f3960785c95fcd59bd771cabc24998741b",
+          "download_seconds": 123.39,
+          "quality": {
+            "clear_percent": 78.466,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 26.885855,
+            "full_resolution_clear_percent": 78.555
+          }
+        },
+        {
+          "id": "S2C_T21MYS_20260927T140011_L2A",
+          "date": "2026-09-27T14:03:29.296000Z",
+          "phase": "recent",
+          "image_sha256": "9bbfb74546ba99f5d6749b414ddd0c6e201228658eac754e42683b4ccf320d8b",
+          "scl_sha256": "80695bd4286056221c562089ca3185f2eb7c0be4fae3a57bfd3f1b53df46169f",
+          "download_seconds": 122.77,
+          "quality": {
+            "clear_percent": 41.357,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 24.345736,
+            "full_resolution_clear_percent": 41.249
+          }
+        },
+        {
+          "id": "S2C_T21MYS_20261007T140044_L2A",
+          "date": "2026-10-07T14:03:29.825000Z",
+          "phase": "recent",
+          "image_sha256": "0ddf7547f5fa26d442e3889b8a076be80905d7100144f31b65736b78cc55a0cb",
+          "scl_sha256": "0a60d2aef3c63fd72c05f985366e865be035c727bf64d105558c0dc30705afe7",
+          "download_seconds": 124.47,
+          "quality": {
+            "clear_percent": 97.431,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 5.03863,
+            "full_resolution_clear_percent": 97.414
+          }
+        },
+        {
+          "id": "S2B_T21MYS_20261012T135701_L2A",
+          "date": "2026-10-12T14:03:27.313000Z",
+          "phase": "recent",
+          "image_sha256": "ff38edad94e986625ba731b57cc68fa8763988b1eabd5fbebaaaed0e141b5a18",
+          "scl_sha256": "61e785f84a91f16a6399f18fa4edb474d00529a95186beb80b67ee67620309a1",
+          "download_seconds": 122.64,
+          "quality": {
+            "clear_percent": 93.336,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 20.778388,
+            "full_resolution_clear_percent": 93.296
+          }
+        },
+        {
+          "id": "S2B_T21MYS_20261022T135702_L2A",
+          "date": "2026-10-22T14:03:28.183000Z",
+          "phase": "recent",
+          "image_sha256": "e37d95120fa8e10783444d059abd78c2ba0a2286fc2b010bcec1c4a1cadb0f1b",
+          "scl_sha256": "41be8a35dab7d2226c07f679c583c3e314b705f966f701dfd1063eb468da57e8",
+          "download_seconds": 135.67,
+          "quality": {
+            "clear_percent": 46.806,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 35.868672,
+            "full_resolution_clear_percent": 46.945
+          }
+        },
+        {
+          "id": "S2A_T21MYS_20261029T140057_L2A",
+          "date": "2026-10-29T14:03:34.183000Z",
+          "phase": "recent",
+          "image_sha256": "f4635e89102c19d49bee8809f09692b30a66ded306494a2724a9983c79e7eebb",
+          "scl_sha256": "3a1075a32fd676997bfab4036a39c400b407d1def523ea035677103b926dc7b5",
+          "download_seconds": 126.16,
+          "quality": {
+            "clear_percent": 68.413,
+            "covered_percent": 100.0,
+            "overview_resolution_m": 120,
+            "scene_cloud_percent": 12.990588,
+            "full_resolution_clear_percent": 68.443
+          }
+        }
+      ]
+    }
+  ],
+  "detection_parameters": {
+    "forest_ndvi_min": 0.65,
+    "forest_nbr_min": 0.5,
+    "ndvi_drop_min": 0.2,
+    "nbr_drop_min": 0.2,
+    "post_ndvi_max": 0.55,
+    "mad_multiplier": 3.0,
+    "min_baseline_days": 2,
+    "corroborating_days": 2,
+    "min_area_ha": 0.5,
+    "tile_size": 256
+  },
+  "detection_regions": [
+    {
+      "region": "novo_progresso",
+      "method": "spectral_persistence_baseline_v1",
+      "parameters": {
+        "forest_ndvi_min": 0.65,
+        "forest_nbr_min": 0.5,
+        "ndvi_drop_min": 0.2,
+        "nbr_drop_min": 0.2,
+        "post_ndvi_max": 0.55,
+        "mad_multiplier": 3.0,
+        "min_baseline_days": 2,
+        "corroborating_days": 2,
+        "min_area_ha": 0.5,
+        "tile_size": 256
+      },
+      "grid": {
+        "crs": "EPSG:32721",
+        "width": 2218,
+        "height": 2220,
+        "transform": [
+          10.0,
+          0.0,
+          665620.0,
+          0.0,
+          -10.0,
+          9225990.0
+        ],
+        "pixel_area_ha_projected": 0.01
+      },
+      "baseline_unique_dates": [
+        "2025-08-03",
+        "2025-08-25",
+        "2025-09-27",
+        "2025-10-27"
+      ],
+      "recent_unique_dates": [
+        "2026-08-03",
+        "2026-08-08",
+        "2026-08-18",
+        "2026-08-30",
+        "2026-09-02",
+        "2026-09-12",
+        "2026-09-17",
+        "2026-09-27",
+        "2026-10-07",
+        "2026-10-17",
+        "2026-10-19",
+        "2026-11-01"
+      ],
+      "status_pixel_counts": {
+        "insufficient_forest_baseline_or_not_eligible": 3433586,
+        "eligible_insufficient_recent_observations": 1,
+        "observed_without_current_corroborated_loss": 1421889,
+        "single_pending_anomaly": 49830,
+        "corroborated_candidate_latest_clear_anomalous": 13800,
+        "corroborated_candidate_latest_clear_not_anomalous": 4854
+      },
+      "baseline_supported_area_ha_projected": 47166.9,
+      "eligible_forest_area_ha_projected": 14903.74,
+      "observable_eligible_area_ha_projected": 14903.72,
+      "eligible_area_with_insufficient_recent_observations_ha_projected": 0.02,
+      "candidate_polygon_count": 59,
+      "candidate_area_ha_geodesic": 109.5142,
+      "candidate_count_by_observation_classification": {
+        "observed_new_recent_loss": 18,
+        "left_censored_possible_loss_since_baseline": 11,
+        "mixed_censoring_candidate": 30
+      },
+      "candidate_area_ha_geodesic_by_observation_classification": {
+        "observed_new_recent_loss": 18.5406,
+        "left_censored_possible_loss_since_baseline": 9.7605,
+        "mixed_censoring_candidate": 81.2131
+      },
+      "accuracy_evaluated": false,
+      "validated_deforestation": false,
+      "area_note": "Raster coverage areas use the projected grid; candidate polygons use WGS84 geodesic hectares.",
+      "selection_note": "Same-day scenes count once; invalid/cloud observations do not reset or corroborate candidates.",
+      "limitations": [
+        "Corroboration is repeated spectral evidence, not independent validation.",
+        "Flooding, burning, harvest and forest management may generate candidates.",
+        "No economic driver, permanence or responsibility is inferred.",
+        "SWIR resampling does not increase its native spatial detail.",
+        "Date ranges express observation bounds, not exact disturbance times.",
+        "Without a clear intact observation during the recent period, loss is left-censored and may predate that period."
+      ]
+    },
+    {
+      "region": "belterra",
+      "method": "spectral_persistence_baseline_v1",
+      "parameters": {
+        "forest_ndvi_min": 0.65,
+        "forest_nbr_min": 0.5,
+        "ndvi_drop_min": 0.2,
+        "nbr_drop_min": 0.2,
+        "post_ndvi_max": 0.55,
+        "mad_multiplier": 3.0,
+        "min_baseline_days": 2,
+        "corroborating_days": 2,
+        "min_area_ha": 0.5,
+        "tile_size": 256
+      },
+      "grid": {
+        "crs": "EPSG:32721",
+        "width": 2229,
+        "height": 2218,
+        "transform": [
+          10.0,
+          0.0,
+          727760.0,
+          0.0,
+          -10.0,
+          9646080.0
+        ],
+        "pixel_area_ha_projected": 0.01
+      },
+      "baseline_unique_dates": [
+        "2025-08-03",
+        "2025-09-02",
+        "2025-09-24",
+        "2025-10-27"
+      ],
+      "recent_unique_dates": [
+        "2026-08-03",
+        "2026-08-13",
+        "2026-08-20",
+        "2026-08-30",
+        "2026-09-02",
+        "2026-09-09",
+        "2026-09-19",
+        "2026-09-27",
+        "2026-10-07",
+        "2026-10-12",
+        "2026-10-22",
+        "2026-10-29"
+      ],
+      "status_pixel_counts": {
+        "insufficient_forest_baseline_or_not_eligible": 2564671,
+        "eligible_insufficient_recent_observations": 0,
+        "observed_without_current_corroborated_loss": 2210428,
+        "single_pending_anomaly": 82880,
+        "corroborated_candidate_latest_clear_anomalous": 79674,
+        "corroborated_candidate_latest_clear_not_anomalous": 6269
+      },
+      "baseline_supported_area_ha_projected": 39202.28,
+      "eligible_forest_area_ha_projected": 23792.51,
+      "observable_eligible_area_ha_projected": 23792.51,
+      "eligible_area_with_insufficient_recent_observations_ha_projected": 0.0,
+      "candidate_polygon_count": 287,
+      "candidate_area_ha_geodesic": 649.8028,
+      "candidate_count_by_observation_classification": {
+        "observed_new_recent_loss": 74,
+        "left_censored_possible_loss_since_baseline": 59,
+        "mixed_censoring_candidate": 154
+      },
+      "candidate_area_ha_geodesic_by_observation_classification": {
+        "observed_new_recent_loss": 103.3443,
+        "left_censored_possible_loss_since_baseline": 93.5554,
+        "mixed_censoring_candidate": 452.9031
+      },
+      "accuracy_evaluated": false,
+      "validated_deforestation": false,
+      "area_note": "Raster coverage areas use the projected grid; candidate polygons use WGS84 geodesic hectares.",
+      "selection_note": "Same-day scenes count once; invalid/cloud observations do not reset or corroborate candidates.",
+      "limitations": [
+        "Corroboration is repeated spectral evidence, not independent validation.",
+        "Flooding, burning, harvest and forest management may generate candidates.",
+        "No economic driver, permanence or responsibility is inferred.",
+        "SWIR resampling does not increase its native spatial detail.",
+        "Date ranges express observation bounds, not exact disturbance times.",
+        "Without a clear intact observation during the recent period, loss is left-censored and may predate that period."
+      ]
+    }
+  ],
+  "classification": {
+    "spectral_status": "insufficient_training_reference",
+    "embedding_status": "insufficient_training_reference",
+    "sample_count": 300,
+    "eligible_reviewed_count": 0,
+    "feature_quality_counts": {
+      "ready": 290,
+      "insufficient_clear_support": 10
+    },
+    "support_m": 160,
+    "support_policy_version": "preannotation-amendment-20261102-v2",
+    "confidence_intervals": null,
+    "population_accuracy_estimated": false
+  },
+  "model_probes": [
+    {
+      "model_id": "ibm-esa-geospatial/TerraMind-1.0-tiny",
+      "model_license": "Apache-2.0",
+      "input_sha256": "0ddf7547f5fa26d442e3889b8a076be80905d7100144f31b65736b78cc55a0cb",
+      "scl_sha256": "0a60d2aef3c63fd72c05f985366e865be035c727bf64d105558c0dc30705afe7",
+      "input_units": "physical reflectance",
+      "device": "cuda",
+      "gpu_name": "NVIDIA GeForce RTX 2060 SUPER",
+      "model_load_seconds": 0.95,
+      "inference_seconds": 0.633,
+      "tile_count": 100,
+      "tile_size_pixels": 224,
+      "feature_shape": [
+        100,
+        14,
+        14,
+        192
+      ],
+      "clear_feature_patches": 18429,
+      "peak_cuda_allocated_bytes": 64191488,
+      "versions": {
+        "torch": "2.7.1+cu118",
+        "torchvision": "0.22.1+cu118",
+        "terratorch": "1.2.13",
+        "timm": "1.0.30",
+        "numpy": "2.5.4",
+        "rasterio": "1.5.2",
+        "huggingface_hub": "2.4.0"
+      },
+      "feature_spacing_crs_units": [
+        160.0,
+        160.0
+      ],
+      "limitations": [
+        "Frozen encoder features, not trained classifications or accuracy measurements.",
+        "Native feature grid is 16 input pixels: 160 m for a 10 m source; SWIR input remains natively 20 m.",
+        "Tokens attend to the full inference window and are contextual features, not independent local observations.",
+        "Cloud and invalid pixels are neutral-filled; patch clear fraction is explicit and patches below 90% are masked.",
+        "A tiny prefix is a feasibility probe; no full-AOI throughput or production guarantee is implied."
+      ]
+    },
+    {
+      "model_id": "ibm-esa-geospatial/TerraMind-1.0-tiny",
+      "model_license": "Apache-2.0",
+      "input_sha256": "131d543fdce4dc0085deb36a2b4e17f867348835779cc14052b405211c871960",
+      "scl_sha256": "fc819b43e52a651a8b84ae931ec25421575de5dd913c0243856e926c9438b839",
+      "input_units": "physical reflectance",
+      "device": "cuda",
+      "gpu_name": "NVIDIA GeForce RTX 2060 SUPER",
+      "model_load_seconds": 12.623,
+      "inference_seconds": 0.327,
+      "tile_count": 4,
+      "tile_size_pixels": 224,
+      "feature_shape": [
+        4,
+        14,
+        14,
+        192
+      ],
+      "clear_feature_patches": 731,
+      "peak_cuda_allocated_bytes": 38448128,
+      "versions": {
+        "torch": "2.7.1+cu118",
+        "torchvision": "0.22.1+cu118",
+        "terratorch": "1.2.13",
+        "timm": "1.0.30",
+        "numpy": "2.5.4",
+        "rasterio": "1.5.2",
+        "huggingface_hub": "2.4.0"
+      },
+      "feature_spacing_crs_units": [
+        160.0,
+        160.0
+      ],
+      "limitations": [
+        "Frozen encoder features, not trained classifications or accuracy measurements.",
+        "Native feature grid is 16 input pixels: 160 m for a 10 m source; SWIR input remains natively 20 m.",
+        "Tokens attend to the full inference window and are contextual features, not independent local observations.",
+        "Cloud and invalid pixels are neutral-filled; patch clear fraction is explicit and patches below 90% are masked.",
+        "A tiny prefix is a feasibility probe; no full-AOI throughput or production guarantee is implied."
+      ]
+    },
+    {
+      "model_id": "ibm-esa-geospatial/TerraMind-1.0-tiny",
+      "model_license": "Apache-2.0",
+      "input_sha256": "9dd74220f3e805bd086ae9c9421edaa6941fc57814b8b2e8860b1508377a6aeb",
+      "scl_sha256": "849551bfb0af84fecdff68afe968bbefe2627297d5ca751a6f472a7311aaacc1",
+      "input_units": "physical reflectance",
+      "device": "cuda",
+      "gpu_name": "NVIDIA GeForce RTX 2060 SUPER",
+      "model_load_seconds": 12.684,
+      "inference_seconds": 0.716,
+      "tile_count": 100,
+      "tile_size_pixels": 224,
+      "feature_shape": [
+        100,
+        14,
+        14,
+        192
+      ],
+      "clear_feature_patches": 18274,
+      "peak_cuda_allocated_bytes": 38448128,
+      "versions": {
+        "torch": "2.7.1+cu118",
+        "torchvision": "0.22.1+cu118",
+        "terratorch": "1.2.13",
+        "timm": "1.0.30",
+        "numpy": "2.5.4",
+        "rasterio": "1.5.2",
+        "huggingface_hub": "2.4.0"
+      },
+      "feature_spacing_crs_units": [
+        160.0,
+        160.0
+      ],
+      "limitations": [
+        "Frozen encoder features, not trained classifications or accuracy measurements.",
+        "Native feature grid is 16 input pixels: 160 m for a 10 m source; SWIR input remains natively 20 m.",
+        "Tokens attend to the full inference window and are contextual features, not independent local observations.",
+        "Cloud and invalid pixels are neutral-filled; patch clear fraction is explicit and patches below 90% are masked.",
+        "A tiny prefix is a feasibility probe; no full-AOI throughput or production guarantee is implied."
+      ]
+    }
+  ],
+  "reference_access": {
+    "accessed_at": "2026-11-02T21:08:20.944615+00:00",
+    "reference_is_ground_truth": false,
+    "mapbiomas_10m_2025": {
+      "url": "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/lulc_10m/collection4/coverage/brazil_coverage/brazil_coverage-col4_10m_2025.tif",
+      "anonymous": true,
+      "http_status": 403,
+      "available": false,
+      "status": "http_error"
+    },
+    "mapbiomas_30m_2025": {
+      "url": "https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection11/lulc/coverage/brazil_coverage/brazil_coverage-col11_2025.tif",
+      "anonymous": true,
+      "http_status": 403,
+      "available": false,
+      "status": "http_error"
+    },
+    "mapbiomas_alerta": {
+      "endpoint": "https://plataforma.alerta.mapbiomas.org/api/v2/graphql",
+      "anonymous": true,
+      "documentation": "https://docs.api.alerta.mapbiomas.org/pt-BR/",
+      "documented_account_required": true,
+      "status": "network_error",
+      "error_type": "URLError",
+      "available": false
+    },
+    "dist_alert": [
+      {
+        "region": "novo_progresso",
+        "bbox": [
+          -55.5,
+          -7.2,
+          -55.3,
+          -7.0
+        ],
+        "start": "2026-08-01",
+        "end": "2026-11-02",
+        "metadata_url": "https://cmr.earthdata.nasa.gov/search/granules.json?short_name=OPERA_L3_DIST-ALERT-HLS_V1&bounding_box=-55.5%2C-7.2%2C-55.3%2C-7.0&temporal=2026-08-01T00%3A00%3A00Z%2C2026-11-02T23%3A59%3A59Z&page_size=1&sort_key=-start_date",
+        "granule_id": "G4397427056-LPCLOUD",
+        "title": "OPERA_L3_DIST-ALERT-HLS_T21MXN_20261031T134907Z_20261102T045044Z_L8_30_v1",
+        "acquisition_time": "2026-10-31T13:49:07.963Z",
+        "note": "Disturbance status is not confirmed deforestation or causal attribution.",
+        "raster_probe": {
+          "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/OPERA_L3_DIST-ALERT-HLS_V1/OPERA_L3_DIST-ALERT-HLS_T21MXN_20261031T134907Z_20261102T045044Z_L8_30_v1/OPERA_L3_DIST-ALERT-HLS_T21MXN_20261031T134907Z_20261102T045044Z_L8_30_v1_VEG-DIST-STATUS.tif",
+          "anonymous": true,
+          "http_status": 401,
+          "available": false,
+          "status": "authentication_required"
+        },
+        "status": "metadata_retrieved"
+      },
+      {
+        "region": "belterra",
+        "bbox": [
+          -54.95,
+          -3.4,
+          -54.75,
+          -3.2
+        ],
+        "start": "2026-08-01",
+        "end": "2026-11-02",
+        "metadata_url": "https://cmr.earthdata.nasa.gov/search/granules.json?short_name=OPERA_L3_DIST-ALERT-HLS_V1&bounding_box=-54.95%2C-3.4%2C-54.75%2C-3.2&temporal=2026-08-01T00%3A00%3A00Z%2C2026-11-02T23%3A59%3A59Z&page_size=1&sort_key=-start_date",
+        "granule_id": "G4397429112-LPCLOUD",
+        "title": "OPERA_L3_DIST-ALERT-HLS_T21MYS_20261031T134820Z_20261102T045304Z_L8_30_v1",
+        "acquisition_time": "2026-10-31T13:48:20.113Z",
+        "note": "Disturbance status is not confirmed deforestation or causal attribution.",
+        "raster_probe": {
+          "url": "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/OPERA_L3_DIST-ALERT-HLS_V1/OPERA_L3_DIST-ALERT-HLS_T21MYS_20261031T134820Z_20261102T045304Z_L8_30_v1/OPERA_L3_DIST-ALERT-HLS_T21MYS_20261031T134820Z_20261102T045304Z_L8_30_v1_VEG-DIST-STATUS.tif",
+          "anonymous": true,
+          "http_status": 401,
+          "available": false,
+          "status": "authentication_required"
+        },
+        "status": "metadata_retrieved"
+      }
+    ]
+  },
+  "external_spend_brl": 0,
+  "field_validated": false,
+  "validated_deforestation": false,
+  "mapbiomas_superiority_established": false,
+  "product_identity_selected": false,
+  "qualitative_review_note": "24 seeded model-selected cases. These are not reference labels or a precision estimate.",
+  "limitations": [
+    "No reviewed classification reference labels; no classifier fitted.",
+    "No external reference raster retrieved.",
+    "Spectral candidates can include haze, seasonal and agricultural changes.",
+    "Native frozen model features are160m contextual tokens, not10m segmentation.",
+    "Distinct1km cells do not establish independence of contextual features."
+  ]
+}
