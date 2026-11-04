@@ -1,17 +1,15 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { IconButton } from "@/components/ui/icon-button";
-import * as Popover from "radix-ui/popover";
-import * as RadioGroup from "radix-ui/radio-group";
 import * as Switch from "@/components/ui/switch";
-import { Layers, LoaderCircle, X } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { textButtonClass } from "@/components/ui/action";
 import type { Visualization, VisualizationManifest } from "@/lib/analysis-artifacts";
-import { BASEMAPS, type BasemapId } from "./sources";
+import type { BasemapId } from "./sources";
 import { formatDate } from "@/features/analyses/types";
-import MapToolButton from "./MapToolButton";
+import MapLayersControl from "./MapLayersControl";
+import BasemapPicker from "./BasemapPicker";
 type Props = {
     basemap: BasemapId;
     onBasemap: (value: BasemapId) => void;
@@ -32,38 +30,8 @@ type Props = {
     retryImage: () => void;
 };
 export default function MapLayersPicker(props: Props) {
-    return (<Popover.Root>
-      <Popover.Trigger asChild>
-        <MapToolButton  label="Camadas">
-          <Layers size={17}/>
-        </MapToolButton>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content className={"z-[2500] max-h-[calc(100dvh-145px)] w-[min(340px,calc(100vw-84px))] overflow-y-auto rounded-[8px] border border-solid border-[#45454c] bg-[#222225] px-[16px] pb-[12px] pt-[15px] shadow-[0_8px_25px_#0005] max-[760px]:max-h-[calc(100dvh-160px)]"} sideOffset={9} side="left" align="start" collisionPadding={12} aria-label="Camadas" data-testid="layer-picker">
-          <div className={"-mr-[5px] -mt-[3px] mb-[12px] ml-0 flex items-center justify-between gap-[16px]"}>
-            <h2 className={"text-[14px] font-medium"}>Camadas</h2>
-            <Popover.Close asChild>
-              <IconButton  aria-label="Fechar camadas" hitArea="popup">
-                <X size={17}/>
-              </IconButton>
-            </Popover.Close>
-          </div>
-          <h3 className={"mb-[10px] text-[12px] font-normal text-muted-foreground"}>Mapa de fundo</h3>
-          <RadioGroup.Root value={props.basemap} onValueChange={(value) => props.onBasemap(value as BasemapId)} aria-label="Mapa de fundo" className={"flex flex-col gap-[7px]"}>
-            {BASEMAPS.map((item) => (<label className={"flex min-w-0 cursor-pointer items-center gap-[10px] rounded-[5px] border border-solid border-[#3a3a40] px-[9px] py-[9px] hover:bg-[#2d2d32] has-[[data-state=checked]]:border-[#787883] has-[[data-state=checked]]:bg-[#303035] data-[disabled]:cursor-not-allowed data-[disabled]:opacity-45 pointer-coarse:min-h-[62px]"} key={item.id} data-disabled={item.id !== "none" && !props.hasKey ? "" : undefined}>
-                <RadioGroup.Item className={"size-[15px] shrink-0 rounded-full border border-solid border-[#8e8e99] bg-transparent p-[3px]"} value={item.id} disabled={item.id !== "none" && !props.hasKey} aria-label={item.title}>
-                  <RadioGroup.Indicator className={"block size-[7px] rounded-full bg-[var(--accent)]"}/>
-                </RadioGroup.Item>
-                <span className={cn("relative h-[34px] w-[32px] shrink-0 overflow-hidden rounded-[3px] border border-solid border-[#56565d]", item.id === "satellite" ? "bg-[#3f4d32] before:absolute before:left-[4px] before:top-[8px] before:h-[36px] before:w-[16px] before:rotate-[33deg] before:bg-[#837454] before:content-['']" : item.id === "streets" ? "bg-[#c5c4bb] before:absolute before:-left-[8px] before:top-[14px] before:h-[4px] before:w-[55px] before:-rotate-[35deg] before:bg-[#efefe8] before:content-[''] after:absolute after:-left-[8px] after:top-[14px] after:h-[4px] after:w-[55px] after:rotate-[70deg] after:bg-[#efefe8] after:content-['']" : "border-dashed bg-[#24262a]")} aria-hidden="true"/>
-                <span className={"flex min-w-0 flex-col gap-[5px]"}>
-                  <strong className={"text-[13px] font-medium"}>{item.title}</strong>
-                  {item.id !== "none" && (<span className={"text-[12px] leading-[1.45] text-muted-foreground"}>{item.time.kind === "acquisition" ? formatDate(item.time.date) : item.time.label}</span>)}
-                </span>
-              </label>))}
-          </RadioGroup.Root>
-          {!props.hasKey && (<p className={"mt-[10px] text-[12px] leading-[1.6] text-[var(--error)]"}>
-              Mapa de referência indisponível neste ambiente.
-            </p>)}
+  return <MapLayersControl>
+    <BasemapPicker value={props.basemap} onChange={props.onBasemap} hasKey={props.hasKey} />
           <div className={"mt-[17px] border-t border-solid border-border pt-[15px]"}>
             <div className={"mb-[7px]"}>
               <h3 className={"text-[12px] font-medium"}>Resultado</h3>
@@ -114,7 +82,5 @@ export default function MapLayersPicker(props: Props) {
               </Switch.Root>
             </div>
           </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>);
+  </MapLayersControl>;
 }

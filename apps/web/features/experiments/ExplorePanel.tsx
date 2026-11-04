@@ -30,7 +30,7 @@ export default function ExplorePanel({ study }: { study: LabStudy }) {
   const ids = useMemo(() => candidates.map(item => item.properties.id), [candidates]);
   const selected = candidates.find(feature => feature.properties.id === selectedId)?.properties;
   useEffect(() => { if (selectedId && !ids.includes(selectedId)) setSelectedId(null); }, [ids, selectedId]);
-  const select = useCallback((id: string) => { setSelectedId(id); setFocusToken(value => value + 1); }, []);
+  const select = useCallback((id: string | null) => { setSelectedId(id); if (id !== null) setFocusToken(value => value + 1); }, []);
   if (!region) return <div className={styles.empty}>O estudo não possui pilotos cartográficos disponíveis.</div>;
   const before = region.scenes.find(scene => scene.id === dates.before) || region.scenes[0];
   const after = region.scenes.find(scene => scene.id === dates.after) || region.scenes.at(-1);
@@ -40,11 +40,13 @@ export default function ExplorePanel({ study }: { study: LabStudy }) {
         <label className={styles.field}>Piloto<select value={region.id} onChange={event => { const next = study.regions.find(item => item.id === event.target.value)!; setRegionId(next.id); setDates(initialDates(next)); setSelectedId(null); }} aria-label="Piloto do estudo">{study.regions.map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
         <label className={styles.field}>Imagem de referência<select aria-label="Imagem de referência" value={before?.id || ""} onChange={event => setDates(previous => ({ ...previous, before: event.target.value }))}>{region.scenes.map(scene => <option key={scene.id} value={scene.id}>{labDate(scene.date)} · {labNumber(scene.clearPercent)}% claro</option>)}</select></label>
         <label className={styles.field}>Imagem de comparação<select aria-label="Imagem de comparação" value={after?.id || ""} onChange={event => setDates(previous => ({ ...previous, after: event.target.value }))}>{region.scenes.map(scene => <option key={scene.id} value={scene.id}>{labDate(scene.date)} · {labNumber(scene.clearPercent)}% claro</option>)}</select></label>
-        <label className={styles.field}>Visualização<select value={color} onChange={event => setColor(event.target.value as "rgb" | "falseColor")} aria-label="Visualização da imagem"><option value="rgb">Cor natural · RGB</option><option value="falseColor">Falsa cor</option></select></label>
+      </div>
+      {before && after ? <Map studyId={study.id} region={region} before={before} after={after} color={color} opacity={opacity} showCandidates={showCandidates} candidateIds={ids} selectedId={selectedId} focusToken={focusToken} onSelect={select} attribution={study.attribution} layerControls={<>
+        <label className={styles.field}>Visualização<select value={color} onChange={event => setColor(event.target.value as "rgb" | "falseColor")} aria-label="Visualização da imagem"><option value="rgb">Cor natural · RGB</option><option value="falseColor">Falsa cor · B08, B04, B03</option></select></label>
         <label className={styles.field}>Opacidade da comparação · {Math.round(opacity * 100)}%<input type="range" min="0" max="1" step=".05" value={opacity} onChange={event => setOpacity(Number(event.target.value))} aria-label="Opacidade da imagem de comparação" /></label>
         <label className={styles.fieldCheckbox}><input type="checkbox" checked={showCandidates} onChange={event => setShowCandidates(event.target.checked)} /> Candidatos</label>
-      </div>
-      {before && after ? <Map studyId={study.id} region={region} before={before} after={after} color={color} opacity={opacity} showCandidates={showCandidates} candidateIds={ids} selectedId={selectedId} focusToken={focusToken} onSelect={select} /> : <div className={styles.empty}>Imagens datadas indisponíveis neste piloto.</div>}
+        <p className={styles.layerNote}>Referência: {labDate(before.date)} · Comparação: {labDate(after.date)}. O fundo cartográfico tem sua própria informação temporal.</p>
+      </>} /> : <div className={styles.empty}>Imagens datadas indisponíveis neste piloto.</div>}
       <div className={styles.mapFoot}><span>Arraste a opacidade para comparar as duas observações. Preto e nuvens não comprovam mudança.</span><span>Sentinel‑2 · bandas visíveis a 10 m · SWIR nativo a 20 m</span></div>
     </div>
     <aside className={styles.candidateSidebar} aria-label="Candidatos do piloto">

@@ -97,11 +97,14 @@ test('private experiment images, independent reviews, persistence and workspace'
     await expect(page.locator('.leaflet-image-layer').first()).toBeVisible();
     await expect.poll(() => page.locator('.leaflet-image-layer').first().evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true);
     const oldImage = await page.locator('.leaflet-image-layer').first().getAttribute('src');
+    await page.getByRole('button', { name: 'Camadas', exact: true }).click();
     await page.getByRole('combobox', { name: 'Visualização da imagem', exact: true }).selectOption('falseColor');
     await expect.poll(() => page.locator('.leaflet-image-layer').first().getAttribute('src')).not.toBe(oldImage);
     const opacity = page.getByRole('slider', { name: 'Opacidade da imagem de comparação', exact: true });
     await opacity.focus(); await page.keyboard.press('Home'); await expect(opacity).toHaveValue('0');
     await page.keyboard.press('End'); await expect(opacity).toHaveValue('1');
+    await expect(page.locator('img[data-geospatial-layer="comparison"]')).toHaveCSS('opacity', '1');
+    await page.keyboard.press('Escape');
     const minimum = page.getByRole('spinbutton', { name: 'Área mínima dos candidatos', exact: true });
     await minimum.fill('999999');
     await expect(page.getByText('Nenhum candidato atende a esses filtros.', { exact: true })).toBeVisible();

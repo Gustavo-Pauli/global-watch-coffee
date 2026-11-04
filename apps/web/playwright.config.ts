@@ -9,4 +9,10 @@ export default defineConfig({
   testDir: './tests/browser', timeout: 180_000, workers: 1,
   reporter: 'list', expect: { timeout: 30_000 },
   use: { baseURL, browserName: 'chromium', channel: process.env.PLAYWRIGHT_CHANNEL || 'chrome', actionTimeout: 30_000, viewport: { width: 1440, height: 1000 }, trace: 'off', screenshot: 'only-on-failure' },
+  // Opt-in lifecycle for CI/offline adapter tests; normal browser audits keep
+  // using the developer's existing server. No product route or auth bypass.
+  webServer: process.env.MAP_BROWSER_START_SERVER === '1' ? {
+    command: `pnpm exec next start --hostname 127.0.0.1 --port ${new URL(baseURL).port || '3000'}`,
+    url: baseURL, reuseExistingServer: false, timeout: 60_000,
+  } : undefined,
 });

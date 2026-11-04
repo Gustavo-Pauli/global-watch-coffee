@@ -334,7 +334,7 @@ export default function AnalysisWorkspace({ id }: {
           </div>) : (<>
             <div className={cn("@container absolute inset-0 h-full min-w-0 overflow-hidden", inspectorOpen && "right-[340px] max-[899px]:invisible max-[899px]:right-0")} data-testid="map-stage">
               <div className={"absolute inset-0 size-full"} aria-label="Mapa da análise" data-testid="map-canvas">
-                <SatelliteMap geojson={data.geojson} bounds={data.result.leaflet_bounds} overlay={raster.overlay} opacity={opacity / 100} selected={selected} onSelect={setSelected} onAsk={askCandidate} focusRequest={focusRequest} showRaster={showRaster} showPolygons={showPolygons} basemap={basemap} inspectorRef={panel}/>
+                <SatelliteMap geojson={data.geojson} bounds={data.result.leaflet_bounds} overlay={raster.overlay} opacity={opacity / 100} selected={selected} onSelect={setSelected} onAsk={askCandidate} focusRequest={focusRequest} showRaster={showRaster} showPolygons={showPolygons} basemap={basemap} inspectorRef={panel} acquisitionDate={date}/>
               </div>
               <div className={"absolute left-[14px] top-[14px] z-[500] flex min-h-[36px] max-w-[calc(100%-148px)] flex-wrap items-center gap-[9px] rounded-[6px] border border-solid border-[#424246] bg-[#202023] px-[12px] py-[9px] text-[12px] text-[#dddde0] shadow-[0_3px_12px_#0003] max-[760px]:left-[12px] max-[760px]:top-[12px] max-[760px]:grid max-[760px]:max-w-[calc(100%-150px)] max-[760px]:grid-cols-[11px_auto] max-[760px]:gap-x-[8px] max-[760px]:gap-y-[5px] max-[760px]:px-[10px] max-[760px]:py-[8px]"} aria-label="Legenda e área estimada" data-testid="map-legend">
                 <span className="size-[11px] shrink-0 border border-solid border-[var(--accent)] bg-[#c0d6a633]" />
