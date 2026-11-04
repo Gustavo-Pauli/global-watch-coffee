@@ -45,6 +45,7 @@ jobs:
       WORKER_SECRET: ci-worker-secret-01234567890123456789012345
       SUPABASE_URL: https://placeholder.supabase.co
       SUPABASE_SECRET_KEY: sb_secret_ci_placeholder_do_not_use
+      NEXT_PUBLIC_MAPTILER_KEY: offline-browser-fixture
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -66,3 +67,10 @@ jobs:
         run: pnpm --filter @global-watch/web typecheck
       - name: Build Next.js without real external credentials
         run: pnpm --filter @global-watch/web build
+      - name: Install browser for offline map regressions
+        run: pnpm --filter @global-watch/web exec playwright install --with-deps chromium
+      - name: Shared map engine and adapter browser regressions (offline fixtures)
+        env:
+          PLAYWRIGHT_CHANNEL: chromium
+          MAP_BROWSER_START_SERVER: '1'
+        run: pnpm --filter @global-watch/web exec playwright test tests/browser/map-engine.spec.ts tests/browser/map-engine-layers.spec.ts
